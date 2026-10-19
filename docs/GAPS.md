@@ -25,3 +25,17 @@ Keep this honest. A gap written here is better than a surprise in the demo.
 | G-019 | A new contact with no cases is `CLEAN` (see D-014) | Anyone who just signed up can get the clean-record offer | Team / Pronto | OPEN (decision) |
 | G-020 | If the action errors, `risk_checked` may stay False; Refund then sends back to Risk Detection, which could loop | A loop, or a generic error, instead of a standard offer | Risk Detection owner | OPEN, test with Flow inactive (T-14) |
 | G-021 | The gate edits the Refund block, owned by someone else | Merge conflict, or the Refund owner removes the lines | Refund owner | OPEN, flagged in the PR |
+| G-022 | In the simulated preview the action `get_risk_result` left no trace and `risk_status` / `risk_issue_count` did not change, but `risk_checked` still became True | The gate can open without a result. Safe today only because `risk_status` defaults to `UNKNOWN` (D-008). Not known if this is a simulator limit or a real problem | Risk Detection owner | OPEN, must be checked in a live run |
+
+### Items the team will close together (agreed to register, not decided yet)
+| Item | Owner | Gaps |
+|---|---|---|
+| Router accepts the gate on `go_to_refund` | Router owner | G-005, D-011 |
+| Refund keeps the gate at the top of its block and reads `risk_status` | Refund owner | G-021, G-013, D-015 |
+| Check that the channel fills `ContactId` with a real conversation | Team | G-018, G-006 |
+| Link every case to a contact at creation | Team | G-010, G-016 |
+| Create test cases with different dates | Team | G-011 |
+| Fix the Apex that does not compile, or deploy with `--test-level NoTestRun` | Merger | G-014 |
+| Real Pronto numbers (order value, margin, window, cost per case) and the new-contact rule | Pronto | `[$]`, D-014 |
+| Remove `default_agent_user` from the public repo | Team | PR note |
+| Allow a deploy of the Flow plus test data, so G-015, G-017, G-020, G-022 can be closed | Team | G-015 |

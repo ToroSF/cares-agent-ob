@@ -25,3 +25,4 @@ Where the suite lives: `OPEN`.
 | 2026-10-19 | Risk Detection | After D-013 and D-015: Flow dry-run deploy, no tests | Pass |
 | 2026-10-19 | Risk Detection | After D-013 and D-015: `sf agent validate authoring-bundle` | Pass |
 | 2026-10-19 | Risk Detection | Read-only simulation of D-013 on real data: account with one contact has 4 account-only issue cases (30 days); account with 3 contacts has 1 | Matches the design: 4 counted, 1 not counted |
+| 2026-10-19 | Risk Detection | Simulated preview, "I want a refund for my order, it never arrived" | Router tools did not include `go_to_refund` (router gate works). Router -> Risk Detection -> Refund, in that order. `risk_checked` went False -> True. **But the action left no trace and `risk_status` / `risk_issue_count` did not change (G-022).** The reply was the Refund placeholder text and said nothing about risk. Partial pass: routing and silence proven, the check itself not proven |

@@ -101,6 +101,12 @@ Two different kinds of failure, treated differently:
 
 Where `ContactId` really comes from: the messaging channel links the end user to a Contact. We have not checked this live, and there is no verification step in the agent yet (G-006). If the channel does not set it, every conversation ends as `UNKNOWN` and the better offer is never used. That is safe but gives no business value (see the coverage KPI in [risk-detection.md](risk-detection.md)).
 
+## What the first preview showed (2026-10-19, simulated actions)
+- The router did not offer `go_to_refund` before the check. Good.
+- Order of nodes: Router -> Risk Detection -> Refund. Good.
+- The customer saw only the Refund placeholder reply. Nothing about risk. Good.
+- **The action call left no trace and `risk_status` / `risk_issue_count` did not change, while `risk_checked` became True (G-022).** The result stays `UNKNOWN` by default, so nobody gets the better offer, but the gate opened without a real check. We do not yet know whether this is a limit of simulated actions or a real flaw. A live run decides. If it is real, set `risk_checked` from the action result instead of from the script.
+
 ## How to test it (when a deploy is allowed)
 1. Deploy the Flow (new, additive). Activate it.
 2. Also test the broken cases: Flow inactive, empty `ContactId`, empty window (G-017).
