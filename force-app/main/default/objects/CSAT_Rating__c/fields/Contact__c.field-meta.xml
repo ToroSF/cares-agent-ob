@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Contact__c</fullName>
+    <label>Contact</label>
+    <description>The customer who gave (or was offered) this rating. Used to build a per-customer CSAT history.</description>
+    <type>Lookup</type>
+    <referenceTo>Contact</referenceTo>
+    <relationshipLabel>CSAT Ratings</relationshipLabel>
+    <relationshipName>CSAT_Ratings</relationshipName>
+    <required>true</required>
+    <deleteConstraint>Cascade</deleteConstraint>
+</CustomField>
