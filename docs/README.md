@@ -8,7 +8,8 @@ CARES is the Pronto customer care agent. A router sends each customer to one spe
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branches, PRs, who edits what, how we deploy |
 | [DECISIONS.md](DECISIONS.md) | Every decision, with the reason and what we gave up |
 | [GAPS.md](GAPS.md) | Known gaps and risks, with owner |
-| [subagents/](subagents/) | One doc per subagent: purpose, inputs, outputs, tests, gaps. Risk Detection has a short [node spec](subagents/risk-detection-node-spec.md) and a full design doc |
+| [OPEN_ITEMS.md](OPEN_ITEMS.md) | What's left after merging the Risk Detection, Experience Rating and Stolen & Delayed Orders PRs: unbuilt subagents, connections wired in code with no real org config behind them yet, tagged by GitHub username |
+| [subagents/](subagents/) | One doc per subagent: purpose, inputs, outputs, tests, gaps. Risk Detection has a short [node spec](subagents/risk-detection-node-spec.md) and a full design doc. [Refund](subagents/refund.md) is a handoff brief for the subagent still to be built, explaining the context Risk Detection and Stolen & Delayed Orders already produce for it |
 | [RISKS.md](RISKS.md) | Risk Diagnostic: People, Business, Tech, Data, one concrete failure each |
 | [GROUNDING.md](GROUNDING.md) | Data sources, how accuracy is checked, what happens on failure |
 | [TEST_PLAN.md](TEST_PLAN.md) | Happy, edge and adversarial tests, results per run |
