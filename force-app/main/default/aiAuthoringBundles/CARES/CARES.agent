@@ -39,6 +39,38 @@ variables:
         description: "True once a CSAT save has been attempted for the current interaction, regardless of success or failure. Prevents asking or saving more than once per case, including on failure (no retry loop)."
     csat_saved: mutable boolean = False
         description: "True only if the CSAT save action reported success. Consumed by experience_rating's post-action instructions so the agent never tells the customer their rating was saved when it wasn't."
+    stolen_delayed_order_id: mutable string = ""
+        description: "Stolen & Delayed: order id as checked by the evaluate action. Set only by actions."
+    stolen_delayed_evaluated: mutable boolean = False
+        description: "Stolen & Delayed: True once the order has a final decision. Stays False after an order-not-found result so the customer can correct the number."
+    stolen_delayed_lookups: mutable number = 0
+        description: "Stolen & Delayed: number of order checks in this conversation. Capped at 3."
+    stolen_delayed_decision: mutable string = ""
+        description: "Stolen & Delayed: STANDARD_PATH, FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE or ORDER_NOT_FOUND. Set only by actions. Context for Refund."
+    stolen_delayed_reason: mutable string = ""
+        description: "Stolen & Delayed: internal reason code for the decision. Never shown to the customer. Context for Refund."
+    stolen_delayed_needs_person: mutable boolean = False
+        description: "Stolen & Delayed: True when the case must go to a person (manual review or an escalation trigger)."
+    stolen_delayed_full_refund_approved: mutable boolean = False
+        description: "Stolen & Delayed: True when Refund may refund the full order value. Set only by actions. Context for Refund."
+    stolen_delayed_order_total: mutable number = 0
+        description: "Stolen & Delayed: order total in the order currency, from the delivery platform. Context for Refund."
+    stolen_delayed_currency: mutable string = ""
+        description: "Stolen & Delayed: ISO currency code of the order. Context for Refund."
+    stolen_delayed_redispatch_eligible: mutable boolean = False
+        description: "Stolen & Delayed: True when the order can be sent again."
+    stolen_delayed_customer_choice: mutable string = ""
+        description: "Stolen & Delayed: remedy chosen by the customer: REFUND, WALLET_CREDIT or REDISPATCH. Context for Refund."
+    stolen_delayed_loss_absorption: mutable boolean = False
+        description: "Stolen & Delayed: True for the loss absorption case (refund the customer, pay the driver, reimburse the restaurant). Context for Refund."
+    stolen_delayed_driver_compensation: mutable string = ""
+        description: "Stolen & Delayed: driver pay recommendation for Refund: PAY_IN_FULL, WITHHOLD_DELIVERY_PAY or HOLD_FOR_REVIEW."
+    stolen_delayed_restaurant_reimbursement: mutable string = ""
+        description: "Stolen & Delayed: restaurant recommendation for Refund: REIMBURSE or NO_CHANGE."
+    stolen_delayed_handoff_status: mutable string = ""
+        description: "Stolen & Delayed: READY_FOR_REFUND, REDISPATCHED, BLOCKED or FAILED."
+    stolen_delayed_redispatch_reference: mutable string = ""
+        description: "Stolen & Delayed: platform reference of the re-dispatched order."
 
 language:
     default_locale: "en_US"
@@ -88,14 +120,175 @@ subagent refund:
 
 subagent stolen_delayed_orders:
     label: "Stolen & Delayed Orders"
-    description: "PLACEHOLDER — classifies an order issue as stolen or delayed, then hands off to Refund. Detailed distance/time-threshold logic to be added in a future pass."
+    description: "Handles orders reported as stolen, missing or late. For orders marked delivered with no photo from the customer or the driver, an Apex policy reads delivery telemetry and trust history and decides. It never issues refunds or credits: approved claims go to Refund through Risk Detection with the full context. It can re-dispatch the order, and sends risky or sensitive cases to a person."
+
+    actions:
+        evaluate_delivery_exception:
+            description: "Read-only. Checks the order: driver GPS at the moment it was marked delivered, driver wait time, calls and chats to the customer, photo evidence, customer claim rate, driver non-delivery rate, fraud and duplication signals, and order value. Returns the decision."
+            label: "Check Delivery"
+            include_in_progress_indicator: True
+            progress_indicator_message: "Checking your delivery..."
+            inputs:
+                contactId: string
+                    description: "The contact id from the channel, never from the chat."
+                    is_required: True
+                orderId: string
+                    description: "Order number given by the customer."
+                    is_required: True
+                customerReport: string
+                    description: "What the customer said happened, in their own words. Do not summarise or soften it."
+            outputs:
+                decision: string
+                    description: "STANDARD_PATH, FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE or ORDER_NOT_FOUND."
+                    filter_from_agent: True
+                reasonCode: string
+                    description: "Internal reason code."
+                    filter_from_agent: True
+                orderId: string
+                    description: "Order id as checked."
+                    filter_from_agent: True
+                isFinal: boolean
+                    description: "False only when the order was not found."
+                    filter_from_agent: True
+                needsPerson: boolean
+                    description: "True when a person must take over."
+                    filter_from_agent: True
+                fullRefundApproved: boolean
+                    description: "True when Refund may refund the full order value."
+                    filter_from_agent: True
+                orderTotal: number
+                    description: "Order total in the order currency."
+                    filter_from_agent: True
+                currencyIsoCode: string
+                    description: "ISO currency code of the order."
+                    filter_from_agent: True
+                redispatchEligible: boolean
+                    description: "True when the order can be sent again."
+                    filter_from_agent: True
+                driverCompensation: string
+                    description: "Driver pay recommendation."
+                    filter_from_agent: True
+                restaurantReimbursement: string
+                    description: "Restaurant reimbursement recommendation."
+                    filter_from_agent: True
+            target: "apex://CARES_StolenDelayedEvaluateAction"
+
+        handoff_approved_claim:
+            description: "Re-checks an approved claim with fresh data. For REFUND or WALLET_CREDIT it prepares the context for Refund and moves no money. For REDISPATCH it sends the order again. Flags the customer and driver trust scores in the background."
+            label: "Prepare Resolution"
+            include_in_progress_indicator: True
+            progress_indicator_message: "Getting this sorted..."
+            inputs:
+                contactId: string
+                    description: "The contact id from the channel, never from the chat."
+                    is_required: True
+                orderId: string
+                    description: "Order id returned by the evaluate action."
+                    is_required: True
+                expectedDecision: string
+                    description: "Decision returned by the evaluate action."
+                    is_required: True
+                customerChoice: string
+                    description: "REFUND (original payment method), WALLET_CREDIT (app wallet) or REDISPATCH (send the order again)."
+                    is_required: True
+            outputs:
+                handoffStatus: string
+                    description: "READY_FOR_REFUND, REDISPATCHED, BLOCKED or FAILED."
+                    filter_from_agent: True
+                reasonCode: string
+                    description: "Internal reason code."
+                    filter_from_agent: True
+                customerChoice: string
+                    description: "Normalised customer choice."
+                    filter_from_agent: True
+                orderTotal: number
+                    description: "Order total, re-checked."
+                    filter_from_agent: True
+                currencyIsoCode: string
+                    description: "ISO currency code of the order."
+                    filter_from_agent: True
+                lossAbsorption: boolean
+                    description: "True for the loss absorption case."
+                    filter_from_agent: True
+                driverCompensation: string
+                    description: "Driver pay recommendation for Refund."
+                    filter_from_agent: True
+                restaurantReimbursement: string
+                    description: "Restaurant reimbursement recommendation for Refund."
+                    filter_from_agent: True
+                redispatchReference: string
+                    description: "Platform reference of the re-dispatch."
+                    filter_from_agent: True
+            target: "apex://CARES_StolenDelayedHandoffAction"
 
     reasoning:
         instructions: ->
-            | This sub-agent is a structural placeholder. Acknowledge whether the customer's order seems stolen or delayed and let them know it will be routed to the Refund sub-agent once this sub-agent's detailed classification logic is implemented.
+            | You help customers whose order was stolen, never arrived, or is late. Be empathetic and brief. Handle one order at a time.
+              You never issue, promise or calculate a refund or credit yourself. Refund does that after you hand over.
+              Never mention GPS, telemetry, driver or customer history, claim rates, trust scores, fraud checks, limits or how a decision was made. Never blame the driver or the customer.
+              If the customer mentions an assault, a threat, a safety incident or legal action at any point, tell them a member of the team will take over and call {!@actions.escalate_for_review}.
+              If the customer asks for a person at any point, call {!@actions.escalate_for_review}.
+            if @variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_lookups < 3:
+                | Ask for the order number and a short description of what happened, if you do not have them yet. Then call {!@actions.check_order} with the order number and the customer's own words.
+            if @variables.stolen_delayed_decision == "ORDER_NOT_FOUND" and @variables.stolen_delayed_lookups < 3:
+                | The last order number could not be matched to this customer. Ask them to double-check it and try again. Do not say whether the order exists.
+            if @variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_lookups >= 3:
+                | The order could not be found after several tries. Tell the customer a member of the team will help and call {!@actions.escalate_for_review}.
+            if @variables.stolen_delayed_needs_person == True:
+                | This case needs a person. Tell the customer, kindly, that a member of the support team will review it and continue the conversation. Do not promise any outcome or amount. Call {!@actions.escalate_for_review}. If the handoff fails, say the team will follow up shortly.
+            if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "":
+                | Apologise. Tell the customer they will get the full order value back: {!@variables.stolen_delayed_order_total} {!@variables.stolen_delayed_currency}. Ask how they prefer it: a refund to the original payment method, or credit in the app wallet.
+            if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "" and @variables.stolen_delayed_redispatch_eligible == True:
+                | You may also offer to send the order again instead.
+            if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "":
+                | When the customer has chosen, call {!@actions.resolve_claim} with REFUND, WALLET_CREDIT or REDISPATCH. Do not change or mention any other amount.
+            if @variables.stolen_delayed_handoff_status == "REDISPATCHED":
+                | Tell the customer the order is on its way again. Reference: {!@variables.stolen_delayed_redispatch_reference}. Then ask if there is anything else and use {!@actions.go_to_experience_rating} when they are done.
+            if @variables.stolen_delayed_handoff_status == "BLOCKED" or @variables.stolen_delayed_handoff_status == "FAILED":
+                | Apologise that this could not be completed here. Tell the customer a member of the team will help and call {!@actions.escalate_for_review}.
         actions:
-            go_to_refund: @utils.transition to @subagent.refund
-                description: "Hand off to Refund once the order issue is classified."
+            check_order: @actions.evaluate_delivery_exception
+                description: "Check the reported order. Call once you have the order number."
+                available when @variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_lookups < 3
+                with contactId = @variables.ContactId
+                with orderId = ...
+                with customerReport = ...
+                set @variables.stolen_delayed_lookups = @variables.stolen_delayed_lookups + 1
+                set @variables.stolen_delayed_order_id = @outputs.orderId
+                set @variables.stolen_delayed_decision = @outputs.decision
+                set @variables.stolen_delayed_reason = @outputs.reasonCode
+                set @variables.stolen_delayed_evaluated = @outputs.isFinal
+                set @variables.stolen_delayed_needs_person = @outputs.needsPerson
+                set @variables.stolen_delayed_full_refund_approved = @outputs.fullRefundApproved
+                set @variables.stolen_delayed_order_total = @outputs.orderTotal
+                set @variables.stolen_delayed_currency = @outputs.currencyIsoCode
+                set @variables.stolen_delayed_redispatch_eligible = @outputs.redispatchEligible
+                set @variables.stolen_delayed_driver_compensation = @outputs.driverCompensation
+                set @variables.stolen_delayed_restaurant_reimbursement = @outputs.restaurantReimbursement
+                if @outputs.decision == "STANDARD_PATH":
+                    transition to @subagent.risk_detection
+            resolve_claim: @actions.handoff_approved_claim
+                description: "Record the customer's choice for an approved claim: REFUND, WALLET_CREDIT or REDISPATCH."
+                available when @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == ""
+                with contactId = @variables.ContactId
+                with orderId = @variables.stolen_delayed_order_id
+                with expectedDecision = @variables.stolen_delayed_decision
+                with customerChoice = ...
+                set @variables.stolen_delayed_handoff_status = @outputs.handoffStatus
+                set @variables.stolen_delayed_customer_choice = @outputs.customerChoice
+                set @variables.stolen_delayed_order_total = @outputs.orderTotal
+                set @variables.stolen_delayed_currency = @outputs.currencyIsoCode
+                set @variables.stolen_delayed_loss_absorption = @outputs.lossAbsorption
+                set @variables.stolen_delayed_driver_compensation = @outputs.driverCompensation
+                set @variables.stolen_delayed_restaurant_reimbursement = @outputs.restaurantReimbursement
+                set @variables.stolen_delayed_redispatch_reference = @outputs.redispatchReference
+                if @outputs.handoffStatus == "READY_FOR_REFUND":
+                    transition to @subagent.risk_detection
+            escalate_for_review: @utils.escalate
+                description: "Hand the conversation to a person: manual review, an escalation trigger, a failed step, or the customer asks for a person."
+            go_to_experience_rating: @utils.transition to @subagent.experience_rating
+                description: "Ask for feedback once the order has been re-dispatched."
+                available when @variables.stolen_delayed_handoff_status == "REDISPATCHED"
 
 subagent risk_detection:
     label: "Risk Detection"
