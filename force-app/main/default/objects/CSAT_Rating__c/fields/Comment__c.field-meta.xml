@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Comment__c</fullName>
+    <label>Comment</label>
+    <description>Optional free-text comment. Asked only when the score is low, to understand what went wrong.</description>
+    <inlineHelpText>Optional comment the customer gave about their experience.</inlineHelpText>
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>5</visibleLines>
+    <required>false</required>
+    <securityClassification>Internal</securityClassification>
+    <complianceGroup>PII</complianceGroup>
+</CustomField>

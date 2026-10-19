@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Interaction_Date__c</fullName>
+    <label>Interaction Date</label>
+    <description>When the CARES interaction that generated this rating was resolved. Used by Risk Detection to evaluate a rolling history window (e.g. the last 30 days).</description>
+    <type>DateTime</type>
+    <required>true</required>
+</CustomField>
