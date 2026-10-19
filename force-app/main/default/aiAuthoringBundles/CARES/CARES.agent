@@ -74,6 +74,10 @@ subagent refund:
     label: "Refund"
     description: "PLACEHOLDER — issues a refund or store credit based on customer tier and order outcome, within defined limits. Detailed tier/limit/credit-percentage logic to be added in a future pass."
 
+    before_reasoning:
+        if @variables.risk_checked == False:
+            transition to @subagent.risk_detection
+
     reasoning:
         instructions: ->
             | This sub-agent is a structural placeholder. Acknowledge the customer's refund request and let them know a refund or credit will be issued once this sub-agent's detailed logic is implemented. Do not invent specific amounts, tiers, or percentages.
