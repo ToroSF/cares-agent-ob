@@ -27,6 +27,14 @@ variables:
         description: "This variable may also be referred to as MessagingSession EndUserLanguage"
     VerifiedCustomerId: mutable string
         description: "This variable may also be referred to as VerifiedCustomerId"
+    risk_checked: mutable boolean = False
+        description: "Risk Detection: True only after the Get Risk Result action has run in this conversation. Set by the script, never by the model."
+    risk_status: mutable string = "UNKNOWN"
+        description: "Risk Detection result: CLEAN, NOT_CLEAN or UNKNOWN. Set only by the Get Risk Result action."
+    risk_issue_count: mutable number = 0
+        description: "Risk Detection: number of issue cases for this contact inside the lookback window."
+    risk_lookback_days: mutable number = 30
+        description: "Risk Detection: lookback window in days. Placeholder value, to be confirmed with Pronto."
 
 language:
     default_locale: "en_US"
@@ -40,19 +48,20 @@ start_agent agent_router:
     reasoning:
         instructions: ->
             | Select the sub-agent that best matches the customer's message and conversation history:
-              - Refund: the customer wants a refund or credit for an order.
+              - Refund: the customer wants a refund or credit for an order. Refund is only reachable after Risk Detection has run, so for a refund request choose Risk Detection first.
               - Stolen & Delayed Orders: the customer reports a missing/stolen or late order.
-              - Risk Detection: an internal check on the customer's recent history, used to inform how generously to treat them (not usually triggered directly by the customer).
+              - Risk Detection: a silent internal check of the customer's recent history, used to inform how generously to treat them. The customer never asks for it and is never told about it.
               - Escalate to Human: the issue has no economic angle, or no other sub-agent can resolve it.
               - Experience Rating: the interaction is wrapping up and the customer should be asked to rate it.
               If it's unclear, make your best guess.
         actions:
             go_to_refund: @utils.transition to @subagent.refund
-                description: "Route to the Refund sub-agent for refund/credit requests."
+                description: "Route to the Refund sub-agent for refund/credit requests. Only available after the Risk Detection check has run."
+                available when @variables.risk_checked == True
             go_to_stolen_delayed: @utils.transition to @subagent.stolen_delayed_orders
                 description: "Route to the Stolen & Delayed Orders sub-agent for missing or late order reports."
             go_to_risk_detection: @utils.transition to @subagent.risk_detection
-                description: "Route to Risk Detection to check the customer's recent history."
+                description: "Route here FIRST for any refund or credit request. It runs a silent history check and then hands over to Refund automatically."
             go_to_escalate_human: @utils.transition to @subagent.escalate_to_human
                 description: "Route to Escalate to Human for non-economic or unresolvable 'rare' cases."
             go_to_experience_rating: @utils.transition to @subagent.experience_rating
@@ -64,6 +73,10 @@ start_agent agent_router:
 subagent refund:
     label: "Refund"
     description: "PLACEHOLDER — issues a refund or store credit based on customer tier and order outcome, within defined limits. Detailed tier/limit/credit-percentage logic to be added in a future pass."
+
+    before_reasoning:
+        if @variables.risk_checked == False:
+            transition to @subagent.risk_detection
 
     reasoning:
         instructions: ->
@@ -82,14 +95,38 @@ subagent stolen_delayed_orders:
 
 subagent risk_detection:
     label: "Risk Detection"
-    description: "PLACEHOLDER — checks the customer's recent history (e.g. a clean 30-day record) and feeds into Refund to adjust the offer. Detailed history-lookback logic to be added in a future pass."
+    description: "Silent internal check of the customer's recent history (default 30 days). Runs once, stores CLEAN, NOT_CLEAN or UNKNOWN, then hands over to Refund. Never talks to the customer about it."
+
+    before_reasoning:
+        if @variables.risk_checked == False:
+            run @actions.get_risk_result
+                with contactId = @variables.ContactId
+                with lookbackDays = @variables.risk_lookback_days
+                set @variables.risk_status = @outputs.riskStatus
+                set @variables.risk_issue_count = @outputs.issueCount
+            set @variables.risk_checked = True
+        transition to @subagent.refund
 
     reasoning:
         instructions: ->
-            | This sub-agent is a structural placeholder. It represents an internal check on the customer's recent history that will later adjust what Refund can offer. Detailed logic is not yet implemented.
-        actions:
-            go_to_refund: @utils.transition to @subagent.refund
-                description: "Hand off to Refund with the risk assessment once implemented."
+            | This step is silent. Do not mention any history check, risk, record or limit to the customer. Do not answer questions about it.
+
+    actions:
+        get_risk_result:
+            description: "Read-only. Counts the verified contact's issue cases in the lookback window and returns CLEAN, NOT_CLEAN or UNKNOWN."
+            target: "flow://CARES_Get_Risk_Result"
+            inputs:
+                contactId: string
+                    description: "The contact id from the channel, never from the chat."
+                lookbackDays: number
+                    description: "Lookback window in days."
+            outputs:
+                riskStatus: string
+                    description: "CLEAN, NOT_CLEAN or UNKNOWN."
+                    filter_from_agent: True
+                issueCount: number
+                    description: "Number of issue cases in the window."
+                    filter_from_agent: True
 
 subagent experience_rating:
     label: "Experience Rating"
