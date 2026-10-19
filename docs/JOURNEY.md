@@ -1,0 +1,13 @@
+# Journey: how we got here
+
+Short dated log of what the team did and why. Add a line when something is decided or learned. No identifiers.
+
+| Date | What happened | Why it matters |
+|---|---|---|
+| 2026-10-19 | Compared four individual designs; picked CARES as the base | Strongest structure for the team, one clear job per subagent |
+| 2026-10-19 | Agreed the headline KPI is customer retention | Switching apps is free |
+| 2026-10-19 | Agreed on one branch per subagent and one person merging, deploying, activating | Avoid conflicts in the shared org |
+| 2026-10-19 | Started the docs set in `docs/` | So every teammate and assistant can follow what was done and why |
+| 2026-10-19 | Built the first Risk Detection version on its branch: a read-only Flow, variables, the silent step and the router gate. Validated, not deployed | A first working draft to test. See D-007 to D-012 |
+| 2026-10-19 | A flow file failed to parse because XML elements of one type must be grouped; fixed and revalidated | Small but a trap for anyone writing Flow XML by hand |
+| 2026-10-19 | Found that normal validate fails because of old Apex classes in the shared org | Anyone deploying will hit it (G-014) |
