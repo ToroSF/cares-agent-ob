@@ -29,6 +29,16 @@ public with sharing class CARES_Refund_CalculateOffer {
             description='Value of affected items; ignored for Stolen and Delayed'
         )
         public Decimal affectedValue;
+        @InvocableVariable(
+            label='Approved Full Amount'
+            description='Full order value already approved by Stolen & Delayed Orders; 0 when not approved'
+        )
+        public Decimal approvedFullAmount;
+        @InvocableVariable(
+            label='Order Total Cap'
+            description='Order total the refund must not exceed; 0 when unknown'
+        )
+        public Decimal orderTotalCap;
     }
     public class Result {
         @InvocableVariable(
@@ -67,14 +77,18 @@ public with sharing class CARES_Refund_CalculateOffer {
         description='Calculates the refund and store credit offer from tier, order outcome and risk status'
     )
     public static List<Result> execute(List<Request> requests) {
-        // Stub — return a fixed eligible offer
+        // Stub — fixed 15.00 offer (or the approved full amount), capped at the order total, 20% credit bonus
         List<Result> results = new List<Result>();
         for (Request req : requests) {
             Result r = new Result();
+            Decimal refund = req.approvedFullAmount != null && req.approvedFullAmount > 0 ? req.approvedFullAmount : 15.00;
+            if (req.orderTotalCap != null && req.orderTotalCap > 0 && refund > req.orderTotalCap) {
+                refund = req.orderTotalCap;
+            }
             r.eligible = true;
             r.ineligibleReason = '';
-            r.refundAmount = 15.00;
-            r.creditAmount = 18.00;
+            r.refundAmount = refund.setScale(2);
+            r.creditAmount = (refund * 1.20).setScale(2);
             r.currencyCode = 'USD';
             r.tierName = 'Gold';
             results.add(r);

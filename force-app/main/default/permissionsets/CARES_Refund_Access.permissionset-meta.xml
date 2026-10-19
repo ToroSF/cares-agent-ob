@@ -4,6 +4,10 @@
     <description>Grants the Einstein Agent User running CARES access to the Refund sub-agent's invocable Apex actions. Assignment is an explicit rollout step, not a side effect of deploying the agent.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <classAccesses>
+        <apexClass>CARES_Refund_ApplySettlement</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>CARES_Refund_CalculateOffer</apexClass>
         <enabled>true</enabled>
     </classAccesses>

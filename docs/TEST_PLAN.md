@@ -34,3 +34,6 @@ Where the suite lives: `OPEN`.
 | 2026-10-19 | Refund | This branch: `sf agent validate authoring-bundle` | Pass |
 | 2026-10-19 | Refund | This branch, simulated preview: "I want a refund, my order had the wrong burger" (no `ContactId` in preview) | First run: failed, the model asked for an order (`ContactId` is null, not blank, G-029). After the fix: Router -> Risk Detection -> Refund -> Escalate to Human; order actions hidden. Pass |
 | | Refund | R-01 to R-14 on this branch (see `subagents/refund.md`) | `OPEN`: needs deploy (G-027) |
+| 2026-10-19 | Refund | After merging main (Stolen & Delayed contract): local compiler, dry-run deploy of 5 classes + permission set, `sf agent validate authoring-bundle` | Pass |
+| 2026-10-19 | Refund | After merging main, simulated preview: no `ContactId` | Pass: Router -> Risk Detection -> Refund -> Escalate to Human; all 5 Refund actions hidden |
+| | Refund | R-02, R-03, R-15 to R-17 (Stolen & Delayed paths) | `OPEN`: needs the delivery platform (G-032) and a deploy (G-027) |

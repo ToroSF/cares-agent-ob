@@ -1,5 +1,6 @@
 public with sharing class CARES_Refund_LogOrderIssue {
-    private static final Set<String> ALLOWED_TYPES = new Set<String>{ 'Wrong_Missing_Items', 'Quality_Issue' };
+    private static final Set<String> ITEM_TYPES = new Set<String>{ 'Wrong_Missing_Items', 'Quality_Issue' };
+    private static final Set<String> DELIVERY_TYPES = new Set<String>{ 'Stolen', 'Delayed' };
 
     public class Request {
         @InvocableVariable(
@@ -10,7 +11,7 @@ public with sharing class CARES_Refund_LogOrderIssue {
         public String orderId;
         @InvocableVariable(
             label='Issue Type'
-            description='Wrong_Missing_Items or Quality_Issue'
+            description='Wrong_Missing_Items or Quality_Issue; Stolen or Delayed only on the Stolen & Delayed standard path'
             required=true
         )
         public String issueType;
@@ -22,10 +23,14 @@ public with sharing class CARES_Refund_LogOrderIssue {
         public String issueDescription;
         @InvocableVariable(
             label='Affected Items'
-            description='Names of the order items that were wrong, missing, or bad quality'
-            required=true
+            description='Names of the order items that were wrong, missing, or bad quality; blank for Stolen or Delayed'
         )
         public String affectedItems;
+        @InvocableVariable(
+            label='Delivery Path'
+            description='STANDARD when the order came from the Stolen & Delayed standard path, otherwise blank'
+        )
+        public String deliveryPath;
     }
     public class Result {
         @InvocableVariable(
@@ -49,13 +54,15 @@ public with sharing class CARES_Refund_LogOrderIssue {
         description='Records a customer-reported wrong/missing item or quality issue and values the affected items'
     )
     public static List<Result> execute(List<Request> requests) {
-        // Stub — validate the outcome category, return a fixed affected value
+        // Stub — validate the outcome category, return a fixed affected value for item issues
         List<Result> results = new List<Result>();
         for (Request req : requests) {
             Result r = new Result();
-            r.accepted = ALLOWED_TYPES.contains(req.issueType) && String.isNotBlank(req.affectedItems);
+            Boolean deliveryIssue = req.deliveryPath == 'STANDARD' && DELIVERY_TYPES.contains(req.issueType);
+            Boolean itemIssue = ITEM_TYPES.contains(req.issueType) && String.isNotBlank(req.affectedItems);
+            r.accepted = deliveryIssue || itemIssue;
             r.orderOutcome = r.accepted ? req.issueType : '';
-            r.affectedValue = r.accepted ? 12.00 : 0;
+            r.affectedValue = itemIssue ? 12.00 : 0;
             results.add(r);
         }
         return results;

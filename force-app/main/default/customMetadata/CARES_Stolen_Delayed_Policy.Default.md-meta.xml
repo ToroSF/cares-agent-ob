@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomMetadata
+  xmlns="http://soap.sforce.com/2006/04/metadata"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+>
+    <label>Default</label>
+    <protected>false</protected>
+    <values>
+        <field>Escalation_Amount_USD__c</field>
+        <value xsi:type="xsd:double">100</value>
+    </values>
+    <values>
+        <field>Excellent_Driver_Max_NonDelivery__c</field>
+        <value xsi:type="xsd:double">1</value>
+    </values>
+    <values>
+        <field>Excellent_Driver_Min_Deliveries__c</field>
+        <value xsi:type="xsd:double">50</value>
+    </values>
+    <values>
+        <field>GPS_Match_Max_Meters__c</field>
+        <value xsi:type="xsd:double">50</value>
+    </values>
+    <values>
+        <field>GPS_Mismatch_Min_Meters__c</field>
+        <value xsi:type="xsd:double">100</value>
+    </values>
+    <values>
+        <field>High_Trust_Max_Claim_Rate__c</field>
+        <value xsi:type="xsd:double">5</value>
+    </values>
+    <values>
+        <field>High_Trust_Min_Orders__c</field>
+        <value xsi:type="xsd:double">5</value>
+    </values>
+    <values>
+        <field>Low_Trust_Min_Claim_Rate__c</field>
+        <value xsi:type="xsd:double">20</value>
+    </values>
+    <values>
+        <field>Min_Driver_Contact_Attempts__c</field>
+        <value xsi:type="xsd:double">1</value>
+    </values>
+    <values>
+        <field>Min_Driver_Wait_Seconds__c</field>
+        <value xsi:type="xsd:double">180</value>
+    </values>
+    <values>
+        <field>Sensitive_Keywords__c</field>
+        <value xsi:nil="true" />
+    </values>
+</CustomMetadata>
