@@ -27,6 +27,8 @@ variables:
         description: "This variable may also be referred to as MessagingSession EndUserLanguage"
     VerifiedCustomerId: mutable string
         description: "This variable may also be referred to as VerifiedCustomerId"
+    csat_score_captured: mutable boolean = False
+        description: "True once a CSAT rating has been successfully saved for the current interaction. Prevents asking or saving more than once per case."
 
 language:
     default_locale: "en_US"
@@ -93,11 +95,48 @@ subagent risk_detection:
 
 subagent experience_rating:
     label: "Experience Rating"
-    description: "PLACEHOLDER — captures the customer's rating of the interaction once resolved, to learn and improve CARES over time."
+    description: "Captures a 1-5 CSAT rating (shown as a slider in the UI) for the resolved CARES interaction, with an optional follow-up comment on low scores, and stores it against the customer's Contact record."
 
     reasoning:
         instructions: ->
-            | This sub-agent is a structural placeholder. Ask the customer to rate their experience with CARES on this interaction. Detailed capture/storage logic is not yet implemented.
+            | The current case has just been resolved. Ask the customer to rate their experience with CARES on a scale of 1 to 5, presented as a slider in the UI.
+              If the customer declines or does not respond, politely accept that and end the conversation. Do not call {!@actions.save_csat_rating} and do not ask again.
+
+            if @variables.csat_score_captured == False:
+                | Once the customer gives a score, if the score is 3 or lower, ask one brief, open follow-up question about what could have gone better. This follow-up is optional — if the customer skips it, proceed without it.
+                  Then call {!@actions.save_csat_rating} exactly once with the customer's contactId, the score, and the comment if one was given (otherwise leave the comment blank).
+                  After the action completes, thank the customer and do not call the action again.
+
+        actions:
+            save_csat_rating: @actions.save_csat_rating
+                available when @variables.csat_score_captured == False
+                with contactId = @variables.ContactId
+                with score = ...
+                with comment = ...
+                set @variables.csat_score_captured = @outputs.isSuccess
+
+    actions:
+        save_csat_rating:
+            description: "Save the customer's CSAT score (1-5) and optional comment for this resolved interaction."
+            label: "Save CSAT Rating"
+            target: "apex://CsatRatingSaver"
+            inputs:
+                contactId: string
+                    description: "Id of the customer (Contact) giving the rating"
+                    is_required: True
+                score: number
+                    description: "Satisfaction score from the slider, 1 (very unsatisfied) to 5 (very satisfied)"
+                    is_required: True
+                comment: string
+                    description: "Optional free-text comment, typically collected only when the score is low"
+                    is_required: False
+            outputs:
+                isSuccess: boolean
+                    filter_from_agent: True
+                errorMessage: string
+                    filter_from_agent: True
+                ratingId: string
+                    filter_from_agent: True
 
 subagent escalate_to_human:
     label: "Escalate to Human"
