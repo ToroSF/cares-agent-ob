@@ -54,7 +54,7 @@ Design principle `DECIDED` (proposal from one member, adopted as the working rul
 | Subagent | Owner | Status | Doc |
 |---|---|---|---|
 | Agent Router | `OPEN` | Real, weak: no conditions, "best guess" when unclear | n/a |
-| Refund | `OPEN` | Placeholder | to add |
+| Refund | Refund owner | Built with stub actions on branch, validated, not deployed | [node spec](subagents/refund.md) |
 | Stolen & Delayed Orders | `OPEN` | Placeholder | to add |
 | Risk Detection | Risk Detection owner | Built on branch, validated, not deployed | [node spec](subagents/risk-detection-node-spec.md), [design](subagents/risk-detection.md) |
 | Experience Rating | `OPEN` | Placeholder | to add |

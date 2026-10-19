@@ -39,6 +39,32 @@ variables:
         description: "True once a CSAT save has been attempted for the current interaction, regardless of success or failure. Prevents asking or saving more than once per case, including on failure (no retry loop)."
     csat_saved: mutable boolean = False
         description: "True only if the CSAT save action reported success. Consumed by experience_rating's post-action instructions so the agent never tells the customer their rating was saved when it wasn't."
+    refund_order_id: mutable string = ""
+        description: "Refund: order being resolved. Set only by the find order action (or Stolen & Delayed Orders)."
+    refund_order_line_items: mutable string = ""
+        description: "Refund: item names and prices on the order, from the find order action."
+    refund_order_outcome: mutable string = ""
+        description: "Refund: Stolen, Delayed, Wrong_Missing_Items or Quality_Issue. Set only by an action, never by the model."
+    refund_affected_value: mutable number = 0
+        description: "Refund: value of the wrong, missing or bad-quality items, from the log order issue action."
+    refund_offer_calculated: mutable boolean = False
+        description: "Refund: True once the offer calculation has run for the current order. Set by the script."
+    refund_offer_eligible: mutable boolean = False
+        description: "Refund: whether an offer can be made, from the calculate offer action."
+    refund_offer_ineligible_reason: mutable string = ""
+        description: "Refund: customer-safe reason when no offer can be made."
+    refund_offer_amount: mutable number = 0
+        description: "Refund: fixed refund amount, from the calculate offer action."
+    refund_credit_amount: mutable number = 0
+        description: "Refund: store credit amount, from the calculate offer action."
+    refund_chosen_resolution: mutable string = ""
+        description: "Refund: Refund or Store_Credit. Set only by the confirm actions, as literals."
+    refund_confirmed: mutable boolean = False
+        description: "Refund: True only after the customer explicitly confirmed the option and amount."
+    refund_issue_attempted: mutable boolean = False
+        description: "Refund: True once issuing has been attempted for the current order. Prevents a second attempt."
+    refund_issued: mutable boolean = False
+        description: "Refund: True only if the issue action reported success."
 
 language:
     default_locale: "en_US"
@@ -76,7 +102,7 @@ start_agent agent_router:
 
 subagent refund:
     label: "Refund"
-    description: "PLACEHOLDER — issues a refund or store credit based on customer tier and order outcome, within defined limits. Detailed tier/limit/credit-percentage logic to be added in a future pass."
+    description: "Resolves stolen, delayed, wrong or missing item, and food quality complaints by offering a fixed refund or store credit within CRM-managed limits."
 
     before_reasoning:
         if @variables.risk_checked == False:
@@ -84,7 +110,224 @@ subagent refund:
 
     reasoning:
         instructions: ->
-            | This sub-agent is a structural placeholder. Acknowledge the customer's refund request and let them know a refund or credit will be issued once this sub-agent's detailed logic is implemented. Do not invent specific amounts, tiers, or percentages.
+            if @variables.refund_order_outcome != "" and @variables.refund_offer_calculated == False:
+                run @actions.calculate_refund_offer
+                    with contactId = @variables.ContactId
+                    with orderId = @variables.refund_order_id
+                    with orderOutcome = @variables.refund_order_outcome
+                    with riskStatus = @variables.risk_status
+                    with affectedValue = @variables.refund_affected_value
+                    set @variables.refund_offer_eligible = @outputs.eligible
+                    set @variables.refund_offer_ineligible_reason = @outputs.ineligibleReason
+                    set @variables.refund_offer_amount = @outputs.refundAmount
+                    set @variables.refund_credit_amount = @outputs.creditAmount
+                set @variables.refund_offer_calculated = True
+
+            if @variables.ContactId is None or @variables.ContactId == "":
+                | Current step: you can't find the customer's account from this conversation, so you can't look up their orders. Apologize and use {!@actions.go_to_escalate_human}.
+            else if @variables.refund_issued == True:
+                | The resolution has been issued. Tell the customer the confirmation message and reference number from the {!@actions.issue_resolution} result, then ask if there is anything else you can help with.
+            else if @variables.refund_order_id == "":
+                | Current step: identify the order. If the customer has given an order number or said it's their most recent order, call {!@actions.find_order} now (leave orderNumber blank for the most recent order). Otherwise ask which order this is about.
+                  If no order is found, ask for a different order number.
+            else if @variables.refund_order_outcome == "":
+                | Current step: record what went wrong. The order's items are: {!@variables.refund_order_line_items}
+                  Ask what went wrong and which items were affected, unless the customer already said.
+                  If items were wrong or missing, the issue type is Wrong_Missing_Items. If items were cold, damaged or poor quality, it is Quality_Issue.
+                  Call {!@actions.log_order_issue} with the affected item names exactly as they appear in the item list. If it is not accepted, ask the customer which of the listed items were affected.
+                  If the customer says the order was stolen, never arrived, or was late, use {!@actions.go_to_stolen_delayed} instead.
+            else if @variables.refund_offer_calculated == False:
+                | Tell the customer you're preparing their options.
+            else if @variables.refund_offer_eligible == False:
+                | Tell the customer you can't offer a refund or credit for this order. Reason: {!@variables.refund_offer_ineligible_reason}
+                  Offer to connect them with a human agent.
+            else if @variables.refund_issue_attempted == True:
+                | Issuing the resolution failed. Apologize and use {!@actions.go_to_escalate_human}.
+            else if @variables.refund_confirmed == False:
+                | Offer the customer exactly these two options and ask which they prefer:
+                  - A refund of ${!@variables.refund_offer_amount} to their original payment method
+                  - Store credit of ${!@variables.refund_credit_amount}
+                  When they choose, repeat the chosen option and its exact amount and ask them to confirm.
+                  Only after they explicitly confirm, call {!@actions.confirm_refund} or {!@actions.confirm_store_credit} to match their choice.
+            else:
+                | The customer confirmed: {!@variables.refund_chosen_resolution}. Issue it now with {!@actions.issue_resolution}, exactly once.
+
+            | Rules for every reply:
+              Never say a refund or credit is approved, being processed, or issued unless {!@actions.issue_resolution} has succeeded.
+              Never state an amount, percentage, tier, limit, or policy that is not given to you here or by an action result. Show amounts with two decimals.
+              Never mention any history check, risk, record or limit. Refunds always go to the customer's original payment method; do not offer any other destination.
+              If the customer rejects both options, asks for more than the offer, or disputes the outcome, do not negotiate: use {!@actions.go_to_escalate_human}.
+
+        actions:
+            find_order: @actions.find_order
+                description: "Look up the customer's order by order number, or their most recent order."
+                available when @variables.ContactId is not None and @variables.ContactId != "" and @variables.refund_order_id == ""
+                with contactId = @variables.ContactId
+                with orderNumber = ...
+                set @variables.refund_order_id = @outputs.orderId
+                set @variables.refund_order_line_items = @outputs.lineItems
+
+            log_order_issue: @actions.log_order_issue
+                description: "Record a wrong/missing item or quality issue and the affected items."
+                available when @variables.refund_order_id != "" and @variables.refund_order_outcome == ""
+                with orderId = @variables.refund_order_id
+                with issueType = ...
+                with issueDescription = ...
+                with affectedItems = ...
+                set @variables.refund_order_outcome = @outputs.orderOutcome
+                set @variables.refund_affected_value = @outputs.affectedValue
+
+            confirm_refund: @utils.setVariables
+                description: "Record that the customer explicitly confirmed the refund. Call only after they say yes to the repeated option and amount."
+                available when @variables.refund_offer_calculated == True and @variables.refund_offer_eligible == True and @variables.refund_confirmed == False
+                set @variables.refund_chosen_resolution = "Refund"
+                set @variables.refund_confirmed = True
+
+            confirm_store_credit: @utils.setVariables
+                description: "Record that the customer explicitly confirmed the store credit. Call only after they say yes to the repeated option and amount."
+                available when @variables.refund_offer_calculated == True and @variables.refund_offer_eligible == True and @variables.refund_confirmed == False
+                set @variables.refund_chosen_resolution = "Store_Credit"
+                set @variables.refund_confirmed = True
+
+            issue_resolution: @actions.issue_resolution
+                description: "Issue the confirmed refund or store credit."
+                available when @variables.refund_confirmed == True and @variables.refund_offer_eligible == True and @variables.refund_issue_attempted == False
+                with contactId = @variables.ContactId
+                with orderId = @variables.refund_order_id
+                with resolutionType = @variables.refund_chosen_resolution
+                with refundAmount = @variables.refund_offer_amount
+                with creditAmount = @variables.refund_credit_amount
+                set @variables.refund_issue_attempted = True
+                set @variables.refund_issued = @outputs.success
+
+            go_to_stolen_delayed: @utils.transition to @subagent.stolen_delayed_orders
+                description: "Hand off when the customer reports a stolen, undelivered or late order."
+                available when @variables.refund_order_outcome == ""
+
+            go_to_escalate_human: @utils.transition to @subagent.escalate_to_human
+                description: "Hand off to a human when the customer has no account, rejects the offer, wants more, disputes the outcome, or issuing fails."
+
+    after_reasoning:
+        if @variables.refund_issued == True:
+            set @variables.refund_order_id = ""
+            set @variables.refund_order_line_items = ""
+            set @variables.refund_order_outcome = ""
+            set @variables.refund_affected_value = 0
+            set @variables.refund_offer_calculated = False
+            set @variables.refund_offer_eligible = False
+            set @variables.refund_offer_ineligible_reason = ""
+            set @variables.refund_offer_amount = 0
+            set @variables.refund_credit_amount = 0
+            set @variables.refund_chosen_resolution = ""
+            set @variables.refund_confirmed = False
+            set @variables.refund_issue_attempted = False
+            set @variables.refund_issued = False
+
+    actions:
+        find_order:
+            description: "Finds a customer's order by order number, or their most recent order"
+            target: "apex://CARES_Refund_FindOrder"
+            inputs:
+                contactId: string
+                    description: "The contact id from the channel, never from the chat."
+                    is_required: True
+                orderNumber: string
+                    description: "Order number given by the customer; leave blank for the most recent order"
+            outputs:
+                orderId: string
+                    description: "Internal order identifier"
+                    filter_from_agent: True
+                orderSummary: string
+                    description: "Order number, delivery date and total"
+                    filter_from_agent: False
+                lineItems: string
+                    description: "Item names and prices on the order"
+                    filter_from_agent: False
+                found: boolean
+                    description: "Whether a matching order was found"
+                    filter_from_agent: True
+
+        log_order_issue:
+            description: "Records a customer-reported wrong/missing item or quality issue and values the affected items"
+            target: "apex://CARES_Refund_LogOrderIssue"
+            inputs:
+                orderId: string
+                    description: "Internal order identifier"
+                    is_required: True
+                issueType: string
+                    description: "Wrong_Missing_Items or Quality_Issue"
+                    is_required: True
+                issueDescription: string
+                    description: "The customer's description of what went wrong"
+                    is_required: True
+                affectedItems: string
+                    description: "Names of the affected items, exactly as listed on the order"
+                    is_required: True
+            outputs:
+                orderOutcome: string
+                    description: "Validated outcome category; blank when not accepted"
+                    filter_from_agent: True
+                affectedValue: number
+                    description: "Total price of the matched affected items"
+                    filter_from_agent: True
+                accepted: boolean
+                    description: "Whether the issue type and affected items were accepted"
+                    filter_from_agent: True
+
+        calculate_refund_offer:
+            description: "Calculates the refund and store credit offer from tier, order outcome and risk status"
+            target: "apex://CARES_Refund_CalculateOffer"
+            inputs:
+                contactId: string
+                    description: "The contact id from the channel, never from the chat."
+                    is_required: True
+                orderId: string
+                    is_required: True
+                orderOutcome: string
+                    is_required: True
+                riskStatus: string
+                    description: "CLEAN, NOT_CLEAN or UNKNOWN from Risk Detection."
+                    is_required: True
+                affectedValue: number
+            outputs:
+                eligible: boolean
+                    filter_from_agent: True
+                ineligibleReason: string
+                    filter_from_agent: False
+                refundAmount: number
+                    filter_from_agent: False
+                creditAmount: number
+                    filter_from_agent: False
+                currencyCode: string
+                    filter_from_agent: False
+                tierName: string
+                    filter_from_agent: True
+
+        issue_resolution:
+            description: "Issues the confirmed refund (to the original payment method) or store credit"
+            target: "apex://CARES_Refund_IssueResolution"
+            inputs:
+                contactId: string
+                    description: "The contact id from the channel, never from the chat."
+                    is_required: True
+                orderId: string
+                    is_required: True
+                resolutionType: string
+                    description: "Refund or Store_Credit"
+                    is_required: True
+                refundAmount: number
+                    is_required: True
+                creditAmount: number
+                    is_required: True
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                referenceNumber: string
+                    description: "Resolution reference to give the customer"
+                    filter_from_agent: False
+                message: string
+                    description: "Customer-facing confirmation of what was issued"
+                    filter_from_agent: False
 
 subagent stolen_delayed_orders:
     label: "Stolen & Delayed Orders"
