@@ -47,4 +47,4 @@ Lessons from an earlier individual build, to repeat here: in that org about 97% 
 - Duplicate customer records (R-11).
 
 ## Addendum 2026-10-19: how contact-less cases are spread
-Of the 3 accounts that have cases without a contact, 2 have exactly one contact and 1 has three contacts. So account-only cases are safe to attribute for 2 accounts and ambiguous for 1. See D-013 and G-016.
+Cases without a contact sit on 2 accounts: one account has 1 contact (4 cases) and one has 3 contacts (1 case). So 4 of the 5 account-only cases can be attributed safely and 1 cannot. (Correction: an earlier note said 3 accounts; the third account already had contacts on its cases.) See D-013 and G-016.

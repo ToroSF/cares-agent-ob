@@ -21,7 +21,7 @@ Four types: People, Business, Tech, Data. For each: a concrete failure, how to r
 
 | ID | Failure | Reproduce | Safeguard (where) | Escalate when | Not caught | Status |
 |---|---|---|---|---|---|---|
-| R-06 | Router sends a money case straight to Refund, skipping Risk Detection or diagnosis | Say "refund me" with no context | Router conditions on variables only actions can set (script); test suite before activation | Refund reachable without the required steps | A new route added later without a test | PROPOSAL |
+| R-06 | Router sends a money case straight to Refund, skipping Risk Detection or diagnosis | Say "refund me" with no context | Gate at Refund and in the router, both on a variable only an action sets (script); test suite before activation | Refund reachable without the required steps | A new route added later without a test | PROPOSAL |
 | R-07 | An action fails or times out and the agent invents an answer | Break the flow in a test org | Fail to `UNKNOWN`: standard offer or a person; never an invented value (Flow + script) | Any action error on a money step | An error that returns plausible but wrong data | PROPOSAL |
 | R-08 | A deploy or activation breaks routing for everyone | Deploy a changed router | One person merges and activates after the full test suite; keep the previous version to roll back | Any failed regression test | Model variation between runs (same test can pass and fail) | PROPOSAL |
 

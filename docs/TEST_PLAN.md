@@ -21,3 +21,7 @@ Where the suite lives: `OPEN`.
 | 2026-10-19 | Risk Detection | Flow dry-run deploy with default tests | Fail: unrelated Apex classes in the org do not compile (G-014) |
 | | Risk Detection | Live tests (see `subagents/risk-detection.md` section 5) | `OPEN`: needs deploy and dated test data |
 | | Risk Detection | Missing-data tests: empty `ContactId`, empty window, Flow inactive, Flow error (G-017, G-018) | `OPEN`: needs deploy |
+| 2026-10-19 | Risk Detection | After D-013 and D-015: local compiler | Pass |
+| 2026-10-19 | Risk Detection | After D-013 and D-015: Flow dry-run deploy, no tests | Pass |
+| 2026-10-19 | Risk Detection | After D-013 and D-015: `sf agent validate authoring-bundle` | Pass |
+| 2026-10-19 | Risk Detection | Read-only simulation of D-013 on real data: account with one contact has 4 account-only issue cases (30 days); account with 3 contacts has 1 | Matches the design: 4 counted, 1 not counted |

@@ -2,7 +2,7 @@
 
 Short, factual description of how this subagent works as built on branch `feature/risk-detection-subagent`. For the why, the trade-offs and the rubric view, read [risk-detection.md](risk-detection.md). Decisions: D-007 to D-013 in [../DECISIONS.md](../DECISIONS.md).
 
-State: built and validated, **not deployed, not tested live**. Last updated: 2026-10-19.
+State: built and validated (compiler, dry-run deploy, agent validate), **not deployed, not tested live**. Last updated: 2026-10-19.
 
 ## In one paragraph
 Before Refund makes an offer, CARES checks how many issue cases the verified customer had in the last N days. The result is `CLEAN`, `NOT_CLEAN` or `UNKNOWN`. The customer is never told. The script runs the check, not the model, and the result is stored in variables that only the action sets.
@@ -17,7 +17,7 @@ Customer -> Agent Router
               v
            Refund        (reads risk_status; today a placeholder)
 ```
-Refund cannot be reached from the router until `risk_checked` is True (D-011).
+Refund cannot be reached until `risk_checked` is True: the router hides it (D-011) and Refund itself sends anyone back to Risk Detection first (D-015), so no route skips the check.
 
 ## Node card
 | Field | Value |
@@ -25,6 +25,7 @@ Refund cannot be reached from the router until `risk_checked` is True (D-011).
 | Type | Subagent used as a silent, deterministic step (D-007) |
 | Entered from | Router action `go_to_risk_detection` |
 | Leaves to | Refund, by `transition to` in `before_reasoning` |
+| Also entered from | Refund, when `risk_checked` is False (D-015) |
 | Talks to the customer | No |
 | Action | `get_risk_result` -> `flow://CARES_Get_Risk_Result` |
 | Reads | `ContactId` (set by the channel), `risk_lookback_days` |
@@ -46,10 +47,12 @@ If the subagent is entered a second time in the same conversation, step 3 is ski
 |---|---|
 | Inputs | `contactId` (text), `lookbackDays` (number) |
 | Outputs | `riskStatus` (text), `issueCount` (number) |
-| Query | Cases where `ContactId` = input, `CreatedDate` >= now - `lookbackDays`, `Type` != `Refund / Compensation` |
-| Counting | Loop over the result and add one per case |
+| Step 0 | Read the contact. If it does not exist -> `UNKNOWN` |
+| Query 1 | Cases where `ContactId` = input, `CreatedDate` >= now - `lookbackDays`, `Type` != `Refund / Compensation` |
+| Query 2 (D-013) | Only if the contact has an account and no other contact is on that account: cases with that `AccountId`, no `ContactId`, same date and type filters |
+| Counting | Loop over each result and add one per case |
 | Rule | 0 cases -> `CLEAN`; 1 or more -> `NOT_CLEAN` |
-| `UNKNOWN` when | `contactId` is blank, `lookbackDays` is not above 0, or the query fails (fault path) |
+| `UNKNOWN` when | `contactId` is blank, the contact does not exist, `lookbackDays` is not above 0, or any query fails (fault path) |
 | Status in file | `Draft` (it must be activated after deploy) |
 
 Why the recovery type is excluded: a recovery case created by CARES itself must not make the customer look risky next time (D-009).
@@ -67,9 +70,9 @@ Rule: the model never sets these. A flag that drives money must come from an act
 ## Contract for other owners
 | Owner | What you must do |
 |---|---|
-| Refund | Read `risk_status`. `CLEAN`: you may use the clean-record offer. `NOT_CLEAN` or `UNKNOWN`: standard offer only. Never say why to the customer (G-013) |
+| Refund | Your block now starts with a gate that sends anyone without a check to Risk Detection (D-015). Keep it, or move it, but do not drop it. Read `risk_status`. `CLEAN`: you may use the clean-record offer. `NOT_CLEAN` or `UNKNOWN`: standard offer only. Never say why to the customer (G-013) |
 | Router | Accept the gate on `go_to_refund` and the router text change (D-011) |
-| Stolen & Delayed | Your transition to Refund bypasses the gate. Send it to Risk Detection instead (G-012) |
+| Stolen & Delayed | Nothing to change: the gate at Refund covers your transition (G-012) |
 | Merger | Deploy the Flow before the agent, activate the Flow, use `--test-level NoTestRun` until the org's broken Apex is fixed (G-014) |
 
 ## When data is missing or something fails
@@ -80,10 +83,13 @@ The rule: a missing answer never unlocks the better offer. `UNKNOWN` is handled 
 | `ContactId` is empty (no contact linked by the channel, or a preview without a channel) | `UNKNOWN` | Nothing | By design in the Flow. Not tested live |
 | `lookbackDays` is empty or below 1 | `UNKNOWN` | Nothing | By design in the Flow. Not tested live |
 | The case query fails (fault path in the Flow) | `UNKNOWN` | Nothing | By design in the Flow. Not tested live |
-| The Flow is not deployed, not active, or the action itself errors | **Unknown behavior.** The script may stop with an error instead of moving on. `risk_checked` may stay False, so Refund stays closed | Possibly the generic agent error message | **Assumption, not tested (G-017).** Safe direction: Refund stays closed, nobody gets a better offer |
+| The Flow is not deployed, not active, or the action itself errors | **Unknown behavior.** The script may stop with an error instead of moving on. `risk_checked` may stay False, so Refund stays closed, and the gate at Refund could send the conversation back to Risk Detection in a loop (G-020) | Possibly the generic agent error message | **Assumption, not tested (G-017).** Safe direction: Refund stays closed, nobody gets a better offer |
 | Contact has no cases in the window | `CLEAN` | Nothing | Correct result |
 | Contact has only `Refund / Compensation` cases in the window | `CLEAN` | Nothing | By design (D-009) |
-| Case exists but is linked only to an account | `CLEAN` | Nothing | **False clean.** Known gap (G-010, G-016) |
+| Case linked only to an account, contact is the only one on that account | Counted (D-013) | Nothing | Mitigated. Not tested live |
+| Case linked only to an account, account has several contacts | `CLEAN` | Nothing | **False clean.** Known gap (G-016) |
+| Contact id does not exist | `UNKNOWN` | Nothing | By design |
+| New contact, no cases | `CLEAN` | Nothing | Open decision (D-014, G-019) |
 | Problem never logged as a case, or logged in another system | `CLEAN` | Nothing | **False clean.** Not fixable here: the check cannot see it |
 | Two contact records for the same person | Counts only the one in `ContactId` | Nothing | **False clean.** Data quality problem (R-11) |
 | Case dates are wrong or have no type | Date wrong: window is wrong. No type: it is counted as an issue | Nothing | Needs a data audit |
@@ -100,10 +106,11 @@ Where `ContactId` really comes from: the messaging channel links the end user to
 2. Also test the broken cases: Flow inactive, empty `ContactId`, empty window (G-017).
 3. Run the Flow alone with the cases T-01 to T-10 in [risk-detection.md](risk-detection.md), section 5.
 4. Publish a draft agent version and preview with a messaging contact; read the trace: did the action run, what did it return, did Refund open only after.
-5. Expected false clean for account-only cases (T-08, T-09). They prove G-016.
+5. T-09 is expected to show a false clean. It proves G-016. T-14 shows what really happens when the action errors (G-020).
 
 ## Known limits
-- Cases with only an account are not counted (G-010, G-016; fix proposed in D-013, not built).
+- Cases with only an account are counted only when the contact is alone on the account (D-013). One case in the shared org stays invisible (G-016).
+- A brand-new contact is `CLEAN` (D-014 open).
 - The 30-day window and the issue types are placeholders.
 - Cases never logged, or logged in another system, are invisible.
 - Nothing has run live. Dry-run deploy of the Flow and agent validation passed; the logic was only simulated with read-only queries.
