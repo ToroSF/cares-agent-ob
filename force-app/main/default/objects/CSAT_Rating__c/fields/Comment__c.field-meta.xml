@@ -8,4 +8,6 @@
     <length>32768</length>
     <visibleLines>5</visibleLines>
     <required>false</required>
+    <securityClassification>Internal</securityClassification>
+    <complianceGroup>PII</complianceGroup>
 </CustomField>
