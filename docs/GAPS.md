@@ -39,3 +39,4 @@ Keep this honest. A gap written here is better than a surprise in the demo.
 | Real Pronto numbers (order value, margin, window, cost per case) and the new-contact rule | Pronto | `[$]`, D-014 |
 | Remove `default_agent_user` from the public repo | Team | PR note |
 | Allow a deploy of the Flow plus test data, so G-015, G-017, G-020, G-022 can be closed | Team | G-015 |
+| G-022 option | See D-018: gate on the action result instead of `risk_checked` | | | OPEN |
