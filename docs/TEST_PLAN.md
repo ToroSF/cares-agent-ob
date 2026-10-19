@@ -20,3 +20,4 @@ Where the suite lives: `OPEN`.
 | 2026-10-19 | Risk Detection | `sf agent validate authoring-bundle` | Pass |
 | 2026-10-19 | Risk Detection | Flow dry-run deploy with default tests | Fail: unrelated Apex classes in the org do not compile (G-014) |
 | | Risk Detection | Live tests (see `subagents/risk-detection.md` section 5) | `OPEN`: needs deploy and dated test data |
+| | Risk Detection | Missing-data tests: empty `ContactId`, empty window, Flow inactive, Flow error (G-017, G-018) | `OPEN`: needs deploy |

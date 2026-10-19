@@ -11,3 +11,4 @@ Short dated log of what the team did and why. Add a line when something is decid
 | 2026-10-19 | Built the first Risk Detection version on its branch: a read-only Flow, variables, the silent step and the router gate. Validated, not deployed | A first working draft to test. See D-007 to D-012 |
 | 2026-10-19 | A flow file failed to parse because XML elements of one type must be grouped; fixed and revalidated | Small but a trap for anyone writing Flow XML by hand |
 | 2026-10-19 | Found that normal validate fails because of old Apex classes in the shared org | Anyone deploying will hit it (G-014) |
+| 2026-10-19 | Wrote the failure and missing-data table for Risk Detection and split failures into visible (handled) and invisible (not handled) | The invisible ones are the gap our safeguards do not catch |

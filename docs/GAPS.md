@@ -20,3 +20,5 @@ Keep this honest. A gap written here is better than a surprise in the demo.
 | G-014 | Org has Apex classes that fail to compile ("Variable does not exist") so a normal validate with tests fails for any deploy | Deploys need `--test-level NoTestRun` or the Apex must be fixed first | Merger | OPEN |
 | G-015 | Flow and agent are only validated, not run: nothing has been deployed or tested live | Behavior is unproven | Risk Detection owner | OPEN |
 | G-016 | Cases with only an account and an account with several contacts cannot be assigned to one person | Those cases stay invisible to Risk Detection (false clean). Needs a data fix at case creation, or D-013 for single-contact accounts | Risk Detection owner / Team | OPEN |
+| G-017 | Not known what the script does when the action itself errors (Flow missing, inactive or crashing) | The agent could show a generic error, or stop before Refund. Safe direction (Refund closed) but not tested | Risk Detection owner | OPEN |
+| G-018 | `ContactId` from the channel has not been checked live | If it is empty, every result is `UNKNOWN` and the clean-record offer never happens | Team | OPEN |

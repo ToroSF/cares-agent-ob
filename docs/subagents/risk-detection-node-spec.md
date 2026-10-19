@@ -72,11 +72,35 @@ Rule: the model never sets these. A flag that drives money must come from an act
 | Stolen & Delayed | Your transition to Refund bypasses the gate. Send it to Risk Detection instead (G-012) |
 | Merger | Deploy the Flow before the agent, activate the Flow, use `--test-level NoTestRun` until the org's broken Apex is fixed (G-014) |
 
+## When data is missing or something fails
+The rule: a missing answer never unlocks the better offer. `UNKNOWN` is handled like `NOT_CLEAN` by Refund (standard offer).
+
+| Situation | Result | Customer sees | Status |
+|---|---|---|---|
+| `ContactId` is empty (no contact linked by the channel, or a preview without a channel) | `UNKNOWN` | Nothing | By design in the Flow. Not tested live |
+| `lookbackDays` is empty or below 1 | `UNKNOWN` | Nothing | By design in the Flow. Not tested live |
+| The case query fails (fault path in the Flow) | `UNKNOWN` | Nothing | By design in the Flow. Not tested live |
+| The Flow is not deployed, not active, or the action itself errors | **Unknown behavior.** The script may stop with an error instead of moving on. `risk_checked` may stay False, so Refund stays closed | Possibly the generic agent error message | **Assumption, not tested (G-017).** Safe direction: Refund stays closed, nobody gets a better offer |
+| Contact has no cases in the window | `CLEAN` | Nothing | Correct result |
+| Contact has only `Refund / Compensation` cases in the window | `CLEAN` | Nothing | By design (D-009) |
+| Case exists but is linked only to an account | `CLEAN` | Nothing | **False clean.** Known gap (G-010, G-016) |
+| Problem never logged as a case, or logged in another system | `CLEAN` | Nothing | **False clean.** Not fixable here: the check cannot see it |
+| Two contact records for the same person | Counts only the one in `ContactId` | Nothing | **False clean.** Data quality problem (R-11) |
+| Case dates are wrong or have no type | Date wrong: window is wrong. No type: it is counted as an issue | Nothing | Needs a data audit |
+| Customer asks about the check, their "risk" or the limit | No answer; the step is silent | A normal reply from the next step | Instruction + silent step. Adversarial test open |
+
+Two different kinds of failure, treated differently:
+1. **Failures the system can see** (empty input, query error). Handled: `UNKNOWN`.
+2. **Failures the system cannot see** (unlogged problems, account-only cases, duplicate contacts). Not handled: they look like `CLEAN`. This is the gap our safeguards do not catch. The only fixes are better data (link every case to a contact, add order and delivery data) and a cap on what the clean-record offer can cost.
+
+Where `ContactId` really comes from: the messaging channel links the end user to a Contact. We have not checked this live, and there is no verification step in the agent yet (G-006). If the channel does not set it, every conversation ends as `UNKNOWN` and the better offer is never used. That is safe but gives no business value (see the coverage KPI in [risk-detection.md](risk-detection.md)).
+
 ## How to test it (when a deploy is allowed)
 1. Deploy the Flow (new, additive). Activate it.
-2. Run the Flow alone with the cases T-01 to T-10 in [risk-detection.md](risk-detection.md), section 5.
-3. Publish a draft agent version and preview with a messaging contact; read the trace: did the action run, what did it return, did Refund open only after.
-4. Expected false clean for account-only cases (T-08, T-09). They prove G-016.
+2. Also test the broken cases: Flow inactive, empty `ContactId`, empty window (G-017).
+3. Run the Flow alone with the cases T-01 to T-10 in [risk-detection.md](risk-detection.md), section 5.
+4. Publish a draft agent version and preview with a messaging contact; read the trace: did the action run, what did it return, did Refund open only after.
+5. Expected false clean for account-only cases (T-08, T-09). They prove G-016.
 
 ## Known limits
 - Cases with only an account are not counted (G-010, G-016; fix proposed in D-013, not built).
