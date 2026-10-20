@@ -75,7 +75,7 @@ Design principle `DECIDED` (proposal from one member, adopted as the working rul
 | `ContactId`                                  | linked  | The contact of the messaging end user, set by the channel |
 | `VerifiedCustomerId`                         | mutable | Nothing sets it yet                                       |
 
-Rule `PROPOSAL`: the customer's identity comes only from `ContactId` (set by the channel) or a verification step, never from what the customer types.
+Rule `PROPOSAL`: the customer's identity comes only from `ContactId` (set by the channel) or a verification step, never from what the customer types. **Exception (D-045, demo):** when the channel gives no contact, the Identify Customer subagent looks the customer up by account email. That identity is unverified (G-053), so Risk Detection ignores it.
 
 ## 5. Data
 
