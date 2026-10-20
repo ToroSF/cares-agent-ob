@@ -11,7 +11,7 @@ In one line: **the script decides whose data and whose money; the model writes t
 
 | Fact | Source | Method | Freshness | Volume | Latency | If it fails | Status |
 |---|---|---|---|---|---|---|---|
-| Who the customer is | Channel contact (`ContactId`) | Linked variable | Per session | 1 | None | Unverified: no data actions, offer a person | PROPOSAL |
+| Who the customer is | Channel contact (`ContactId`); else an email lookup (`customer_id`, D-045) | Linked variable / Apex lookup | Per session | 1 | None | Unverified: no data actions, offer a person | PROPOSAL |
 | Recent issue history (30 days) | Cases of the verified contact | Flow (SOQL count) | Live | Small per contact | Fast (one query) | `UNKNOWN`: standard offer | PROPOSAL |
 | Order, delivery times, driver location | `OPEN` (CRM has no orders; a Data Cloud `Order` stream exists, not checked, G-058) | `OPEN` | `OPEN` | `OPEN` | `OPEN` | `OPEN` | OPEN |
 | Customer tier | `OPEN` (no field exists) | `OPEN` | `OPEN` | `OPEN` | `OPEN` | Standard tier | OPEN |

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>CARES Identity Access</label>
+    <description>Lets the CARES agent user run the email lookup used when the chat has no linked contact (Identify Customer). Assigning it is an explicit rollout step.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <classAccesses>
+        <apexClass>CARES_Identity_FindContactByEmail</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+</PermissionSet>
