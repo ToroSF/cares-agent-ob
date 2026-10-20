@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Amount__c</fullName>
+    <label>Amount</label>
+    <description
+  >Amount issued: refundAmount for Refund, creditAmount for Store_Credit.</description>
+    <type>Currency</type>
+    <precision>12</precision>
+    <scale>2</scale>
+    <required>true</required>
+</CustomField>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Risk_Status__c</fullName>
+    <label>Risk Status</label>
+    <description
+  >Risk result (CLEAN, NOT_CLEAN or UNKNOWN) used for this resolution's limit, kept for audit.</description>
+    <type>Text</type>
+    <length>40</length>
+    <required>false</required>
+</CustomField>

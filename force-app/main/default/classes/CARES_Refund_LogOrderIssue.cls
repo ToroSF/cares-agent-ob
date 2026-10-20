@@ -54,17 +54,60 @@ public with sharing class CARES_Refund_LogOrderIssue {
         description='Records a customer-reported wrong/missing item or quality issue and values the affected items'
     )
     public static List<Result> execute(List<Request> requests) {
-        // Stub — validate the outcome category, return a fixed affected value for item issues
+        // Order data is still a stub (G-004), but the affected items are now
+        // validated against CARES_Refund_FindOrder's explicit line-item list
+        // instead of accepted as free text (closes the "accepts an item not on
+        // the order, values it at 12.00" part of G-023).
         List<Result> results = new List<Result>();
         for (Request req : requests) {
             Result r = new Result();
             Boolean deliveryIssue = req.deliveryPath == 'STANDARD' && DELIVERY_TYPES.contains(req.issueType);
-            Boolean itemIssue = ITEM_TYPES.contains(req.issueType) && String.isNotBlank(req.affectedItems);
-            r.accepted = deliveryIssue || itemIssue;
-            r.orderOutcome = r.accepted ? req.issueType : '';
-            r.affectedValue = itemIssue ? 12.00 : 0;
+            if (deliveryIssue) {
+                r.accepted = true;
+                r.orderOutcome = req.issueType;
+                r.affectedValue = 0;
+                results.add(r);
+                continue;
+            }
+            if (ITEM_TYPES.contains(req.issueType)) {
+                Decimal matchedValue = matchAffectedItems(req.affectedItems);
+                r.accepted = matchedValue != null;
+                r.orderOutcome = r.accepted ? req.issueType : '';
+                r.affectedValue = r.accepted ? matchedValue : 0;
+                results.add(r);
+                continue;
+            }
+            r.accepted = false;
+            r.orderOutcome = '';
+            r.affectedValue = 0;
             results.add(r);
         }
         return results;
+    }
+
+    // Returns the summed price of every named item when all of them are on the
+    // stub order's line-item list; null when the list is blank or any name
+    // doesn't match (reject rather than accept an unlisted item at a guessed value).
+    private static Decimal matchAffectedItems(String affectedItems) {
+        if (String.isBlank(affectedItems)) {
+            return null;
+        }
+        Map<String, Decimal> pricesByLowerName = new Map<String, Decimal>();
+        for (String name : CARES_Refund_FindOrder.STUB_LINE_ITEM_NAMES) {
+            pricesByLowerName.put(name.toLowerCase(), CARES_Refund_FindOrder.STUB_LINE_ITEM_PRICES.get(name));
+        }
+        Decimal total = 0;
+        for (String rawName : affectedItems.split('[,;]')) {
+            String name = rawName.trim();
+            if (String.isBlank(name)) {
+                continue;
+            }
+            Decimal price = pricesByLowerName.get(name.toLowerCase());
+            if (price == null) {
+                return null;
+            }
+            total += price;
+        }
+        return total == 0 ? null : total;
     }
 }
