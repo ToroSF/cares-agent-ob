@@ -872,7 +872,11 @@ subagent identify_customer:
 
     reasoning:
         instructions: ->
-            if @variables.identify_attempts >= 2:
+            if @variables.customer_id != "" and @variables.router_active_task == "STOLEN_DELAYED":
+                | You found the customer's account. Thank them in one short sentence and use {!@actions.continue_order_check} now. Do not say anything else about the account.
+            else if @variables.customer_id != "":
+                | You found the customer's account. Thank them in one short sentence and use {!@actions.continue_refund} now. Do not say anything else about the account.
+            else if @variables.identify_attempts >= 2:
                 | You still can't find the customer's account. Apologize, tell the customer a member of the team will help, and use {!@actions.go_to_escalate_human}.
             else if @variables.identify_attempts == 1:
                 | The last email did not match an account. Ask the customer to check it and send it again, then call {!@actions.find_contact_by_email} with exactly that email.
@@ -889,12 +893,16 @@ subagent identify_customer:
                 with email = ...
                 set @variables.identify_attempts = @variables.identify_attempts + 1
                 set @variables.customer_id = @outputs.contactId
-                if @outputs.found == True and @variables.router_active_task == "STOLEN_DELAYED":
-                    transition to @subagent.stolen_delayed_orders
-                if @outputs.found == True and @variables.router_active_task != "STOLEN_DELAYED":
-                    transition to @subagent.refund
+            # A transition inside the action's post-processing did not fire live (G-054), so the model returns with these
+            continue_refund: @utils.transition to @subagent.refund
+                description: "Continue the customer's refund request once their account is found."
+                available when @variables.customer_id != "" and @variables.router_active_task != "STOLEN_DELAYED"
+            continue_order_check: @utils.transition to @subagent.stolen_delayed_orders
+                description: "Continue the customer's missing or late order check once their account is found."
+                available when @variables.customer_id != "" and @variables.router_active_task == "STOLEN_DELAYED"
             go_to_escalate_human: @utils.transition to @subagent.escalate_to_human
                 description: "Hand off to a person when the account can't be found or the customer won't share an email."
+                available when @variables.customer_id == ""
 
     actions:
         find_contact_by_email:
