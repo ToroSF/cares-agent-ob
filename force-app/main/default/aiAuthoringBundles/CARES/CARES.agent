@@ -593,7 +593,9 @@ subagent stolen_delayed_orders:
               Never mention GPS, telemetry, driver or customer history, claim rates, trust scores, fraud checks, limits or how a decision was made. Never blame the driver or the customer.
               If the customer mentions an assault, a threat, a safety incident or legal action at any point, tell them a member of the team will take over and call {!@actions.escalate_for_review}.
               If the customer asks for a person at any point, call {!@actions.escalate_for_review}.
-            if @variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_lookups < 3:
+            if @variables.ContactId is None or @variables.ContactId == "":
+                | Current step: you can't find the customer's account from this conversation, so you can't look up their orders. Apologize and use {!@actions.escalate_for_review}.
+            else if @variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_lookups < 3:
                 | Ask for the order number and a short description of what happened, if you do not have them yet. Then call {!@actions.check_order} with the order number and the customer's own words.
             if @variables.stolen_delayed_decision == "ORDER_NOT_FOUND" and @variables.stolen_delayed_lookups < 3:
                 | The last order number could not be matched to this customer. Ask them to double-check it and try again. Do not say whether the order exists.
@@ -617,7 +619,7 @@ subagent stolen_delayed_orders:
         actions:
             check_order: @actions.evaluate_delivery_exception
                 description: "Check the reported order. Call once you have the order number."
-                available when (@variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_lookups < 3) or @variables.stolen_delayed_handoff_status == "REDISPATCHED"
+                available when @variables.ContactId is not None and @variables.ContactId != "" and ((@variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_lookups < 3) or @variables.stolen_delayed_handoff_status == "REDISPATCHED")
                 with contactId = @variables.ContactId
                 with orderId = ...
                 with customerReport = ...
