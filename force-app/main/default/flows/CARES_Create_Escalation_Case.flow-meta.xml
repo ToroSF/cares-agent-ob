@@ -4,8 +4,8 @@
   <assignments>
     <name>Set_Success</name>
     <label>Set success</label>
-    <locationX>50</locationX>
-    <locationY>300</locationY>
+    <locationX>250</locationX>
+    <locationY>600</locationY>
     <assignmentItems>
       <assignToReference>success</assignToReference>
       <operator>Assign</operator>
@@ -22,10 +22,37 @@
     </assignmentItems>
   </assignments>
   <assignments>
+    <name>Set_Reused</name>
+    <label>Return the open case</label>
+    <locationX>50</locationX>
+    <locationY>400</locationY>
+    <assignmentItems>
+      <assignToReference>success</assignToReference>
+      <operator>Assign</operator>
+      <value>
+        <booleanValue>true</booleanValue>
+      </value>
+    </assignmentItems>
+    <assignmentItems>
+      <assignToReference>reusedExisting</assignToReference>
+      <operator>Assign</operator>
+      <value>
+        <booleanValue>true</booleanValue>
+      </value>
+    </assignmentItems>
+    <assignmentItems>
+      <assignToReference>caseNumber</assignToReference>
+      <operator>Assign</operator>
+      <value>
+        <elementReference>openCase.CaseNumber</elementReference>
+      </value>
+    </assignmentItems>
+  </assignments>
+  <assignments>
     <name>Set_Failed</name>
     <label>Set failed</label>
-    <locationX>250</locationX>
-    <locationY>200</locationY>
+    <locationX>450</locationX>
+    <locationY>500</locationY>
     <assignmentItems>
       <assignToReference>success</assignToReference>
       <operator>Assign</operator>
@@ -34,12 +61,63 @@
       </value>
     </assignmentItems>
   </assignments>
-  <description>CARES Escalate to Human. Creates one Case with the context the person needs (order, Stolen &amp; Delayed decision and reason, risk status, offer, customer choice) so the customer does not have to repeat the story. The description is internal: the risk status must never be shown to the customer. Any problem returns success = false and no case number.</description>
+  <decisions>
+    <name>Has_Contact</name>
+    <label>Known contact?</label>
+    <locationX>250</locationX>
+    <locationY>100</locationY>
+    <defaultConnector>
+      <targetReference>Get_Queue</targetReference>
+    </defaultConnector>
+    <defaultConnectorLabel>No contact: create a new case</defaultConnectorLabel>
+    <rules>
+      <name>Yes</name>
+      <conditionLogic>and</conditionLogic>
+      <conditions>
+        <leftValueReference>contactId</leftValueReference>
+        <operator>IsBlank</operator>
+        <rightValue>
+          <booleanValue>false</booleanValue>
+        </rightValue>
+      </conditions>
+      <connector>
+        <targetReference>Get_Open_Case</targetReference>
+      </connector>
+      <label>Yes</label>
+    </rules>
+  </decisions>
+  <decisions>
+    <name>Open_Case_Found</name>
+    <label>Open case for the same issue?</label>
+    <locationX>250</locationX>
+    <locationY>250</locationY>
+    <defaultConnector>
+      <targetReference>Get_Queue</targetReference>
+    </defaultConnector>
+    <defaultConnectorLabel>None: create a new case</defaultConnectorLabel>
+    <rules>
+      <name>Found</name>
+      <conditionLogic>and</conditionLogic>
+      <conditions>
+        <leftValueReference>openCase.Id</leftValueReference>
+        <operator>IsNull</operator>
+        <rightValue>
+          <booleanValue>false</booleanValue>
+        </rightValue>
+      </conditions>
+      <connector>
+        <targetReference>Add_Comment</targetReference>
+      </connector>
+      <label>Found</label>
+    </rules>
+  </decisions>
+  <description>CARES Escalate to Human. Logs the context the person needs (category, order, Stolen &amp; Delayed decision and reason, risk status, offer, customer choice) so the customer does not have to repeat the story. Playbook rules: if the contact already has an open CARES case for the same category and order, a private comment is added to it instead of a duplicate. New cases get Type, Reason, Priority and Status from the category and go to the CARES Escalations queue when it exists. URGENT (food safety, harassment, fraud) is High priority. The description is internal: the risk status must never be shown to the customer. Any problem creating the case returns success = false and no case number.</description>
   <environments>Default</environments>
   <formulas>
     <name>caseDescription</name>
     <dataType>String</dataType>
     <expression>&quot;Escalated by CARES.&quot; &amp;
+&quot; Category: &quot; &amp; BLANKVALUE({!escalationCategory}, &quot;GENERAL&quot;) &amp; &quot;.&quot; &amp;
 &quot; Order: &quot; &amp; BLANKVALUE({!orderId}, &quot;unknown&quot;) &amp; &quot;.&quot; &amp;
 &quot; Stolen &amp; Delayed decision: &quot; &amp; BLANKVALUE({!stolenDelayedDecision}, &quot;none&quot;) &amp; &quot; (&quot; &amp; BLANKVALUE({!stolenDelayedReason}, &quot;no reason&quot;) &amp; &quot;).&quot; &amp;
 &quot; Risk status: &quot; &amp; BLANKVALUE({!riskStatus}, &quot;UNKNOWN&quot;) &amp; &quot;.&quot; &amp;
@@ -47,14 +125,89 @@
 &quot; Customer chose: &quot; &amp; BLANKVALUE({!chosenResolution}, &quot;nothing confirmed&quot;) &amp; &quot;.&quot; &amp;
 &quot; Internal only: never share the risk status with the customer.&quot;</expression>
   </formulas>
+  <formulas>
+    <name>caseSubject</name>
+    <dataType>String</dataType>
+    <expression>CASE({!escalationCategory},
+&quot;URGENT&quot;, &quot;CARES urgent escalation: safety or fraud&quot;,
+&quot;PATTERN_REVIEW&quot;, &quot;CARES escalation: repeated issues review&quot;,
+&quot;CLAIM_REVIEW&quot;, &quot;CARES escalation: delivery claim review&quot;,
+&quot;CARES escalation&quot;)</expression>
+  </formulas>
+  <formulas>
+    <name>caseType</name>
+    <dataType>String</dataType>
+    <expression>CASE({!escalationCategory},
+&quot;CLAIM_REVIEW&quot;, &quot;Delivery &amp; Driver Issue&quot;,
+&quot;Customer Order Issue&quot;)</expression>
+  </formulas>
+  <formulas>
+    <name>caseReason</name>
+    <dataType>String</dataType>
+    <expression>CASE({!escalationCategory},
+&quot;PATTERN_REVIEW&quot;, &quot;Fraud or policy review&quot;,
+&quot;URGENT&quot;, &quot;Fraud or policy review&quot;,
+&quot;&quot;)</expression>
+  </formulas>
+  <formulas>
+    <name>casePriority</name>
+    <dataType>String</dataType>
+    <expression>CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;High&quot;, &quot;Medium&quot;)</expression>
+  </formulas>
+  <formulas>
+    <name>caseStatus</name>
+    <dataType>String</dataType>
+    <expression>CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;Escalated&quot;, &quot;New&quot;)</expression>
+  </formulas>
+  <formulas>
+    <name>caseOwnerId</name>
+    <dataType>String</dataType>
+    <expression>IF(ISBLANK({!queueRecord.Id}), {!$User.Id}, {!queueRecord.Id})</expression>
+  </formulas>
+  <formulas>
+    <name>orderRef</name>
+    <dataType>String</dataType>
+    <expression>BLANKVALUE({!orderId}, &quot;NONE&quot;)</expression>
+  </formulas>
   <interviewLabel>CARES Create Escalation Case</interviewLabel>
   <label>CARES Create Escalation Case</label>
   <processType>AutoLaunchedFlow</processType>
   <recordCreates>
+    <name>Add_Comment</name>
+    <label>Add the new context to the open case</label>
+    <locationX>50</locationX>
+    <locationY>300</locationY>
+    <connector>
+      <targetReference>Set_Reused</targetReference>
+    </connector>
+    <faultConnector>
+      <targetReference>Set_Reused</targetReference>
+    </faultConnector>
+    <inputAssignments>
+      <field>ParentId</field>
+      <value>
+        <elementReference>openCase.Id</elementReference>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
+      <field>CommentBody</field>
+      <value>
+        <elementReference>caseDescription</elementReference>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
+      <field>IsPublished</field>
+      <value>
+        <booleanValue>false</booleanValue>
+      </value>
+    </inputAssignments>
+    <object>CaseComment</object>
+  </recordCreates>
+  <recordCreates>
     <name>Create_Case</name>
     <label>Create escalation case</label>
-    <locationX>50</locationX>
-    <locationY>100</locationY>
+    <locationX>250</locationX>
+    <locationY>400</locationY>
     <assignRecordIdToReference>caseId</assignRecordIdToReference>
     <connector>
       <targetReference>Get_Case</targetReference>
@@ -71,7 +224,7 @@
     <inputAssignments>
       <field>Subject</field>
       <value>
-        <stringValue>CARES escalation</stringValue>
+        <elementReference>caseSubject</elementReference>
       </value>
     </inputAssignments>
     <inputAssignments>
@@ -83,16 +236,135 @@
     <inputAssignments>
       <field>Origin</field>
       <value>
-        <stringValue>Chat</stringValue>
+        <stringValue>Agentforce</stringValue>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
+      <field>Type</field>
+      <value>
+        <elementReference>caseType</elementReference>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
+      <field>Reason</field>
+      <value>
+        <elementReference>caseReason</elementReference>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
+      <field>Priority</field>
+      <value>
+        <elementReference>casePriority</elementReference>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
+      <field>Status</field>
+      <value>
+        <elementReference>caseStatus</elementReference>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
+      <field>OwnerId</field>
+      <value>
+        <elementReference>caseOwnerId</elementReference>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
+      <field>CARES_Order_Ref__c</field>
+      <value>
+        <elementReference>orderRef</elementReference>
       </value>
     </inputAssignments>
     <object>Case</object>
   </recordCreates>
   <recordLookups>
+    <name>Get_Open_Case</name>
+    <label>Find an open CARES case for the same category and order</label>
+    <locationX>250</locationX>
+    <locationY>175</locationY>
+    <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+    <connector>
+      <targetReference>Open_Case_Found</targetReference>
+    </connector>
+    <faultConnector>
+      <targetReference>Get_Queue</targetReference>
+    </faultConnector>
+    <filterLogic>and</filterLogic>
+    <filters>
+      <field>ContactId</field>
+      <operator>EqualTo</operator>
+      <value>
+        <elementReference>contactId</elementReference>
+      </value>
+    </filters>
+    <filters>
+      <field>IsClosed</field>
+      <operator>EqualTo</operator>
+      <value>
+        <booleanValue>false</booleanValue>
+      </value>
+    </filters>
+    <filters>
+      <field>CARES_Order_Ref__c</field>
+      <operator>EqualTo</operator>
+      <value>
+        <elementReference>orderRef</elementReference>
+      </value>
+    </filters>
+    <filters>
+      <field>Subject</field>
+      <operator>EqualTo</operator>
+      <value>
+        <elementReference>caseSubject</elementReference>
+      </value>
+    </filters>
+    <getFirstRecordOnly>true</getFirstRecordOnly>
+    <object>Case</object>
+    <sortField>CreatedDate</sortField>
+    <sortOrder>Desc</sortOrder>
+    <storeOutputAutomatically>false</storeOutputAutomatically>
+    <outputReference>openCase</outputReference>
+    <queriedFields>Id</queriedFields>
+    <queriedFields>CaseNumber</queriedFields>
+  </recordLookups>
+  <recordLookups>
+    <name>Get_Queue</name>
+    <label>Get the CARES Escalations queue</label>
+    <locationX>250</locationX>
+    <locationY>325</locationY>
+    <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+    <connector>
+      <targetReference>Create_Case</targetReference>
+    </connector>
+    <faultConnector>
+      <targetReference>Create_Case</targetReference>
+    </faultConnector>
+    <filterLogic>and</filterLogic>
+    <filters>
+      <field>DeveloperName</field>
+      <operator>EqualTo</operator>
+      <value>
+        <stringValue>CARES_Escalations</stringValue>
+      </value>
+    </filters>
+    <filters>
+      <field>Type</field>
+      <operator>EqualTo</operator>
+      <value>
+        <stringValue>Queue</stringValue>
+      </value>
+    </filters>
+    <getFirstRecordOnly>true</getFirstRecordOnly>
+    <object>Group</object>
+    <storeOutputAutomatically>false</storeOutputAutomatically>
+    <outputReference>queueRecord</outputReference>
+    <queriedFields>Id</queriedFields>
+  </recordLookups>
+  <recordLookups>
     <name>Get_Case</name>
     <label>Get case number</label>
-    <locationX>50</locationX>
-    <locationY>200</locationY>
+    <locationX>250</locationX>
+    <locationY>500</locationY>
     <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
     <connector>
       <targetReference>Set_Success</targetReference>
@@ -117,15 +389,22 @@
   </recordLookups>
   <runInMode>DefaultMode</runInMode>
   <start>
-    <locationX>50</locationX>
+    <locationX>250</locationX>
     <locationY>0</locationY>
     <connector>
-      <targetReference>Create_Case</targetReference>
+      <targetReference>Has_Contact</targetReference>
     </connector>
   </start>
   <status>Draft</status>
   <variables>
     <name>contactId</name>
+    <dataType>String</dataType>
+    <isCollection>false</isCollection>
+    <isInput>true</isInput>
+    <isOutput>false</isOutput>
+  </variables>
+  <variables>
+    <name>escalationCategory</name>
     <dataType>String</dataType>
     <isCollection>false</isCollection>
     <isInput>true</isInput>
@@ -200,6 +479,16 @@
     </value>
   </variables>
   <variables>
+    <name>reusedExisting</name>
+    <dataType>Boolean</dataType>
+    <isCollection>false</isCollection>
+    <isInput>false</isInput>
+    <isOutput>true</isOutput>
+    <value>
+      <booleanValue>false</booleanValue>
+    </value>
+  </variables>
+  <variables>
     <name>caseNumber</name>
     <dataType>String</dataType>
     <isCollection>false</isCollection>
@@ -220,5 +509,21 @@
     <isInput>false</isInput>
     <isOutput>false</isOutput>
     <objectType>Case</objectType>
+  </variables>
+  <variables>
+    <name>openCase</name>
+    <dataType>SObject</dataType>
+    <isCollection>false</isCollection>
+    <isInput>false</isInput>
+    <isOutput>false</isOutput>
+    <objectType>Case</objectType>
+  </variables>
+  <variables>
+    <name>queueRecord</name>
+    <dataType>SObject</dataType>
+    <isCollection>false</isCollection>
+    <isInput>false</isInput>
+    <isOutput>false</isOutput>
+    <objectType>Group</objectType>
   </variables>
 </Flow>

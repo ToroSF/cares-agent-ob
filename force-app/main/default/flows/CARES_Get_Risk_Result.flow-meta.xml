@@ -96,7 +96,7 @@
         </rightValue>
       </conditions>
       <connector>
-        <targetReference>Get_Recent_Cases</targetReference>
+        <targetReference>Get_Contact</targetReference>
       </connector>
       <label>Yes</label>
     </rules>
@@ -221,7 +221,7 @@
       <targetReference>Add_One</targetReference>
     </nextValueConnector>
     <noMoreValuesConnector>
-      <targetReference>Is_Clean</targetReference>
+      <targetReference>Has_Account</targetReference>
     </noMoreValuesConnector>
   </loops>
   <loops>

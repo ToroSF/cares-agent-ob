@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CARES_Order_Ref__c</fullName>
+    <description>Order the CARES escalation is about, or NONE. Written by the CARES_Create_Escalation_Case Flow and used to find an open case for the same order instead of creating a duplicate (Playbook rule, D-049).</description>
+    <externalId>false</externalId>
+    <label>CARES Order Ref</label>
+    <length>80</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
