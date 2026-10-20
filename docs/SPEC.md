@@ -49,6 +49,8 @@ Customer -> Agent Router
               |-- Risk Detection           (placeholder) -> Refund
               |-- Experience Rating        (placeholder)
               |-- Escalate to Human        (real: platform transfer)
+              |-- Urgent Escalation        (branch: safety first -> Escalate, category URGENT)
+              |-- Pronto Help              (branch: Pronto's customer rules from a Data Library)
               |-- Off Topic                (real: standard guardrails)
               |-- Ambiguous Question       (real: standard guardrails)
 ```
@@ -66,6 +68,10 @@ Design principle `DECIDED` (proposal from one member, adopted as the working rul
 | Experience Rating              | @ToroSF              | Built on branch (`feature/experience-rating-thumbs`), validated, not deployed. Thumbs up/down + model-generated summary (D-044) | [v1 baseline](subagents/experience-rating-v1.md), [changelog](subagents/experience-rating-changelog.md) |
 | Escalate to Human              | `OPEN`               | Real (needs Omni-Channel check)                                                                                                 | to add                                                                                                  |
 | Off Topic / Ambiguous Question | `OPEN`               | Real (template)                                                                                                                 | n/a                                                                                                     |
+| Urgent Escalation              | Team (router)        | Built on `feature/grounding-policy-alignment`, compiled locally, not deployed. Sets category URGENT, goes to Escalate (D-047)   | [POLICY_ALIGNMENT.md](POLICY_ALIGNMENT.md) POL-P13..P15                                                 |
+| Pronto Help                    | @Mateus-Goes         | Built on the same branch, not deployed. Data Library not created yet (placeholder id, G-056)                                    | [node spec](subagents/pronto-help.md), [golden set](grounding/golden-set.md)                            |
+
+On the same branch, Escalate to Human passes a category (URGENT, PATTERN_REVIEW, CLAIM_REVIEW or general) to its Flow, which sets Type, Reason, Priority, Status and the `CARES_Escalations` queue and reuses an open case for the same order (D-049). Risk Detection sends a customer at or above the review threshold to a person before any offer (D-048). Official sources: [sources/](sources/) (D-045).
 
 ## 4. Variables today
 
