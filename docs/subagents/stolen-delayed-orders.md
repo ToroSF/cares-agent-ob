@@ -1,6 +1,6 @@
 # Subagent: Stolen & Delayed Orders (delivery exceptions)
 
-Branch: `feature/delivery-exceptions`. State: built, **not validated against an org, not deployed, not tested live**. Last updated: 2026-10-19.
+Branch: `feature/delivery-exceptions`. State: built, **not validated against an org, not deployed, not tested live**. Contracts between this subagent, Refund and the router were revised on `fix/inter-subagent-contracts` (D-033 through D-039); class access for its two Apex actions was added on `fix/agent-class-access` via `CARES_Stolen_Delayed_Access` (G-050). Last updated: 2026-10-20.
 
 ## In one paragraph
 
