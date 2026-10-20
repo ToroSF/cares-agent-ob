@@ -5,7 +5,15 @@ changed and why, so collaborators working this sub-agent on its own branch
 can see what shifted without re-reading the whole `.agent` file. The full
 baseline this diffs against is [`experience-rating-v1.md`](experience-rating-v1.md).
 
-## v1.1 — Grounding, guardrails, data handling (this pass)
+## v1.2 — Contract fixes (2026-10-20, `fix/inter-subagent-contracts`)
+
+Local compile only (`@sf-agentscript/agentforce` 2.9.27, 0 errors). Not validated against an org, not deployed. See [`../CONTRACTS_FIX_SPEC.md`](../CONTRACTS_FIX_SPEC.md).
+
+- **`ratingId` type (C-01, G-034).** Before: `ratingId: string`, but `CsatRatingSaver.Result.ratingId` is an Apex `Id`. The simulator rejected the action ("invalid data type for the output parameter 'ratingId'"). Now: `object` with `complex_data_type_name: "lightning__recordIdType"`. No Apex change.
+- **Null contact (C-09, G-042).** Before: the skip guard checked only `ContactId == ""`. In preview `ContactId` is null (G-029), so the rating was asked and the save failed. Now: `ContactId is None or ContactId == ""`, the same check Refund uses.
+- **Once per conversation (C-13, G-044).** The `csat_attempted` description now says "per conversation", which is what the code does. Behavior unchanged.
+
+## v1.1 — Grounding, guardrails, data handling
 
 No deploy performed for this pass — changes are local/validated only
 (local compile + `sf agent validate authoring-bundle`), not yet pushed to the

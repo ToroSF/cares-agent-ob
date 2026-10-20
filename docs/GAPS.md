@@ -51,3 +51,18 @@ Keep this honest. A gap written here is better than a surprise in the demo.
 | Remove `default_agent_user` from the public repo | Team | PR note |
 | Allow a deploy of the Flow plus test data, so G-015, G-017, G-020, G-022 can be closed | Team | G-015 |
 | G-022 option | See D-018: gate on the action result instead of `risk_checked` | | | OPEN |
+
+### Contract problems between subagents (2026-10-20, see [CONTRACTS_FIX_SPEC.md](CONTRACTS_FIX_SPEC.md))
+| ID | Gap | Impact | Owner | Status |
+|---|---|---|---|---|
+| G-034 | `save_csat_rating.ratingId` is `string` in the agent, `Id` in `CsatRatingSaver` (C-01) | The agent fails validation in the simulator | Experience Rating owner | CLOSED on `fix/inter-subagent-contracts`: `object` + `lightning__recordIdType`. Needs a simulator reset to confirm |
+| G-035 | Refund ignores a Stolen & Delayed handoff when `refund_order_id` is already set (C-02) | Refund → S&D → Refund dead-ends; a promised READY refund is never offered | @lucasmpalomanes | CLOSED on `fix/inter-subagent-contracts` (D-033). Untested live |
+| G-036 | Nothing resets `stolen_delayed_*` (C-03) | A second S&D claim in the same conversation can't be checked | @rojasC10 | CLOSED on `fix/inter-subagent-contracts` (D-034). Untested live |
+| G-037 | `confirm_refund` reads a stale `stolen_delayed_customer_choice` on every path (C-04) | After a wallet-credit payout, a later refund to card can't be confirmed | @lucasmpalomanes | CLOSED on `fix/inter-subagent-contracts` (D-035). Untested live |
+| G-038 | `stolen_delayed_needs_person` is not tied to an order (C-05) | One escalated order blocks every later refund in the conversation | @lucasmpalomanes / @rojasC10 | OPEN, kept strict on purpose until G-040 is decided (D-037). G-039 makes the block hand off to a person |
+| G-039 | Refund's needs-person branch tells the customer a person is coming but does not escalate (C-06) | Customer waits for nobody | @lucasmpalomanes | CLOSED on `fix/inter-subagent-contracts` (D-037). Untested live |
+| G-040 | `find_order` and the delivery platform may return different order id spaces (C-07) | Same order could be paid twice once real data exists | Team | OPEN (decision) |
+| G-041 | S&D says "full order value"; Refund then offers total + bonus as credit; the choice values are mapped only in instruction text (C-08) | Customer hears two different amounts | @lucasmpalomanes / @rojasC10 | CLOSED on `fix/inter-subagent-contracts` (D-035, D-036). Also closes G-033 for the Stolen & Delayed paths; the direct path is still USD from the stub |
+| G-042 | Experience Rating checks `ContactId == ""` only, not null (C-09, see G-029) | With a null contact it asks for a rating it can't save | Experience Rating owner | CLOSED on `fix/inter-subagent-contracts`. Risk Detection Flow and Stolen & Delayed Apex already treat null as blank (`IsBlank`, `String.isBlank`) |
+| G-043 | Escalations carry no summary, and the "log a support case" fallback has no action (C-11) | The person has to ask the customer to repeat the story | Team | OPEN |
+| G-044 | `csat_attempted` is per conversation, described as per case (C-13) | Second case in a conversation is not rated | Experience Rating owner | CLOSED on `fix/inter-subagent-contracts`: description now says per conversation (behavior kept) |

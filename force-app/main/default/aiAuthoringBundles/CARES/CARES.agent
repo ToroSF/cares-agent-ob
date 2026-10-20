@@ -36,7 +36,7 @@ variables:
     risk_lookback_days: mutable number = 30
         description: "Risk Detection: lookback window in days. Placeholder value, to be confirmed with Pronto."
     csat_attempted: mutable boolean = False
-        description: "True once a CSAT save has been attempted for the current interaction, regardless of success or failure. Prevents asking or saving more than once per case, including on failure (no retry loop)."
+        description: "True once a CSAT save has been attempted in this conversation, regardless of success or failure. Prevents asking or saving more than once per conversation, including on failure (no retry loop)."
     csat_saved: mutable boolean = False
         description: "True only if the CSAT save action reported success. Consumed by experience_rating's post-action instructions so the agent never tells the customer their rating was saved when it wasn't."
     stolen_delayed_order_id: mutable string = ""
@@ -90,7 +90,7 @@ variables:
     refund_credit_amount: mutable number = 0
         description: "Refund: store credit amount, from the calculate offer action."
     refund_chosen_resolution: mutable string = ""
-        description: "Refund: Refund or Store_Credit. Set only by the confirm actions, as literals."
+        description: "Refund: Refund or Store_Credit. Set as literals by the confirm actions, or by the script from the Stolen & Delayed choice on the READY path."
     refund_confirmed: mutable boolean = False
         description: "Refund: True only after the customer explicitly confirmed the option and amount."
     refund_issue_attempted: mutable boolean = False
@@ -104,7 +104,9 @@ variables:
     refund_order_total_cap: mutable number = 0
         description: "Refund: order total the offer must not exceed, from Stolen & Delayed Orders. Set by the script."
     refund_handled_order_id: mutable string = ""
-        description: "Refund: last Stolen & Delayed order Refund issued for. Stops the same hand-off from being paid twice."
+        description: "Refund: last Stolen & Delayed order Refund issued for. Stops the same hand-off from being paid twice. Stolen & Delayed reads it to know a claim was paid."
+    refund_currency: mutable string = ""
+        description: "Refund: ISO currency code of the offer, from the calculate offer action. Set by the script."
 
 language:
     default_locale: "en_US"
@@ -150,16 +152,35 @@ subagent refund:
 
     reasoning:
         instructions: ->
-            if @variables.refund_order_id == "" and @variables.stolen_delayed_needs_person == False and @variables.stolen_delayed_handoff_status == "READY_FOR_REFUND" and @variables.stolen_delayed_order_id != @variables.refund_handled_order_id:
+            # A new Stolen & Delayed hand-off replaces any unconfirmed direct-path work (Refund -> S&D -> Refund)
+            if @variables.refund_sd_path == "" and @variables.refund_confirmed == False and @variables.refund_issue_attempted == False and @variables.stolen_delayed_needs_person == False and @variables.stolen_delayed_handoff_status == "READY_FOR_REFUND" and @variables.stolen_delayed_order_id != @variables.refund_handled_order_id:
                 set @variables.refund_sd_path = "READY"
                 set @variables.refund_order_id = @variables.stolen_delayed_order_id
+                set @variables.refund_order_line_items = ""
                 set @variables.refund_order_outcome = "Stolen"
+                set @variables.refund_affected_value = 0
                 set @variables.refund_approved_full_amount = @variables.stolen_delayed_order_total
                 set @variables.refund_order_total_cap = @variables.stolen_delayed_order_total
-            else if @variables.refund_order_id == "" and @variables.stolen_delayed_needs_person == False and @variables.stolen_delayed_decision == "STANDARD_PATH" and @variables.stolen_delayed_order_id != @variables.refund_handled_order_id:
+                set @variables.refund_offer_calculated = False
+                set @variables.refund_offer_eligible = False
+                set @variables.refund_offer_ineligible_reason = ""
+                set @variables.refund_offer_amount = 0
+                set @variables.refund_credit_amount = 0
+                set @variables.refund_chosen_resolution = "Store_Credit" if @variables.stolen_delayed_customer_choice == "WALLET_CREDIT" else "Refund"
+            else if @variables.refund_sd_path == "" and @variables.refund_confirmed == False and @variables.refund_issue_attempted == False and @variables.stolen_delayed_needs_person == False and @variables.stolen_delayed_decision == "STANDARD_PATH" and @variables.stolen_delayed_order_id != @variables.refund_handled_order_id:
                 set @variables.refund_sd_path = "STANDARD"
                 set @variables.refund_order_id = @variables.stolen_delayed_order_id
+                set @variables.refund_order_line_items = ""
+                set @variables.refund_order_outcome = ""
+                set @variables.refund_affected_value = 0
+                set @variables.refund_approved_full_amount = 0
                 set @variables.refund_order_total_cap = @variables.stolen_delayed_order_total
+                set @variables.refund_offer_calculated = False
+                set @variables.refund_offer_eligible = False
+                set @variables.refund_offer_ineligible_reason = ""
+                set @variables.refund_offer_amount = 0
+                set @variables.refund_credit_amount = 0
+                set @variables.refund_chosen_resolution = ""
 
             if @variables.refund_order_outcome != "" and @variables.refund_offer_calculated == False:
                 run @actions.calculate_refund_offer
@@ -170,14 +191,16 @@ subagent refund:
                     with affectedValue = @variables.refund_affected_value
                     with approvedFullAmount = @variables.refund_approved_full_amount
                     with orderTotalCap = @variables.refund_order_total_cap
+                    with orderCurrency = @variables.stolen_delayed_currency if @variables.refund_sd_path != "" else ""
                     set @variables.refund_offer_eligible = @outputs.eligible
                     set @variables.refund_offer_ineligible_reason = @outputs.ineligibleReason
                     set @variables.refund_offer_amount = @outputs.refundAmount
                     set @variables.refund_credit_amount = @outputs.creditAmount
+                    set @variables.refund_currency = @outputs.currencyCode
                 set @variables.refund_offer_calculated = True
 
             if @variables.stolen_delayed_needs_person == True:
-                | Current step: this case is being handed to a person. Do not offer, promise or issue any refund or credit. Tell the customer a member of the team will take it from here.
+                | Current step: this case is being handed to a person. Do not offer, promise or issue any refund or credit. Tell the customer a member of the team will take it from here, and use {!@actions.go_to_escalate_human} in the same reply.
             else if @variables.ContactId is None or @variables.ContactId == "":
                 | Current step: you can't find the customer's account from this conversation, so you can't look up their orders. Apologize and use {!@actions.go_to_escalate_human}.
             else if @variables.refund_issued == True:
@@ -200,14 +223,14 @@ subagent refund:
                   Offer to connect them with a human agent.
             else if @variables.refund_issue_attempted == True:
                 | Issuing the resolution failed. Apologize and use {!@actions.go_to_escalate_human}.
-            else if @variables.refund_confirmed == False and @variables.refund_sd_path == "READY" and @variables.stolen_delayed_customer_choice == "WALLET_CREDIT":
-                | The customer already chose credit in the app wallet. Confirm with them: store credit of ${!@variables.refund_credit_amount}. After an explicit yes, call {!@actions.confirm_store_credit}.
+            else if @variables.refund_confirmed == False and @variables.refund_sd_path == "READY" and @variables.refund_chosen_resolution == "Store_Credit":
+                | The customer already chose credit in the app wallet. Confirm with them: store credit of {!@variables.refund_credit_amount} {!@variables.refund_currency}. After an explicit yes, call {!@actions.confirm_store_credit}.
             else if @variables.refund_confirmed == False and @variables.refund_sd_path == "READY":
-                | The customer already chose a refund to the original payment method. Confirm with them: a full refund of ${!@variables.refund_offer_amount} to their original payment method. After an explicit yes, call {!@actions.confirm_refund}.
+                | The customer already chose a refund to the original payment method. Confirm with them: a full refund of {!@variables.refund_offer_amount} {!@variables.refund_currency} to their original payment method. After an explicit yes, call {!@actions.confirm_refund}.
             else if @variables.refund_confirmed == False:
                 | Offer the customer exactly these two options and ask which they prefer:
-                  - A refund of ${!@variables.refund_offer_amount} to their original payment method
-                  - Store credit of ${!@variables.refund_credit_amount}
+                  - A refund of {!@variables.refund_offer_amount} {!@variables.refund_currency} to their original payment method
+                  - Store credit of {!@variables.refund_credit_amount} {!@variables.refund_currency}
                   When they choose, repeat the chosen option and its exact amount and ask them to confirm.
                   Only after they explicitly confirm, call {!@actions.confirm_refund} or {!@actions.confirm_store_credit} to match their choice.
             else:
@@ -241,13 +264,13 @@ subagent refund:
 
             confirm_refund: @utils.setVariables
                 description: "Record that the customer explicitly confirmed the refund. Call only after they say yes to the repeated option and amount."
-                available when @variables.refund_offer_calculated == True and @variables.refund_offer_eligible == True and @variables.refund_confirmed == False and @variables.stolen_delayed_customer_choice != "WALLET_CREDIT"
+                available when @variables.refund_offer_calculated == True and @variables.refund_offer_eligible == True and @variables.refund_confirmed == False and (@variables.refund_sd_path != "READY" or @variables.refund_chosen_resolution == "Refund")
                 set @variables.refund_chosen_resolution = "Refund"
                 set @variables.refund_confirmed = True
 
             confirm_store_credit: @utils.setVariables
                 description: "Record that the customer explicitly confirmed the store credit. Call only after they say yes to the repeated option and amount."
-                available when @variables.refund_offer_calculated == True and @variables.refund_offer_eligible == True and @variables.refund_confirmed == False and (@variables.refund_sd_path != "READY" or @variables.stolen_delayed_customer_choice == "WALLET_CREDIT")
+                available when @variables.refund_offer_calculated == True and @variables.refund_offer_eligible == True and @variables.refund_confirmed == False and (@variables.refund_sd_path != "READY" or @variables.refund_chosen_resolution == "Store_Credit")
                 set @variables.refund_chosen_resolution = "Store_Credit"
                 set @variables.refund_confirmed = True
 
@@ -290,6 +313,7 @@ subagent refund:
             set @variables.refund_offer_ineligible_reason = ""
             set @variables.refund_offer_amount = 0
             set @variables.refund_credit_amount = 0
+            set @variables.refund_currency = ""
             set @variables.refund_chosen_resolution = ""
             set @variables.refund_confirmed = False
             set @variables.refund_issue_attempted = False
@@ -366,6 +390,8 @@ subagent refund:
                     description: "Full order value approved by Stolen & Delayed Orders; 0 when not approved"
                 orderTotalCap: number
                     description: "Order total the refund must not exceed; 0 when unknown"
+                orderCurrency: string
+                    description: "ISO currency code of the order from Stolen & Delayed Orders; blank when unknown"
             outputs:
                 eligible: boolean
                     filter_from_agent: True
@@ -424,6 +450,26 @@ subagent refund:
 subagent stolen_delayed_orders:
     label: "Stolen & Delayed Orders"
     description: "Handles orders reported as stolen, missing or late. For orders marked delivered with no photo from the customer or the driver, an Apex policy reads delivery telemetry and trust history and decides. It never issues refunds or credits: approved claims go to Refund through Risk Detection with the full context. It can re-dispatch the order, and sends risky or sensitive cases to a person."
+
+    before_reasoning:
+        # Refund paid the last claim: clear it so a new order can be checked
+        if @variables.stolen_delayed_order_id != "" and @variables.stolen_delayed_order_id == @variables.refund_handled_order_id:
+            set @variables.stolen_delayed_order_id = ""
+            set @variables.stolen_delayed_evaluated = False
+            set @variables.stolen_delayed_lookups = 0
+            set @variables.stolen_delayed_decision = ""
+            set @variables.stolen_delayed_reason = ""
+            set @variables.stolen_delayed_needs_person = False
+            set @variables.stolen_delayed_full_refund_approved = False
+            set @variables.stolen_delayed_order_total = 0
+            set @variables.stolen_delayed_currency = ""
+            set @variables.stolen_delayed_redispatch_eligible = False
+            set @variables.stolen_delayed_customer_choice = ""
+            set @variables.stolen_delayed_loss_absorption = False
+            set @variables.stolen_delayed_driver_compensation = ""
+            set @variables.stolen_delayed_restaurant_reimbursement = ""
+            set @variables.stolen_delayed_handoff_status = ""
+            set @variables.stolen_delayed_redispatch_reference = ""
 
     actions:
         evaluate_delivery_exception:
@@ -540,23 +586,31 @@ subagent stolen_delayed_orders:
             if @variables.stolen_delayed_needs_person == True:
                 | This case needs a person. Tell the customer, kindly, that a member of the support team will review it and continue the conversation. Do not promise any outcome or amount. Call {!@actions.escalate_for_review}. If the handoff fails, say the team will follow up shortly.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "":
-                | Apologise. Tell the customer they will get the full order value back: {!@variables.stolen_delayed_order_total} {!@variables.stolen_delayed_currency}. Ask how they prefer it: a refund to the original payment method, or credit in the app wallet.
+                | Apologise. Tell the customer they can get the full order value back as a refund to the original payment method: {!@variables.stolen_delayed_order_total} {!@variables.stolen_delayed_currency}. Or they can take credit in the app wallet, which is worth a little more; the exact credit amount is confirmed in the next step. Ask which they prefer.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "" and @variables.stolen_delayed_redispatch_eligible == True:
                 | You may also offer to send the order again instead.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "":
                 | When the customer has chosen, call {!@actions.resolve_claim} with REFUND, WALLET_CREDIT or REDISPATCH. Do not change or mention any other amount.
             if @variables.stolen_delayed_handoff_status == "REDISPATCHED":
                 | Tell the customer the order is on its way again. Reference: {!@variables.stolen_delayed_redispatch_reference}. Then ask if there is anything else and use {!@actions.go_to_experience_rating} when they are done.
+                  If the customer reports a problem with a different order, ask for its order number and what happened, then call {!@actions.check_order}.
+            if @variables.stolen_delayed_handoff_status == "READY_FOR_REFUND":
+                | This claim is approved and the customer's choice is recorded. Tell the customer you are finishing it now and use {!@actions.continue_to_refund}.
             if @variables.stolen_delayed_handoff_status == "BLOCKED" or @variables.stolen_delayed_handoff_status == "FAILED":
                 | Apologise that this could not be completed here. Tell the customer a member of the team will help and call {!@actions.escalate_for_review}.
         actions:
             check_order: @actions.evaluate_delivery_exception
                 description: "Check the reported order. Call once you have the order number."
-                available when @variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_lookups < 3
+                available when (@variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_lookups < 3) or @variables.stolen_delayed_handoff_status == "REDISPATCHED"
                 with contactId = @variables.ContactId
                 with orderId = ...
                 with customerReport = ...
-                set @variables.stolen_delayed_lookups = @variables.stolen_delayed_lookups + 1
+                # A check after a re-dispatch starts a new claim
+                set @variables.stolen_delayed_lookups = 1 if @variables.stolen_delayed_handoff_status == "REDISPATCHED" else @variables.stolen_delayed_lookups + 1
+                set @variables.stolen_delayed_handoff_status = ""
+                set @variables.stolen_delayed_customer_choice = ""
+                set @variables.stolen_delayed_loss_absorption = False
+                set @variables.stolen_delayed_redispatch_reference = ""
                 set @variables.stolen_delayed_order_id = @outputs.orderId
                 set @variables.stolen_delayed_decision = @outputs.decision
                 set @variables.stolen_delayed_reason = @outputs.reasonCode
@@ -589,6 +643,9 @@ subagent stolen_delayed_orders:
                     transition to @subagent.risk_detection
             escalate_for_review: @utils.escalate
                 description: "Hand the conversation to a person: manual review, an escalation trigger, a failed step, or the customer asks for a person."
+            continue_to_refund: @utils.transition to @subagent.risk_detection
+                description: "Finish an approved claim whose choice is already recorded."
+                available when @variables.stolen_delayed_handoff_status == "READY_FOR_REFUND" and @variables.stolen_delayed_needs_person == False
             go_to_experience_rating: @utils.transition to @subagent.experience_rating
                 description: "Ask for feedback once the order has been re-dispatched."
                 available when @variables.stolen_delayed_handoff_status == "REDISPATCHED"
@@ -633,7 +690,7 @@ subagent experience_rating:
     description: "Captures a 1-5 CSAT rating (shown as a slider in the UI) for the resolved CARES interaction, with an optional follow-up comment on low scores, and stores it against the customer's Contact record. Skips the question entirely when no Contact is identified."
 
     before_reasoning:
-        if @variables.ContactId == "":
+        if @variables.ContactId is None or @variables.ContactId == "":
             transition to @subagent.experience_rating_skipped
 
     reasoning:
@@ -689,7 +746,8 @@ subagent experience_rating:
                     filter_from_agent: True
                 errorMessage: string
                     filter_from_agent: True
-                ratingId: string
+                ratingId: object
+                    complex_data_type_name: "lightning__recordIdType"
                     filter_from_agent: True
 
 subagent experience_rating_skipped:

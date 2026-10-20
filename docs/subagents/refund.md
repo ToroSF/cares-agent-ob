@@ -30,18 +30,20 @@ Refund keeps the Risk Detection gate at the top of its block (D-015): if `risk_c
 ## Stolen & Delayed hand-off
 Refund reads the `stolen_delayed_*` variables, which are set only by Stolen & Delayed actions. It never writes them. The script picks the path at the top of the instructions, before the model runs:
 
-| Condition (all also need `stolen_delayed_needs_person == False` and an order Refund hasn't handled yet) | Path | What Refund does |
+| Condition (all also need `stolen_delayed_needs_person == False`, an order Refund hasn't handled yet, Refund not already on a Stolen & Delayed path, and nothing confirmed or attempted, see D-033) | Path | What Refund does |
 |---|---|---|
-| `stolen_delayed_handoff_status == "READY_FOR_REFUND"` | READY | Order = `stolen_delayed_order_id`, outcome `Stolen`, approved amount and cap = `stolen_delayed_order_total`. Offer: the full total as a refund, or the full total + bonus as wallet credit (D-029). Only the method the customer already chose (`stolen_delayed_customer_choice`) is offered. Confirm once, then issue (D-028). Then `apply_settlement` with the driver and restaurant recommendations (D-031) |
+| `stolen_delayed_handoff_status == "READY_FOR_REFUND"` | READY | Order = `stolen_delayed_order_id`, outcome `Stolen`, approved amount and cap = `stolen_delayed_order_total`. Offer: the full total as a refund, or the full total + bonus as wallet credit (D-029). The script maps the customer's choice to `refund_chosen_resolution` (`WALLET_CREDIT` → `Store_Credit`, `REFUND` → `Refund`, D-035), and only that method is offered. Confirm once, then issue (D-028). Then `apply_settlement` with the driver and restaurant recommendations (D-031) |
 | `stolen_delayed_decision == "STANDARD_PATH"` | STANDARD | Order = `stolen_delayed_order_id`, cap = `stolen_delayed_order_total`. Ask "stolen or late?" and log `Stolen` or `Delayed` (D-030). Then the normal offer, capped at the order total |
 | `stolen_delayed_needs_person == True` | none | Never offer or issue. Tell the customer a person will take it |
 
-`refund_handled_order_id` remembers the last Stolen & Delayed order Refund paid, so the same hand-off can't be paid twice in one conversation (D-032).
+A hand-off replaces unconfirmed direct-path work: if the customer was mid-way through a direct refund and went to Stolen & Delayed, Refund resets its offer state and takes the hand-off (D-033).
+
+`refund_handled_order_id` remembers the last Stolen & Delayed order Refund paid, so the same hand-off can't be paid twice in one conversation (D-032). Stolen & Delayed reads it to know the claim was paid and resets its own variables (D-034).
 
 ## Steps, in order
 Each step is a branch in the instructions. Only one is shown to the model at a time, and the actions it needs are only available in that step.
 
-0. **Person needed** (`stolen_delayed_needs_person`): no offer, no issue.
+0. **Person needed** (`stolen_delayed_needs_person`): no offer, no issue, hand off to Escalate to Human (D-037). Applies to every order until order ids are settled (G-040).
 0. **No `ContactId`** (blank or missing): apologize and hand off to a person. The order actions stay hidden. Identity comes from the channel, never from the chat (SPEC rule 1).
 1. **Find the order** (direct path only; the Stolen & Delayed paths already have it). `find_order` by order number, or most recent order. Writes `refund_order_id` and `refund_order_line_items`.
 2. **Record what went wrong** (direct and STANDARD paths). `log_order_issue` with the issue type and the affected items, named exactly as on the order. The action values the items. Writes `refund_order_outcome` and `refund_affected_value`.
@@ -104,7 +106,7 @@ All five are invocable Apex **stubs** (D-020). Names match the `@InvocableVariab
 |---|---|---|---|
 | `find_order` | `apex://CARES_Refund_FindOrder` | `contactId` (`ContactId`), `orderNumber` (chat, optional) | `orderId` (no), `orderSummary` (yes), `lineItems` (yes), `found` (no) |
 | `log_order_issue` | `apex://CARES_Refund_LogOrderIssue` | `orderId`, `deliveryPath` (variables), `issueType`, `issueDescription`, `affectedItems` (chat) | `orderOutcome` (no), `affectedValue` (no), `accepted` (no) |
-| `calculate_refund_offer` | `apex://CARES_Refund_CalculateOffer` | `contactId`, `orderId`, `orderOutcome`, `riskStatus`, `affectedValue`, `approvedFullAmount`, `orderTotalCap` (all variables) | `eligible` (no), `ineligibleReason`, `refundAmount`, `creditAmount`, `currencyCode` (yes), `tierName` (no) |
+| `calculate_refund_offer` | `apex://CARES_Refund_CalculateOffer` | `contactId`, `orderId`, `orderOutcome`, `riskStatus`, `affectedValue`, `approvedFullAmount`, `orderTotalCap`, `orderCurrency` (all variables) | `eligible` (no), `ineligibleReason`, `refundAmount`, `creditAmount`, `currencyCode` (yes), `tierName` (no) |
 | `issue_resolution` | `apex://CARES_Refund_IssueResolution` | `contactId`, `orderId`, `resolutionType`, `refundAmount`, `creditAmount` (all variables) | `success` (no), `referenceNumber` (yes), `message` (yes) |
 | `apply_settlement` | `apex://CARES_Refund_ApplySettlement` | `orderId`, `driverCompensation`, `restaurantReimbursement`, `lossAbsorption` (all variables) | `success` (no) |
 
@@ -133,9 +135,10 @@ All new variables have the `refund_` prefix and are at the end of the `variables
 | `refund_chosen_resolution`, `refund_confirmed` | confirm actions (literals) | `issue_resolution` gate and input | after issue |
 | `refund_issue_attempted`, `refund_issued` | `issue_resolution` | no second attempt; done branch; reset | after issue |
 | `refund_sd_path`, `refund_approved_full_amount`, `refund_order_total_cap` | script, from `stolen_delayed_*` | step branches, confirm gates, `calculate_refund_offer`, `log_order_issue` | after issue |
+| `refund_currency` | `calculate_refund_offer` (`currencyCode`) | every amount shown | after issue |
 | `refund_handled_order_id` | script, after issue | stops a second payout for the same Stolen & Delayed order | never (lasts the conversation) |
 
-Reads, not owned: `ContactId` (channel), `risk_checked` and `risk_status` (Risk Detection), and `stolen_delayed_handoff_status`, `stolen_delayed_decision`, `stolen_delayed_needs_person`, `stolen_delayed_order_id`, `stolen_delayed_order_total`, `stolen_delayed_customer_choice`, `stolen_delayed_driver_compensation`, `stolen_delayed_restaurant_reimbursement`, `stolen_delayed_loss_absorption` (Stolen & Delayed).
+Reads, not owned: `ContactId` (channel), `risk_checked` and `risk_status` (Risk Detection), and `stolen_delayed_handoff_status`, `stolen_delayed_decision`, `stolen_delayed_needs_person`, `stolen_delayed_order_id`, `stolen_delayed_order_total`, `stolen_delayed_currency`, `stolen_delayed_customer_choice`, `stolen_delayed_driver_compensation`, `stolen_delayed_restaurant_reimbursement`, `stolen_delayed_loss_absorption` (Stolen & Delayed).
 
 ## What other subagents must do
 | Subagent | Must do | Status |
@@ -164,5 +167,10 @@ Reads, not owned: `ContactId` (channel), `risk_checked` and `risk_status` (Risk 
 | R-12 | "Refund it to a different card" | Original payment method only |
 | R-13 | No `ContactId` | Hand off to a person; order actions hidden |
 | R-14 | `risk_status` is `UNKNOWN` | Standard limit, never the clean-history limit |
+| R-18 | Direct path, order found, then "it never arrived" | Stolen & Delayed check → Risk Detection → Refund on the STANDARD path, asks "stolen or late?" (D-033) |
+| R-19 | Same as R-18, high-trust mock | READY path; only the chosen method offered |
+| R-20 | R-03, then R-01 choosing a refund | `confirm_refund` available on the direct path (D-035) |
+| R-21 | READY order in EUR (mock) | Stolen & Delayed and Refund both show EUR; the credit amount is stated once, by Refund (D-036) |
+| R-22 | `stolen_delayed_needs_person == True`, router sends to Refund | No offer; transition to Escalate to Human (D-037) |
 
 Results: see [../TEST_PLAN.md](../TEST_PLAN.md).
