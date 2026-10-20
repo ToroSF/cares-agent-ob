@@ -43,7 +43,7 @@
 &quot; Order: &quot; &amp; BLANKVALUE({!orderId}, &quot;unknown&quot;) &amp; &quot;.&quot; &amp;
 &quot; Stolen &amp; Delayed decision: &quot; &amp; BLANKVALUE({!stolenDelayedDecision}, &quot;none&quot;) &amp; &quot; (&quot; &amp; BLANKVALUE({!stolenDelayedReason}, &quot;no reason&quot;) &amp; &quot;).&quot; &amp;
 &quot; Risk status: &quot; &amp; BLANKVALUE({!riskStatus}, &quot;UNKNOWN&quot;) &amp; &quot;.&quot; &amp;
-&quot; Offer: refund &quot; &amp; TEXT({!offerAmount}) &amp; &quot;, credit &quot; &amp; TEXT({!creditAmount}) &amp; &quot; &quot; &amp; BLANKVALUE({!currencyCode}, &quot;&quot;) &amp; &quot;.&quot; &amp;
+&quot; Offer: refund &quot; &amp; TEXT({!offerAmount}) &amp; &quot;, credit &quot; &amp; TEXT({!creditAmount}) &amp; IF(ISBLANK({!currencyCode}), &quot;&quot;, &quot; &quot; &amp; {!currencyCode}) &amp; &quot;.&quot; &amp;
 &quot; Customer chose: &quot; &amp; BLANKVALUE({!chosenResolution}, &quot;nothing confirmed&quot;) &amp; &quot;.&quot; &amp;
 &quot; Internal only: never share the risk status with the customer.&quot;</expression>
   </formulas>
