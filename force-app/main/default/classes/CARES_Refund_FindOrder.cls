@@ -15,7 +15,7 @@ public with sharing class CARES_Refund_FindOrder {
     public class Result {
         @InvocableVariable(
             label='Order ID'
-            description='Internal order identifier'
+            description='Delivery platform order id, the same id Stolen & Delayed Orders uses'
         )
         public String orderId;
         @InvocableVariable(

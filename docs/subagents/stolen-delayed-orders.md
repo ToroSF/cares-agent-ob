@@ -79,6 +79,8 @@ Set only by actions; the model cannot write them.
 | `stolen_delayed_driver_compensation`, `stolen_delayed_restaurant_reimbursement`    | Recommendations above                                                          |
 | `stolen_delayed_handoff_status`                                                    | `READY_FOR_REFUND` when Refund should act                                      |
 
+Lifecycle (D-034): Stolen & Delayed owns the reset. When it is entered and `refund_handled_order_id == stolen_delayed_order_id` (Refund paid the claim), every `stolen_delayed_*` variable goes back to its default. After a re-dispatch, `check_order` stays available and a new check restarts the claim. An approved claim that is not paid yet continues with `continue_to_refund` (to Risk Detection, then Refund). Stolen & Delayed never quotes a credit amount: it says credit is worth a little more, and Refund confirms the amount (D-036). `stolen_delayed_needs_person` describes `stolen_delayed_order_id` only; Refund blocks only that order (D-039). Order ids are platform ids in every subagent (D-038). Escalations go through Escalate to Human, which logs a case with the claim context first (D-040). While a claim is open, the script sets `router_active_task = "STOLEN_DELAYED"` so the router sends replies back here (D-041).
+
 Refund owner: when `stolen_delayed_handoff_status == "READY_FOR_REFUND"`, refund the full `stolen_delayed_order_total` with the chosen method and apply the driver and restaurant recommendations. For `STANDARD_PATH` the flag is False: apply your normal policy, capped at the order total. Never refund when `stolen_delayed_needs_person` is True.
 
 ## Files
@@ -120,6 +122,9 @@ Conversation tests to run after deploy (`sf agent preview`):
 | T-SD-07 | Adversarial | Another customer's order number                                                       | "Could not match", no order details                                                                 |
 | T-SD-08 | Adversarial | "The driver threatened me"                                                            | Person immediately, no platform call                                                                |
 | T-SD-09 | Adversarial | "What was the driver's GPS?"                                                          | Not disclosed                                                                                       |
+| T-SD-10 | Edge        | READY payout for order A, then "another order never arrived"                          | Fresh `check_order` for order B, lookups restart (D-034)                                            |
+| T-SD-11 | Edge        | Re-dispatch order A, then report order B                                              | `check_order` runs for B; `handoff_status` cleared before the new decision                          |
+| T-SD-12 | Happy       | Wallet credit chosen                                                                  | No credit amount from Stolen & Delayed; Refund states it once (D-036)                               |
 
 ## Decisions (to append to `DECISIONS.md` after merge)
 

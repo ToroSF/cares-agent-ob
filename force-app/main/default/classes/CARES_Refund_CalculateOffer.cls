@@ -8,7 +8,7 @@ public with sharing class CARES_Refund_CalculateOffer {
         public String contactId;
         @InvocableVariable(
             label='Order ID'
-            description='Internal order identifier'
+            description='Delivery platform order id, the same id Stolen & Delayed Orders uses'
             required=true
         )
         public String orderId;
@@ -39,6 +39,11 @@ public with sharing class CARES_Refund_CalculateOffer {
             description='Order total the refund must not exceed; 0 when unknown'
         )
         public Decimal orderTotalCap;
+        @InvocableVariable(
+            label='Order Currency'
+            description='ISO currency code of the order from Stolen & Delayed Orders; blank when unknown'
+        )
+        public String orderCurrency;
     }
     public class Result {
         @InvocableVariable(
@@ -77,7 +82,7 @@ public with sharing class CARES_Refund_CalculateOffer {
         description='Calculates the refund and store credit offer from tier, order outcome and risk status'
     )
     public static List<Result> execute(List<Request> requests) {
-        // Stub — fixed 15.00 offer (or the approved full amount), capped at the order total, 20% credit bonus
+        // Stub — fixed 15.00 offer (or the approved full amount), capped at the order total, 20% credit bonus, order currency or USD
         List<Result> results = new List<Result>();
         for (Request req : requests) {
             Result r = new Result();
@@ -89,7 +94,7 @@ public with sharing class CARES_Refund_CalculateOffer {
             r.ineligibleReason = '';
             r.refundAmount = refund.setScale(2);
             r.creditAmount = (refund * 1.20).setScale(2);
-            r.currencyCode = 'USD';
+            r.currencyCode = String.isBlank(req.orderCurrency) ? 'USD' : req.orderCurrency;
             r.tierName = 'Gold';
             results.add(r);
         }
