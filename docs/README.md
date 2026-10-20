@@ -17,6 +17,7 @@ CARES is the Pronto customer care agent. A router sends each customer to one spe
 | [sources/](sources/) | The four official Pronto documents (PDF), with date, owner and hash. The only official rules we build on |
 | [POLICY_ALIGNMENT.md](POLICY_ALIGNMENT.md) | Every official Pronto rule vs what CARES does, before and after this branch, with owner and next step |
 | [grounding/golden-set.md](grounding/golden-set.md) | 25 fixed questions to check Pronto Help's retrieval and guardrails, with a results table |
+| [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md) | What to check and in which order when the policy alignment branch is deployed, including the Flow version step |
 | [TEST_PLAN.md](TEST_PLAN.md) | Happy, edge and adversarial tests, results per run |
 | [BASELINE_BATCH_TEST.md](BASELINE_BATCH_TEST.md) | The whole-agent baseline batch test: personas, tiers, invariants, scenarios that fail on purpose, how to run and record |
 | [JOURNEY.md](JOURNEY.md) | Dated log of how we got here |

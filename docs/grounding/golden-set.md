@@ -2,7 +2,7 @@
 
 The fixed questions we ask Pronto Help after every re-index of the `CARES_Customer_Policy` Data Library and before every demo. They check the retriever (did it find the right chunk?) and the guardrails (did the agent stay inside them?). Owner: @Mateus-Goes. Sources: [../sources/](../sources/). Rules: [../POLICY_ALIGNMENT.md](../POLICY_ALIGNMENT.md).
 
-State: written 2026-10-20. **Not run yet**: the library does not exist (G-056).
+State: written 2026-10-20. **Not run yet**: the library exists in the team org (D-053), but Pronto Help is only on a branch that is not deployed. Run it after the deploy ([../DEPLOY_CHECKLIST.md](../DEPLOY_CHECKLIST.md)).
 
 ## How to run
 1. `sf agent adl get` shows 3 files `INDEXED` and a `retrieverId`.

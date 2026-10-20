@@ -16,7 +16,7 @@ In one line: **the script decides whose data and whose money; the model writes t
 | Order, delivery times, driver location | `OPEN` (CRM has no orders; a Data Cloud `Order` stream exists, not checked, G-057) | `OPEN` | `OPEN` | `OPEN` | `OPEN` | `OPEN` | OPEN |
 | Customer tier | `OPEN` (no field exists) | `OPEN` | `OPEN` | `OPEN` | `OPEN` | Standard tier | OPEN |
 | Policy values (caps, windows, percentages) | Configuration (custom metadata or object). Pronto gave no numbers: all are `[$]` (D-051) | Flow reads it | Changes on deploy or edit | Small | Fast | Block the offer, send to a person | OPEN |
-| Meaning of Pronto's customer rules (status words, ETA, address changes, promos, membership, gift certificates, allergens, storefronts) | Data Library `CARES_Customer_Policy`: FAQ (F), Terms (T), Merchant Standards (M), ~800 words, 3 PDFs in `docs/sources/` | RAG, `AnswerQuestionsWithKnowledge` in Pronto Help, with citations | Re-index when Pronto sends a new PDF (`sf agent adl file add`), no agent republish | 3 files, a few chunks | +1–3 s per answer (estimate, measure in the trace) | Empty → "I couldn't find that in Pronto's customer policies" + offer a person | PROPOSAL (built; library not created, G-056) |
+| Meaning of Pronto's customer rules (status words, ETA, address changes, promos, membership, gift certificates, allergens, storefronts) | Data Library `CARES_Customer_Policy`: FAQ (F), Terms (T), Merchant Standards (M), ~800 words, 3 PDFs in `docs/sources/` | RAG, `AnswerQuestionsWithKnowledge` in Pronto Help, with citations | Re-index when Pronto sends a new PDF (`sf agent adl file add`), no agent republish | 3 files, a few chunks | +1–3 s per answer (estimate, measure in the trace) | Empty → "I couldn't find that in Pronto's customer policies" + offer a person | PROPOSAL (built; library created 2026-10-20, D-053; indexing and Data Space check in G-056) |
 | Support rules (when to escalate, case handling, never-list) | Playbook (P), internal | Written into the script, flows and instructions. **Not retrieved** (D-050) | Changes need a publish | — | None | — | PROPOSAL (built) |
 
 ## Why query and not RAG for facts
@@ -32,14 +32,14 @@ Use RAG only for free text where meaning matters (for example past case notes), 
 - **Basic vs enhanced parsing:** the three documents are short plain text with no tables, so basic parsing should be enough. To confirm with the golden set.
 - **Where the common pattern is wrong here:** RAG for eligibility ("am I eligible for a refund?") would let a paraphrased paragraph decide money. Eligibility stays in actions (D-004); Pronto Help sends money questions to Risk Detection → Refund.
 
-Setup, not done yet (org write, needs the team's OK):
+Setup, done on 2026-10-20 in the team org (D-053). To redo it in another org:
 ```
-sf agent adl create --source-type sfdrive --developer-name CARES_Customer_Policy --target-org <team org> --json
-sf agent adl upload --library-id <id> --file docs/sources/pronto-delivery-and-order-lifecycle-faq.pdf --wait 10 --target-org <team org> --json
-# same for the Terms and Merchant Standards PDFs; NOT the Playbook
-sf agent adl get --library-id <id> --target-org <team org> --json   # retrieverId present, 3 files INDEXED
+sf agent adl create --name "CARES Customer Policy" --developer-name CARES_Customer_Policy --source-type sfdrive --index-mode basic --target-org <org> --json
+sf agent adl upload -i <libraryId> --file docs/sources/pronto-delivery-and-order-lifecycle-faq.pdf --file docs/sources/pronto-promotions-membership-and-gift-certificates-terms.pdf --file docs/sources/pronto-merchant-and-storefront-standards.pdf --wait 10 --target-org <org> --json
+# NOT the Playbook (D-050)
+sf agent adl get -i <libraryId> --target-org <org> --json   # retrieverId present, 3 files indexed
 ```
-Then replace the placeholder in `CARES.agent` with `"ARFPC_" + libraryId` (D-052). The agent user already has a Data Cloud permission set license; check the Data Space scope (G-056).
+`CARES.agent` uses `"ARFPC_" + libraryId` = `ARFPC_1JDjV000001ILbhWAG` (D-052). In another org the id is different, so change that line. The agent user already has a Data Cloud permission set license; the Data Space scope still needs a check in the Setup UI (G-056). The deploy steps are in [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md).
 
 ## What we audit (and what we found)
 Audit each source before building on it. Record date, what we checked, result.
@@ -52,7 +52,8 @@ Audit each source before building on it. Record date, what we checked, result.
 | 2026-10-20 | CARES vs the PDFs | Every rule, one by one | 33 rules: 2 aligned, 14 missing (2 critical: food safety, allergens). See [POLICY_ALIGNMENT.md](POLICY_ALIGNMENT.md) |
 | 2026-10-20 | Existing org library `Pronto_Policy_and_FAQ` | Status, files, who uses it (read only) | Ready, 4 PDFs indexed, not assigned to any agent; a prompt template uses it. Not touched |
 | 2026-10-20 | Case picklists | Type, Reason, Origin, Priority, Status values | Reasons that match the Playbook already exist (Missing items, Order arrived cold, Fraud or policy review, Can't update delivery address...). `Origin = Chat` (used by our Flow) is inactive; `Agentforce` is active |
-| | `CARES_Customer_Policy` | Golden set: hit, miss, citation, latency | `OPEN` (G-056) |
+| 2026-10-20 | `CARES_Customer_Policy` (new) | Created with the CLI: File source, basic index, F, T, M only | Library and its data objects created (D-053). File upload: see G-056 for the current state |
+| | `CARES_Customer_Policy` | Golden set: hit, miss, citation, latency | `OPEN`: needs the branch deployed |
 | | Any indexed text | Sensitive data (card numbers, personal data) | PDFs checked 2026-10-20: none. Case text: `OPEN` |
 | | Dates | Are the date fields correct? | `OPEN` |
 

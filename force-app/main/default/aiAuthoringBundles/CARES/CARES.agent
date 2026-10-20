@@ -123,8 +123,8 @@ variables:
         description: "Risk Detection: issue count at which a person reviews before any automatic offer (Playbook: repeated failures). Team assumption [$], to be confirmed with Pronto."
 
 knowledge:
-    # Placeholder until the CARES_Customer_Policy Data Library exists: "ARFPC_" + libraryId (D-046, D-052)
-    rag_feature_config_id: "ARFPC_CARES_CUSTOMER_POLICY_PLACEHOLDER"
+    # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-046, D-052, D-053)
+    rag_feature_config_id: "ARFPC_1JDjV000001ILbhWAG"
     citations_enabled: True
     citations_url: ""
 
