@@ -1,9 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Score__c</fullName>
     <label>Score</label>
-    <description>CSAT score captured from the slider. Scale: 1 (very unsatisfied) to 5 (very satisfied).</description>
-    <inlineHelpText>1-5 satisfaction score captured from the Experience Rating slider.</inlineHelpText>
+    <description
+  >CSAT score mapped from the customer's thumbs up/down choice. 5 = thumbs up, 2 = thumbs down.</description>
+    <inlineHelpText
+  >Score mapped from the Experience Rating thumbs up (5) / thumbs down (2) choice.</inlineHelpText>
     <type>Number</type>
     <precision>1</precision>
     <scale>0</scale>
