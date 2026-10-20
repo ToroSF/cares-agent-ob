@@ -11,10 +11,10 @@ What the person who deploys must do after this branch is merged into `main`. Fol
 | `CARES_Create_Escalation_Case` | Flow | Changed | New input `escalationCategory`; Type, Reason, Priority, Status, queue, reuses an open case |
 | `CARES_Get_Risk_Result` | Flow | Changed | G-053 fix (unknown contact → `UNKNOWN`, account-only branch reachable) |
 | `CARES` | Authoring bundle | Changed | Urgent Escalation, Pronto Help, never-list, review threshold, `knowledge:` block |
-| `CARES_Customer_Policy` | Data Library | **Already in the org** (D-053) | Created 2026-10-20 with the CLI. Not used by any agent until the bundle above is deployed |
+| `CARES_Customer_Policy` | Data Library | **Already in the org** (D-053) | Created 2026-10-20 in Setup; READY, 3 files indexed. Not used by any agent until the bundle above is deployed |
 
 ## Before the deploy
-1. `sf agent adl get -i <libraryId> --target-org <team org> --json`: `retrieverId` is not null and the 3 files are indexed. If not, Pronto Help declines every question (safe, but useless) and the golden set cannot run (G-056).
+1. `sf agent adl get -i <libraryId> --target-org <team org> --json` still shows a `retrieverId`, and `sf agent adl file list` shows the 3 files `INDEXED` (both true on 2026-10-20). If not, Pronto Help declines every question (safe, but useless) and the golden set cannot run (G-056).
 2. Check the agent user can read the library: Data Cloud permission set and the Data Space scope (Setup UI only). Without them, search results are empty and **nothing shows an error** (G-056).
 3. `sf agent validate authoring-bundle --api-name CARES --target-org <team org> --json` on merged `main`.
 4. Check-only deploy of the metadata (`--dry-run`) on merged `main`.

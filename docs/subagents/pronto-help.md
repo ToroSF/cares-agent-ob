@@ -2,7 +2,7 @@
 
 How the Pronto Help subagent works as built on `feature/grounding-policy-alignment`. For the why, read D-045, D-046 and D-050 in [../DECISIONS.md](../DECISIONS.md) and the library section of [../GROUNDING.md](../GROUNDING.md). Owner: @Mateus-Goes (grounding).
 
-State: built, compiled locally with no errors, validated in the team org, **not deployed, not tested**. The Data Library `CARES_Customer_Policy` exists in the team org and the `knowledge:` block points to it (D-053); indexing and the agent user's Data Space access are tracked in G-056. Last updated: 2026-10-20.
+State: built, compiled locally with no errors, validated in the team org, **not deployed, not tested**. The Data Library `CARES_Customer_Policy` is READY in the team org with the 3 files indexed, and the `knowledge:` block points to it (D-053). The agent user's access to it is checked in the first live preview (G-056). Last updated: 2026-10-20.
 
 ## In one paragraph
 Customers ask "what does Picked Up mean?", "can I use two promo codes?", "is this nut-free?". Pronto answers these in three customer documents. Pronto Help searches those documents and answers in a few sentences with citations. It never decides money, eligibility or escalation: money goes to Risk Detection → Refund, a missing or stuck order goes to Stolen & Delayed, safety goes to Urgent Escalation (from the router), and anything it cannot answer goes to a person.
@@ -68,7 +68,7 @@ Rules 4, 6 and the card rule are repeated in the global system instructions, so 
 - Trace check: `search_pronto_policy` called before every answer; no answer without it.
 
 ## Before it can go live
-1. ~~Create the library with the three customer PDFs~~ Done 2026-10-20 (D-053). Wait for the 3 files to be indexed (G-056).
+1. ~~Create the library with the three customer PDFs~~ Done 2026-10-20: READY, 3 files indexed (D-053).
 2. ~~Put `"ARFPC_" + libraryId` in `CARES.agent`~~ Done (D-052).
-3. Check the agent user's Data Space access (Setup UI).
+3. In the first live preview, check that the search returns chunks (agent user's access, G-056).
 4. Follow [../DEPLOY_CHECKLIST.md](../DEPLOY_CHECKLIST.md): validate, deploy, preview, golden set. Publish only with the team's OK.

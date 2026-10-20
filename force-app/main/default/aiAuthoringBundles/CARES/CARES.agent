@@ -124,7 +124,7 @@ variables:
 
 knowledge:
     # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-046, D-052, D-053)
-    rag_feature_config_id: "ARFPC_1JDjV000001ILbhWAG"
+    rag_feature_config_id: "ARFPC_1JDjV000001INDhWAO"
     citations_enabled: True
     citations_url: ""
 
