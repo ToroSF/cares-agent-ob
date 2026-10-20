@@ -123,7 +123,7 @@ variables:
         description: "Risk Detection: issue count at which a person reviews before any automatic offer (Playbook: repeated failures). Team assumption [$], to be confirmed with Pronto."
 
 knowledge:
-    # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-046, D-052, D-053)
+    # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-047, D-053, D-054)
     rag_feature_config_id: "ARFPC_1JDjV000001INDhWAO"
     citations_enabled: True
     citations_url: ""
@@ -696,7 +696,7 @@ subagent risk_detection:
                 set @variables.risk_status = @outputs.riskStatus
                 set @variables.risk_issue_count = @outputs.issueCount
             set @variables.risk_checked = True
-        # Playbook: repeated failures in a short time go to a person before any automatic offer (D-048)
+        # Playbook: repeated failures in a short time go to a person before any automatic offer (D-049)
         if @variables.risk_issue_count >= @variables.risk_review_threshold:
             set @variables.escalation_category = "PATTERN_REVIEW"
             transition to @subagent.escalate_to_human
