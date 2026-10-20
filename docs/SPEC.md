@@ -44,10 +44,10 @@ Inputs we still need from Pronto `[$]`: average order value, orders per customer
 
 ```
 Customer -> Agent Router
-              |-- Refund                   (placeholder)
-              |-- Stolen & Delayed Orders  (placeholder) -> Refund
-              |-- Risk Detection           (placeholder) -> Refund
-              |-- Experience Rating        (placeholder)
+              |-- Refund                   (built, not deployed)
+              |-- Stolen & Delayed Orders  (built, not deployed) -> Refund
+              |-- Risk Detection           (built, not deployed) -> Refund
+              |-- Experience Rating        (built, not deployed)
               |-- Escalate to Human        (real: platform transfer)
               |-- Off Topic                (real: standard guardrails)
               |-- Ambiguous Question       (real: standard guardrails)
@@ -61,7 +61,7 @@ Design principle `DECIDED` (proposal from one member, adopted as the working rul
 | ------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Agent Router                   | `OPEN`               | Real, weak: no conditions, "best guess" when unclear                                                                            | n/a                                                                                                     |
 | Refund                         | Refund owner         | Built with stub actions on branch, validated, not deployed                                                                      | [node spec](subagents/refund.md)                                                                        |
-| Stolen & Delayed Orders        | `OPEN`               | Placeholder                                                                                                                     | to add                                                                                                  |
+| Stolen & Delayed Orders        | @rojasC10            | Built on branch (`feature/delivery-exceptions`), validated, not deployed                                                        | [design](subagents/stolen-delayed-orders.md)                                                            |
 | Risk Detection                 | Risk Detection owner | Built on branch, validated, not deployed                                                                                        | [node spec](subagents/risk-detection-node-spec.md), [design](subagents/risk-detection.md)               |
 | Experience Rating              | @ToroSF              | Built on branch (`feature/experience-rating-thumbs`), validated, not deployed. Thumbs up/down + model-generated summary (D-044) | [v1 baseline](subagents/experience-rating-v1.md), [changelog](subagents/experience-rating-changelog.md) |
 | Escalate to Human              | `OPEN`               | Real (needs Omni-Channel check)                                                                                                 | to add                                                                                                  |
