@@ -703,7 +703,7 @@ subagent risk_detection:
 
 subagent experience_rating:
     label: "Experience Rating"
-    description: "Captures soft, low-friction feedback for the resolved CARES interaction as a thumbs up / thumbs down (shown as two clickable options in the UI), paired with the agent's own written assessment of how the conversation went, stored against the customer's Contact record. Skips the question entirely when no Contact is identified."
+    description: "Captures thumbs up / thumbs down feedback once a CARES interaction is resolved, with the agent's own written summary of how it went, saved on the customer's Contact. Skips the question when no Contact is identified."
 
     before_reasoning:
         set @variables.router_active_task = ""
