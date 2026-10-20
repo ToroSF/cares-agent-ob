@@ -37,6 +37,7 @@ Keep this honest. A gap written here is better than a surprise in the demo.
 | G-032 | The READY and STANDARD paths can't be tested until the delivery platform and its Named Credential exist (SD-G1) | Only the direct path has test evidence | Stolen & Delayed owner / Refund owner | OPEN |
 | G-033 | Offers are shown with `$`; the order currency from Stolen & Delayed isn't passed to the offer or issue | Wrong symbol for non-USD orders (today non-USD orders escalate, SD-G7) | Refund owner | OPEN |
 | G-030 | The model sometimes fills gaps: in one run it assumed "most recent order" and the Cheeseburger from "wrong burger" without asking | Usually right; could pick the wrong order or item | Refund owner | OPEN, watch in tests |
+| G-048 | A simulated preview cannot assert real amounts or policy results (an AI invents action outputs), and whether `--context-variables` applies to linked or mutable variables (`ContactId`, `risk_lookback_days`) has not been checked | The baseline batch can prove routing and gates now, and nothing about money or Flow results until the deploy. If `ContactId` cannot be injected, every account-dependent scenario is blocked | Risk Detection owner (batch), Merger (deploy) | OPEN: scenario B-SM-02 checks it first (D-043) |
 
 ### Items the team will close together (agreed to register, not decided yet)
 | Item | Owner | Gaps |
