@@ -10,7 +10,7 @@ Strategy: happy path + edge cases + adversarial, per subagent (details in each s
 | Regression | Re-run all cases after any change to the router | Merger | Before activation | `OPEN` |
 
 Record for each run: date, agent version, case, expected, actual, pass/fail. Note that results can vary between runs because the model varies; run important cases more than once.
-Where the suite lives: `OPEN`.
+Where the suite lives: the baseline batch (131 scenarios) is in `.claude/skills/cares-testing/`; overview in [BASELINE_BATCH_TEST.md](BASELINE_BATCH_TEST.md). Subagent cases stay in each subagent doc.
 
 ## Run log
 | Date | Subagent | Check | Result |
@@ -37,3 +37,4 @@ Where the suite lives: `OPEN`.
 | 2026-10-19 | Refund | After merging main (Stolen & Delayed contract): local compiler, dry-run deploy of 5 classes + permission set, `sf agent validate authoring-bundle` | Pass |
 | 2026-10-19 | Refund | After merging main, simulated preview: no `ContactId` | Pass: Router -> Risk Detection -> Refund -> Escalate to Human; all 5 Refund actions hidden |
 | | Refund | R-02, R-03, R-15 to R-17 (Stolen & Delayed paths) | `OPEN`: needs the delivery platform (G-032) and a deploy (G-027) |
+| 2026-10-20 | Whole agent | Baseline batch written: 131 scenarios, 12 personas, Tier S (simulated) and Tier L (live) | `OPEN`: not run. Tier S can run now; Tier L waits for the team deploy |

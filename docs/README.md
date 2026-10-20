@@ -15,6 +15,7 @@ CARES is the Pronto customer care agent. A router sends each customer to one spe
 | [RISKS.md](RISKS.md) | Risk Diagnostic: People, Business, Tech, Data, one concrete failure each |
 | [GROUNDING.md](GROUNDING.md) | Data sources, how accuracy is checked, what happens on failure |
 | [TEST_PLAN.md](TEST_PLAN.md) | Happy, edge and adversarial tests, results per run |
+| [BASELINE_BATCH_TEST.md](BASELINE_BATCH_TEST.md) | The whole-agent baseline batch test: personas, tiers, invariants, scenarios that fail on purpose, how to run and record |
 | [JOURNEY.md](JOURNEY.md) | Dated log of how we got here |
 | [PANEL_QA.md](PANEL_QA.md) | Team answers to expected panel questions |
 
