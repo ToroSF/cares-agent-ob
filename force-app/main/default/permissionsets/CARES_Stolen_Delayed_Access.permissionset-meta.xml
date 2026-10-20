@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>CARES Stolen Delayed Access</label>
+    <description>Lets the CARES agent user run the Stolen &amp; Delayed Orders invocable Apex actions. Assigning it is an explicit rollout step, not a side effect of deploying the agent.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <classAccesses>
+        <apexClass>CARES_StolenDelayedEvaluateAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CARES_StolenDelayedHandoffAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+</PermissionSet>
