@@ -142,6 +142,7 @@ start_agent agent_router:
               If the ongoing task is REFUND and the customer's message answers or continues it (yes or no, an order number, item names, a choice between options), choose Refund.
               If the ongoing task is STOLEN_DELAYED and the customer's message answers or continues it, choose Stolen & Delayed Orders.
               A new, different request still goes to the sub-agent that matches it.
+              If the same message reports a missing, stolen or late order AND asks for a refund, choose Stolen & Delayed Orders first; it evaluates the claim and can hand off to Refund itself.
               Always choose a sub-agent; never answer the customer yourself. If it's unclear, make your best guess.
 
               Rules:
