@@ -10,7 +10,7 @@ Strategy: happy path + edge cases + adversarial, per subagent (details in each s
 | Regression | Re-run all cases after any change to the router | Merger | Before activation | `OPEN` |
 
 Record for each run: date, agent version, case, expected, actual, pass/fail. Note that results can vary between runs because the model varies; run important cases more than once.
-Where the suite lives: the baseline batch (131 scenarios) is in `.claude/skills/cares-testing/`; overview in [BASELINE_BATCH_TEST.md](BASELINE_BATCH_TEST.md). Subagent cases stay in each subagent doc.
+Where the suite lives: the baseline batch (142 scenarios) is in `.claude/skills/cares-testing/`; overview in [BASELINE_BATCH_TEST.md](BASELINE_BATCH_TEST.md). Subagent cases stay in each subagent doc.
 
 ## Run log
 | Date | Subagent | Check | Result |
@@ -38,3 +38,5 @@ Where the suite lives: the baseline batch (131 scenarios) is in `.claude/skills/
 | 2026-10-19 | Refund | After merging main, simulated preview: no `ContactId` | Pass: Router -> Risk Detection -> Refund -> Escalate to Human; all 5 Refund actions hidden |
 | | Refund | R-02, R-03, R-15 to R-17 (Stolen & Delayed paths) | `OPEN`: needs the delivery platform (G-032) and a deploy (G-027) |
 | 2026-10-20 | Whole agent | Baseline batch written: 131 scenarios, 12 personas, Tier S (simulated) and Tier L (live) | `OPEN`: not run. Tier S can run now; Tier L waits for the team deploy |
+| 2026-10-20 | Refund, Experience Rating | New Apex unit tests (`CARES_Refund_ActionsTest`, `CsatRatingSaverTest`), dry-run deploy with `RunSpecifiedTests`, team org (no change made) | Pass after fixes: 60/60 CARES tests, every CARES class 90-100% coverage. Found and fixed two `CsatRatingSaver` defects (bad id threw; batch result order) |
+| 2026-10-20 | Whole agent | Baseline batch extended to 142 scenarios (11 added for uncovered branches, 4 corrected) | `OPEN`: not run |

@@ -6,17 +6,17 @@ Status date: 2026-10-20. Status: `PROPOSAL`, written and committed, **never run*
 Every subagent has its own tests (`docs/subagents/`), but nobody has tested the whole agent: router, hand-offs, state that lives across subagents, and failures. PR #5 and PR #7 changed the contracts between subagents and were checked only by the local compiler. We need one baseline before and after the first deploy, so we can say what changed and why. Rubric area 5, level 4: "what was tested, what failed, what was fixed, what was deferred and why".
 
 ## What is in the batch
-131 scenarios, 12 personas, 47 of them `P0` (must pass before the panel, or it is a finding).
+142 scenarios, 12 personas, 50 of them `P0` (must pass before the panel, or it is a finding). 131 were in the first version; 11 were added on 2026-10-20 for agent branches no scenario reached (see "Extension" below).
 
 | Persona | What it checks | Scenarios |
 |---|---|---|
-| P0 Harness and smoke | The test setup works (session, `ContactId` really applied, trace readable) | 6 |
+| P0 Harness and smoke | The test setup works (session, `ContactId` really applied, trace readable, no action validation error) | 7 |
 | P1 Router | Every route, multi-intent, typos, another language | 11 |
 | P2 Risk Detection | Runs once, before Refund, in silence; clean vs not clean; missing data | 14 |
-| P3 Refund, direct | Script-made offer, explicit yes, one issue, no negotiation | 15 |
-| P4 Stolen & Delayed | Triggers, three-try limit, never pays, platform missing | 13 |
-| P5 Contracts | Hand-offs fixed in PR #7: no dead end, no double payout, no stale choice | 11 |
-| P6 Experience Rating | Asked at the right time, saved once, never claimed unless saved | 11 |
+| P3 Refund, direct | Script-made offer, explicit yes, one issue, no negotiation, blank contact, not eligible, no settlement | 18 |
+| P4 Stolen & Delayed | Triggers, three-try limit, never pays, platform missing, escalation through Escalate to Human | 15 |
+| P5 Contracts | Hand-offs fixed in PR #7: no dead end, no double payout, no stale choice, reset, unpaid claim, change of mind | 15 |
+| P6 Experience Rating | Asked at the right time, saved once, never claimed unless saved, blank contact | 12 |
 | P7 Escalate to Human | A person is the outcome, one Case, no internal leak | 9 |
 | P8 Red team | Injection, impersonation, variable tampering, card data, abuse | 16 |
 | P9 Continuity | One-word replies go back to the open task (`router_active_task`) | 8 |
@@ -44,7 +44,11 @@ They prove a documented gap. A fail is recorded as `EXPECTED_FAIL`. A pass is re
 | B-RD-14 | Escalation Cases have no Type and count as issues in the next conversation | G-045 |
 | B-RF-12, B-RF-13 | The Refund stub gives 15.00 / 18.00 to everyone and ignores the affected item, so "a clean record earns a better offer" is designed, not built | G-023, G-024 |
 | B-ER-01, B-ER-08, B-FL-07 | The rating permission set is not assigned, so the save fails; the test checks the agent says so honestly | OPEN_ITEMS |
-| B-IN-11, B-ES-06, B-FL-08 | Escalation Flow is Draft, permission not assigned, transfer may be unconfigured | G-046, G-007 |
+| B-IN-11, B-ES-06, B-FL-08 | Permission set not assigned, transfer may be unconfigured. The Flow is active since 2026-10-20, so B-FL-08 needs it switched off first | G-046, G-007 |
+| B-RF-08 (Tier L) | The Refund stub accepts any named item, even one not on the order | G-023 |
+| B-RF-17 (Tier L) | The stub is always eligible, so the not-eligible branch is BLOCKED live | G-024 |
+| B-IN-12 | No designed behavior when the customer changes method on the READY path | G-049 |
+| B-FL-01 | N/A: `main` was deployed before the baseline ran | |
 | B-IN-07, B-IN-08, B-IN-09, B-FL-03 | Need a real order lookup or a mock platform with several orders and EUR | D-038, SD-G1 |
 
 ## Test data warning
@@ -59,6 +63,28 @@ All cases in the shared org were created on 2026-09-28. They leave the 30-day wi
 6. For each real failure: reproduce with the same fixture, read the trace, find the layer (routing, action, data, instruction), fix at the lowest layer, add the case here. Say when to escalate instead of digging.
 
 Nobody deploys, publishes or activates from this work. The batch only reads, previews and records.
+
+## Extension (2026-10-20, `test/baseline-batch-coverage`)
+A review against `CARES.agent` and the Apex found agent branches no scenario reached, plus expectations that the stubs or the deploy made wrong.
+
+Added scenarios:
+| Scenario | Branch it covers |
+|---|---|
+| B-SM-07 (P0) | Agent starts with no action validation error (`ratingId` type, inactive Flow targets) |
+| B-RF-16 | Refund with `ContactId` blank (B-SM-03 covers missing only) |
+| B-RF-17 | Refund offer not eligible: reason, a person, no amount, confirm and issue hidden |
+| B-RF-18 (P0) | `apply_settlement` never runs off the READY path (negative check) |
+| B-SD-14 (P0) | Stolen & Delayed escalation goes through Escalate to Human and logs the decision and reason in the Case. Runnable live today |
+| B-SD-15 | Re-dispatch then wrap-up: the only route from Stolen & Delayed to the rating |
+| B-IN-12 | Change of method on the READY path (no design yet, G-049) |
+| B-IN-13 | Approved but unpaid claim continues to Refund (`continue_to_refund`) without a second check |
+| B-IN-14 | New Stolen & Delayed claim after a payout: state reset on entry |
+| B-IN-15 | STANDARD path: `deliveryPath = STANDARD` and the offer cap |
+| B-ER-12 | Experience Rating with `ContactId` blank |
+
+Corrected: B-SM-01 now also accepts Off Topic (the router must always choose a sub-agent). B-RF-08 is a known fail in Tier L. B-FL-01 is N/A since the deploy. B-IN-11 and B-FL-08 no longer say the Flow is Draft.
+
+Apex unit tests were missing for Refund and Experience Rating. 20 were added (`CARES_Refund_ActionsTest`, `CsatRatingSaverTest`); all 60 CARES Apex tests pass in a dry run. They found two defects in `CsatRatingSaver`, both fixed: a malformed contact id threw instead of returning an error, and batch results could come back in the wrong order. They also confirm that `CARES_Experience_Rating_Access` is enough to save a rating, and that without it the save fails honestly. How to run them: the skill, "Apex unit tests".
 
 ## What the batch does not cover
 Load and concurrency, voice, real messaging channel behavior, real delivery platform data, other locales beyond one Spanish smoke test, and long-term effects such as retention (that needs Pronto data, `[$]`).
