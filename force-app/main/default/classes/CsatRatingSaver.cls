@@ -11,12 +11,16 @@ public with sharing class CsatRatingSaver {
         description='Saves a customer satisfaction rating (1-5) and optional comment for a resolved CARES interaction, linked to the customer Contact.'
     )
     public static List<Result> execute(List<Request> requests) {
+        // One result per request, in request order (invocable contract)
         List<Result> results = new List<Result>();
-
+        List<Id> requestContactIds = new List<Id>();
         Set<Id> contactIds = new Set<Id>();
         for (Request req : requests) {
-            if (req.contactId != null) {
-                contactIds.add(req.contactId);
+            Id contactId = toId(req.contactId);
+            requestContactIds.add(contactId);
+            results.add(null);
+            if (contactId != null) {
+                contactIds.add(contactId);
             }
         }
 
@@ -31,16 +35,17 @@ public with sharing class CsatRatingSaver {
         }
 
         List<CSAT_Rating__c> ratingsToInsert = new List<CSAT_Rating__c>();
-        List<Request> requestsForInsert = new List<Request>();
+        List<Integer> insertPositions = new List<Integer>();
 
-        for (Request req : requests) {
-            Contact relatedContact = contactsById.get(req.contactId);
+        for (Integer i = 0; i < requests.size(); i++) {
+            Request req = requests[i];
+            Contact relatedContact = requestContactIds[i] == null ? null : contactsById.get(requestContactIds[i]);
             if (relatedContact == null) {
-                results.add(errorResult('Contact not found: ' + req.contactId));
+                results[i] = errorResult('Contact not found: ' + req.contactId);
                 continue;
             }
             if (req.score == null || req.score < 1 || req.score > 5) {
-                results.add(errorResult('Score must be between 1 and 5.'));
+                results[i] = errorResult('Score must be between 1 and 5.');
                 continue;
             }
 
@@ -52,26 +57,38 @@ public with sharing class CsatRatingSaver {
             rating.Interaction_Date__c = Datetime.now();
 
             ratingsToInsert.add(rating);
-            requestsForInsert.add(req);
+            insertPositions.add(i);
         }
 
         if (!ratingsToInsert.isEmpty()) {
             try {
                 insert as user ratingsToInsert;
-                for (Integer i = 0; i < ratingsToInsert.size(); i++) {
+                for (Integer j = 0; j < ratingsToInsert.size(); j++) {
                     Result r = new Result();
                     r.isSuccess = true;
-                    r.ratingId = ratingsToInsert[i].Id;
-                    results.add(r);
+                    r.ratingId = ratingsToInsert[j].Id;
+                    results[insertPositions[j]] = r;
                 }
             } catch (Exception e) {
-                for (Integer i = 0; i < ratingsToInsert.size(); i++) {
-                    results.add(errorResult('Failed to save rating: ' + e.getMessage()));
+                for (Integer j = 0; j < ratingsToInsert.size(); j++) {
+                    results[insertPositions[j]] = errorResult('Failed to save rating: ' + e.getMessage());
                 }
             }
         }
 
         return results;
+    }
+
+    // Blank or malformed ids become null instead of throwing
+    private static Id toId(String value) {
+        if (String.isBlank(value)) {
+            return null;
+        }
+        try {
+            return Id.valueOf(value);
+        } catch (StringException e) {
+            return null;
+        }
     }
 
     public class Request {
