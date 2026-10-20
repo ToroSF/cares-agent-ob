@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CARES_Tier__c</fullName>
+    <label>CARES Tier</label>
+    <description
+  >Loyalty tier used by Refund to pick the refund/credit policy row. Blank means the lowest active CARES_Tier__c (D-024).</description>
+    <type>Lookup</type>
+    <referenceTo>CARES_Tier__c</referenceTo>
+    <relationshipLabel>Contacts</relationshipLabel>
+    <relationshipName>Contacts</relationshipName>
+    <required>false</required>
+    <deleteConstraint>SetNull</deleteConstraint>
+</CustomField>
