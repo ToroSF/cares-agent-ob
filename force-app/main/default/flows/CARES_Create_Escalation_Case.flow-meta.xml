@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version='1.0' encoding='UTF-8' ?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
   <apiVersion>67.0</apiVersion>
   <assignments>
@@ -34,7 +34,8 @@
       </value>
     </assignmentItems>
   </assignments>
-  <description>CARES Escalate to Human. Creates one Case with the context the person needs (order, Stolen &amp; Delayed decision and reason, risk status, offer, customer choice) so the customer does not have to repeat the story. The description is internal: the risk status must never be shown to the customer. Any problem returns success = false and no case number.</description>
+  <description
+  >CARES Escalate to Human. Creates one Case with the context the person needs (order, Stolen &amp; Delayed decision and reason, risk status, offer, customer choice) so the customer does not have to repeat the story. The description is internal: the risk status must never be shown to the customer. Any problem returns success = false and no case number.</description>
   <environments>Default</environments>
   <formulas>
     <name>caseDescription</name>
@@ -43,7 +44,7 @@
 &quot; Order: &quot; &amp; BLANKVALUE({!orderId}, &quot;unknown&quot;) &amp; &quot;.&quot; &amp;
 &quot; Stolen &amp; Delayed decision: &quot; &amp; BLANKVALUE({!stolenDelayedDecision}, &quot;none&quot;) &amp; &quot; (&quot; &amp; BLANKVALUE({!stolenDelayedReason}, &quot;no reason&quot;) &amp; &quot;).&quot; &amp;
 &quot; Risk status: &quot; &amp; BLANKVALUE({!riskStatus}, &quot;UNKNOWN&quot;) &amp; &quot;.&quot; &amp;
-&quot; Offer: refund &quot; &amp; TEXT({!offerAmount}) &amp; &quot;, credit &quot; &amp; TEXT({!creditAmount}) &amp; &quot; &quot; &amp; BLANKVALUE({!currencyCode}, &quot;&quot;) &amp; &quot;.&quot; &amp;
+&quot; Offer: refund &quot; &amp; TEXT({!offerAmount}) &amp; &quot;, credit &quot; &amp; TEXT({!creditAmount}) &amp; IF(ISBLANK({!currencyCode}), &quot;&quot;, &quot; &quot; &amp; {!currencyCode}) &amp; &quot;.&quot; &amp;
 &quot; Customer chose: &quot; &amp; BLANKVALUE({!chosenResolution}, &quot;nothing confirmed&quot;) &amp; &quot;.&quot; &amp;
 &quot; Internal only: never share the risk status with the customer.&quot;</expression>
   </formulas>
