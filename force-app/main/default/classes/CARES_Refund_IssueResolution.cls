@@ -8,7 +8,7 @@ public with sharing class CARES_Refund_IssueResolution {
         public String contactId;
         @InvocableVariable(
             label='Order ID'
-            description='Internal order identifier'
+            description='Delivery platform order id, the same id Stolen & Delayed Orders uses'
             required=true
         )
         public String orderId;

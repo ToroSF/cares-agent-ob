@@ -43,7 +43,7 @@ A hand-off replaces unconfirmed direct-path work: if the customer was mid-way th
 ## Steps, in order
 Each step is a branch in the instructions. Only one is shown to the model at a time, and the actions it needs are only available in that step.
 
-0. **Person needed** (`stolen_delayed_needs_person`): no offer, no issue, hand off to Escalate to Human (D-037). Applies to every order until order ids are settled (G-040).
+0. **Person needed** (`stolen_delayed_needs_person`, for the Stolen & Delayed order only, D-039): no offer, no issue, hand off to Escalate to Human (D-037). A different order can still be resolved; order ids are platform ids everywhere (D-038).
 0. **No `ContactId`** (blank or missing): apologize and hand off to a person. The order actions stay hidden. Identity comes from the channel, never from the chat (SPEC rule 1).
 1. **Find the order** (direct path only; the Stolen & Delayed paths already have it). `find_order` by order number, or most recent order. Writes `refund_order_id` and `refund_order_line_items`.
 2. **Record what went wrong** (direct and STANDARD paths). `log_order_issue` with the issue type and the affected items, named exactly as on the order. The action values the items. Writes `refund_order_outcome` and `refund_affected_value`.
@@ -171,6 +171,8 @@ Reads, not owned: `ContactId` (channel), `risk_checked` and `risk_status` (Risk 
 | R-19 | Same as R-18, high-trust mock | READY path; only the chosen method offered |
 | R-20 | R-03, then R-01 choosing a refund | `confirm_refund` available on the direct path (D-035) |
 | R-21 | READY order in EUR (mock) | Stolen & Delayed and Refund both show EUR; the credit amount is stated once, by Refund (D-036) |
-| R-22 | `stolen_delayed_needs_person == True`, router sends to Refund | No offer; transition to Escalate to Human (D-037) |
+| R-22 | `stolen_delayed_needs_person == True`, customer asks about that same order | No offer; transition to Escalate to Human (D-037) |
+| R-23 | `stolen_delayed_needs_person == True`, customer asks about a different order | Normal flow for the other order (D-039) |
+| R-24 | Mid-offer, customer replies "yes" or an item name | Router sends it back to Refund (`router_active_task`, D-041) |
 
 Results: see [../TEST_PLAN.md](../TEST_PLAN.md).

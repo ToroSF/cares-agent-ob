@@ -5,7 +5,7 @@ public with sharing class CARES_Refund_LogOrderIssue {
     public class Request {
         @InvocableVariable(
             label='Order ID'
-            description='Internal order identifier'
+            description='Delivery platform order id, the same id Stolen & Delayed Orders uses'
             required=true
         )
         public String orderId;

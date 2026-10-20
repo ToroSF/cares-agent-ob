@@ -1,6 +1,6 @@
 # Spec: fixing the contracts between subagents
 
-Status date: 2026-10-20. Status: `PROPOSAL`, partly built on `fix/inter-subagent-contracts` (see 0.1). Nothing is deployed. Source: `CARES.agent` and the Apex on `main` at `a605c79`.
+Status date: 2026-10-20. Status: `DECIDED` (all recommended paths approved 2026-10-20). Built on `fix/inter-subagent-contracts` except C-10 (see 0.1). Nothing is deployed. Source: `CARES.agent` and the Apex on `main` at `a605c79`.
 
 A "contract" here is anything one subagent writes that another one reads: shared variables, transitions, enum values, ids, and the input/output types between an action in the agent and the Apex or Flow behind it. Every problem below was found by reading the code. None was found in a live run, because nothing is deployed yet (G-015). Each item says where the problem is, a concrete case that breaks, the fix, who owns it, and how to test it.
 
@@ -35,15 +35,15 @@ Checked with the local AgentScript compiler (`@sf-agentscript/agentforce` 2.9.27
 | C-02 | Built (fix 2 only; see C-02) | D-033 |
 | C-03 | Built | D-034 |
 | C-04 | Built, via the C-08 mapping | D-035 |
-| C-05 | Not built on purpose: Refund stays strict until C-07 is decided. C-06 makes the strict block hand off | D-037 |
+| C-05 | Built: the block applies only to the Stolen & Delayed order | D-039 |
 | C-06 | Built | D-037 |
-| C-07 | Open, team decision | |
+| C-07 | Decided: platform order id everywhere. Contract text updated; the real `find_order` must return it | D-038 |
 | C-08 | Built. Direct path still shows USD from the stub | D-035, D-036 |
 | C-09 | Built (Experience Rating only; the Flow and the Apex already treat null as blank) | |
-| C-10 | Waits for a live run (D-018) | |
-| C-11 | Open, team decision | |
-| C-12 | Open, router owner | |
-| C-13 | Built: description changed, behavior kept | |
+| C-10 | Decided to wait for a live run (T-14); D-018 stays open | D-042 |
+| C-11 | Built: `CARES_Create_Escalation_Case` Flow + `CARES_Escalation_Access`, run once before the transfer. Stolen & Delayed escalates through Escalate to Human | D-040 |
+| C-12 | Built: `router_active_task` + router instructions | D-041 |
+| C-13 | Built: description changed, behavior kept | D-042 |
 
 ## 1. Rules for every contract (proposed)
 
