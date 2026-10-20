@@ -1,9 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Comment__c</fullName>
     <label>Comment</label>
-    <description>Optional free-text comment. Asked only when the score is low, to understand what went wrong.</description>
-    <inlineHelpText>Optional comment the customer gave about their experience.</inlineHelpText>
+    <description
+  >Optional free-text comment: the agent's own written summary of how the interaction went, generated from the conversation, not dictated by the customer.</description>
+    <inlineHelpText
+  >Agent-generated summary of the interaction, paired with the customer's thumbs up/down choice.</inlineHelpText>
     <type>LongTextArea</type>
     <length>32768</length>
     <visibleLines>5</visibleLines>
