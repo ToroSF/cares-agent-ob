@@ -108,7 +108,7 @@ variables:
     refund_currency: mutable string = ""
         description: "Refund: ISO currency code of the offer, from the calculate offer action. Set by the script."
     router_active_task: mutable string = ""
-        description: "Router: REFUND or STOLEN_DELAYED while that sub-agent is mid-task, blank otherwise. Written only by the script in those sub-agents, cleared by Escalate to Human and Experience Rating. Read by the router so a reply to an open question goes back to the right sub-agent."
+        description: "Router: REFUND or STOLEN_DELAYED while that sub-agent is mid-task, else blank. Set by their scripts, cleared by Escalate to Human and Experience Rating. The router uses it to send replies back to the open task."
     escalation_case_attempted: mutable boolean = False
         description: "Escalate to Human: True once the escalation case action has run in this conversation. Set by the script."
     escalation_case_created: mutable boolean = False
@@ -464,7 +464,7 @@ subagent refund:
 
 subagent stolen_delayed_orders:
     label: "Stolen & Delayed Orders"
-    description: "Handles orders reported as stolen, missing or late. For orders marked delivered with no photo from the customer or the driver, an Apex policy reads delivery telemetry and trust history and decides. It never issues refunds or credits: approved claims go to Refund through Risk Detection with the full context. It can re-dispatch the order, and sends risky or sensitive cases to a person."
+    description: "Handles orders reported as stolen, missing or late. An Apex policy checks delivery evidence and trust and decides. Never issues refunds: approved claims go to Refund through Risk Detection. Can re-dispatch; risky cases go to a person."
 
     before_reasoning:
         # Refund paid the last claim: clear it so a new order can be checked
@@ -489,7 +489,7 @@ subagent stolen_delayed_orders:
 
     actions:
         evaluate_delivery_exception:
-            description: "Read-only. Checks the order: driver GPS at the moment it was marked delivered, driver wait time, calls and chats to the customer, photo evidence, customer claim rate, driver non-delivery rate, fraud and duplication signals, and order value. Returns the decision."
+            description: "Read-only. Checks the order: driver GPS when marked delivered, wait time, contact attempts, photos, customer claim rate, driver non-delivery rate, fraud and duplicate signals, and order value. Returns the decision."
             label: "Check Delivery"
             include_in_progress_indicator: True
             progress_indicator_message: "Checking your delivery..."
