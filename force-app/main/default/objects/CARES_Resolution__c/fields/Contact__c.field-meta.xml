@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Contact__c</fullName>
+    <label>Contact</label>
+    <description>The customer the resolution was issued to.</description>
+    <type>Lookup</type>
+    <referenceTo>Contact</referenceTo>
+    <relationshipLabel>CARES Resolutions</relationshipLabel>
+    <relationshipName>CARES_Resolutions</relationshipName>
+    <required>true</required>
+    <deleteConstraint>Restrict</deleteConstraint>
+</CustomField>

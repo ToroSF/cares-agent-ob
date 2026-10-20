@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Clean_History_Max_Refund__c</fullName>
+    <label>Clean History Max Refund</label>
+    <description
+  >Ceiling for this tier x outcome when risk_status is CLEAN (D-025). Must be greater than or equal to Max_Refund__c; the Apex does not enforce that, CRM users must.</description>
+    <type>Currency</type>
+    <precision>12</precision>
+    <scale>2</scale>
+    <required>true</required>
+</CustomField>
