@@ -6,6 +6,8 @@
    "email": "geoff.wyllt@example.com",
    "tier": "Explorer",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240825-QN0SODC",
    "latest_status": "Delivered",
    "order": "PR-240825-QN0SODC",
@@ -20,12 +22,14 @@
    "price3": "12.90",
    "offer_one": "12.90",
    "credit_one": "14.19",
-   "offer_two": "25.00",
-   "credit_two": "27.50",
-   "offer_all": "25.00",
-   "credit_all": "27.50",
+   "offer_two": "25.80",
+   "credit_two": "28.38",
+   "offer_all": "35.00",
+   "credit_all": "38.50",
    "offer_all_clean": "35.00",
-   "credit_all_clean": "38.50"
+   "credit_all_clean": "38.50",
+   "offer_all_std": "25.00",
+   "credit_all_std": "27.50"
   },
   "FX-EXP-2": {
    "cid": "003jV00000CfpEVQAZ",
@@ -33,6 +37,8 @@
    "email": "giacopo.maryet@example.com",
    "tier": "Explorer",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240819-CNK6KC0",
    "latest_status": "Delivered",
    "order": "PR-240819-CNK6KC0",
@@ -47,12 +53,14 @@
    "price3": "12.54",
    "offer_one": "12.53",
    "credit_one": "13.78",
-   "offer_two": "25.00",
-   "credit_two": "27.50",
-   "offer_all": "25.00",
-   "credit_all": "27.50",
+   "offer_two": "25.06",
+   "credit_two": "27.57",
+   "offer_all": "35.00",
+   "credit_all": "38.50",
    "offer_all_clean": "35.00",
-   "credit_all_clean": "38.50"
+   "credit_all_clean": "38.50",
+   "offer_all_std": "25.00",
+   "credit_all_std": "27.50"
   },
   "FX-INS": {
    "cid": "003jV00000CfpEKQAZ",
@@ -60,6 +68,8 @@
    "email": "calley.macintyre@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240818-2XDHU3O",
    "latest_status": "Delivered",
    "order": "PR-240818-2XDHU3O",
@@ -79,7 +89,9 @@
    "offer_all": "26.60",
    "credit_all": "30.59",
    "offer_all_clean": "26.60",
-   "credit_all_clean": "30.59"
+   "credit_all_clean": "30.59",
+   "offer_all_std": "26.60",
+   "credit_all_std": "30.59"
   },
   "FX-INS-2": {
    "cid": "003jV00000CfpFWQAZ",
@@ -87,6 +99,8 @@
    "email": "ring.velden@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240824-XEE47I3",
    "latest_status": "Delivered",
    "order": "PR-240824-XEE47I3",
@@ -106,7 +120,9 @@
    "offer_all": "27.70",
    "credit_all": "31.86",
    "offer_all_clean": "27.70",
-   "credit_all_clean": "31.86"
+   "credit_all_clean": "31.86",
+   "offer_all_std": "27.70",
+   "credit_all_std": "31.86"
   },
   "FX-PP": {
    "cid": "003jV00000CfpCfQAJ",
@@ -114,6 +130,8 @@
    "email": "gage.balwin@example.com",
    "tier": "Pronto Plus",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240826-BSL3NHL",
    "latest_status": "Delivered",
    "order": "PR-240826-BSL3NHL",
@@ -133,7 +151,9 @@
    "offer_all": "49.70",
    "credit_all": "59.64",
    "offer_all_clean": "49.70",
-   "credit_all_clean": "59.64"
+   "credit_all_clean": "59.64",
+   "offer_all_std": "49.70",
+   "credit_all_std": "59.64"
   },
   "FX-PP-2": {
    "cid": "003jV00000CfpDXQAZ",
@@ -141,6 +161,8 @@
    "email": "jess.gadault@example.com",
    "tier": "Pronto Plus",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240830-A2F7G72",
    "latest_status": "Delivered",
    "order": "PR-240830-A2F7G72",
@@ -160,7 +182,9 @@
    "offer_all": "28.80",
    "credit_all": "34.56",
    "offer_all_clean": "28.80",
-   "credit_all_clean": "34.56"
+   "credit_all_clean": "34.56",
+   "offer_all_std": "28.80",
+   "credit_all_std": "34.56"
   },
   "FX-ONE": {
    "cid": "003jV00000CfpCdQAJ",
@@ -168,6 +192,8 @@
    "email": "duky.atkyns@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240826-VS09AEQ",
    "latest_status": "Delivered",
    "order": "PR-240826-VS09AEQ",
@@ -181,7 +207,9 @@
    "offer_all": "30.50",
    "credit_all": "35.08",
    "offer_all_clean": "30.50",
-   "credit_all_clean": "35.08"
+   "credit_all_clean": "35.08",
+   "offer_all_std": "30.50",
+   "credit_all_std": "35.08"
   },
   "FX-BIG": {
    "cid": "003jV00000CfpFRQAZ",
@@ -189,6 +217,8 @@
    "email": "nert.tungay@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240824-CNVVHNB",
    "latest_status": "Delivered",
    "order": "PR-240824-CNVVHNB",
@@ -205,10 +235,12 @@
    "credit_one": "12.56",
    "offer_two": "21.84",
    "credit_two": "25.12",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "FX-OFD": {
    "cid": "003jV00000CfpDAQAZ",
@@ -216,6 +248,8 @@
    "email": "devin.demattia@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240828-9JJQHS8",
    "latest_status": "Out for Delivery",
    "order": "PR-240725-1V95D3F",
@@ -232,10 +266,12 @@
    "credit_one": "13.25",
    "offer_two": "23.04",
    "credit_two": "26.50",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "FX-PREP": {
    "cid": "003jV00000CfpDBQAZ",
@@ -243,6 +279,8 @@
    "email": "delmore.decroix@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240829-EM6AVJZ",
    "latest_status": "Preparing",
    "order": "PR-240811-8WZAVTE",
@@ -259,10 +297,12 @@
    "credit_one": "10.41",
    "offer_two": "18.10",
    "credit_two": "20.82",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "54.30",
+   "credit_all": "62.44",
    "offer_all_clean": "54.30",
-   "credit_all_clean": "62.44"
+   "credit_all_clean": "62.44",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "FX-CANC": {
    "cid": "003jV00000CfpCXQAZ",
@@ -270,6 +310,8 @@
    "email": "rubia.abarrow@example.com",
    "tier": "Explorer",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240825-XL4Z9P1",
    "latest_status": "Canceled",
    "order": "PR-240808-7VHCQ11",
@@ -286,10 +328,12 @@
    "credit_one": "10.96",
    "offer_two": "19.92",
    "credit_two": "21.91",
-   "offer_all": "25.00",
-   "credit_all": "27.50",
+   "offer_all": "35.00",
+   "credit_all": "38.50",
    "offer_all_clean": "35.00",
-   "credit_all_clean": "38.50"
+   "credit_all_clean": "38.50",
+   "offer_all_std": "25.00",
+   "credit_all_std": "27.50"
   },
   "FX-OTHER": {
    "cid": "003jV00000CfpDUQAZ",
@@ -297,6 +341,8 @@
    "email": "garrik.forman@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240830-FWZ0TPF",
    "latest_status": "Out for Delivery",
    "order": "PR-240813-8TAT0JC",
@@ -313,17 +359,21 @@
    "credit_one": "18.20",
    "offer_two": "31.66",
    "credit_two": "36.41",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "47.50",
+   "credit_all": "54.62",
    "offer_all_clean": "47.50",
-   "credit_all_clean": "54.62"
+   "credit_all_clean": "54.62",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "FX-DIRTY": {
    "cid": "003jV00000CfpEcQAJ",
    "name": "Alex Morgan",
    "email": "alex.morgan@example.com",
    "tier": "Pronto Plus",
-   "cases": 5,
+   "cases": 6,
+   "issues": 5,
+   "risk": "PATTERN_REVIEW",
    "latest": "PR-250814-C3V2D3K",
    "latest_status": "Out for Delivery",
    "order": "PR-250812-0LNZ2JM",
@@ -343,7 +393,9 @@
    "offer_all": "27.40",
    "credit_all": "32.88",
    "offer_all_clean": "27.40",
-   "credit_all_clean": "32.88"
+   "credit_all_clean": "32.88",
+   "offer_all_std": "27.40",
+   "credit_all_std": "32.88"
   },
   "FX-CLEAN-BIG": {
    "cid": "003jV00000CfpCbQAJ",
@@ -351,6 +403,8 @@
    "email": "boyce.antrag@example.com",
    "tier": "Pronto Plus",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240826-B9FGO67",
    "latest_status": "Delivered",
    "order": "PR-240826-B9FGO67",
@@ -367,10 +421,12 @@
    "credit_one": "12.71",
    "offer_two": "21.18",
    "credit_two": "25.42",
-   "offer_all": "60.00",
-   "credit_all": "72.00",
+   "offer_all": "80.00",
+   "credit_all": "96.00",
    "offer_all_clean": "80.00",
-   "credit_all_clean": "96.00"
+   "credit_all_clean": "96.00",
+   "offer_all_std": "60.00",
+   "credit_all_std": "72.00"
   },
   "P-PETRONILLE-LYSTE": {
    "cid": "003jV00000CfpEJQAZ",
@@ -378,6 +434,8 @@
    "email": "petronille.lyste@example.com",
    "tier": "Explorer",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240817-5W2XCC5",
    "latest_status": "Delivered",
    "order": "PR-240817-5W2XCC5",
@@ -395,7 +453,9 @@
    "offer_all": "17.00",
    "credit_all": "18.70",
    "offer_all_clean": "17.00",
-   "credit_all_clean": "18.70"
+   "credit_all_clean": "18.70",
+   "offer_all_std": "17.00",
+   "credit_all_std": "18.70"
   },
   "P-JEFFREY-VALENTINE": {
    "cid": "003jV00000CfpFVQAZ",
@@ -403,6 +463,8 @@
    "email": "jeffrey.valentine@example.com",
    "tier": "Explorer",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240824-HE7TUW7",
    "latest_status": "Delivered",
    "order": "PR-240824-HE7TUW7",
@@ -420,7 +482,9 @@
    "offer_all": "18.10",
    "credit_all": "19.91",
    "offer_all_clean": "18.10",
-   "credit_all_clean": "19.91"
+   "credit_all_clean": "19.91",
+   "offer_all_std": "18.10",
+   "credit_all_std": "19.91"
   },
   "P-HUMFRID-JENDRUSCH": {
    "cid": "003jV00000CfpE0QAJ",
@@ -428,6 +492,8 @@
    "email": "humfrid.jendrusch@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240816-CSQI55B",
    "latest_status": "Delivered",
    "order": "PR-240816-CSQI55B",
@@ -447,7 +513,9 @@
    "offer_all": "29.90",
    "credit_all": "34.38",
    "offer_all_clean": "29.90",
-   "credit_all_clean": "34.38"
+   "credit_all_clean": "34.38",
+   "offer_all_std": "29.90",
+   "credit_all_std": "34.38"
   },
   "P-BEATRIX-SHOOTER": {
    "cid": "003jV00000CfpFAQAZ",
@@ -455,6 +523,8 @@
    "email": "beatrix.shooter@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240822-GY8RVKV",
    "latest_status": "Delivered",
    "order": "PR-240822-GY8RVKV",
@@ -474,7 +544,9 @@
    "offer_all": "31.00",
    "credit_all": "35.65",
    "offer_all_clean": "31.00",
-   "credit_all_clean": "35.65"
+   "credit_all_clean": "35.65",
+   "offer_all_std": "31.00",
+   "credit_all_std": "35.65"
   },
   "P-DIANE-MARIE-PANTRY": {
    "cid": "003jV00000CfpEpQAJ",
@@ -482,6 +554,8 @@
    "email": "dianemarie.pantry@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240820-YGHQOJM",
    "latest_status": "Delivered",
    "order": "PR-240820-YGHQOJM",
@@ -501,7 +575,9 @@
    "offer_all": "34.30",
    "credit_all": "39.44",
    "offer_all_clean": "34.30",
-   "credit_all_clean": "39.44"
+   "credit_all_clean": "39.44",
+   "offer_all_std": "34.30",
+   "credit_all_std": "39.44"
   },
   "P-MARTA-BASSINDALE": {
    "cid": "003jV00000CfpChQAJ",
@@ -509,6 +585,8 @@
    "email": "marta.bassindale@example.com",
    "tier": "Pronto Plus",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240826-YLNU39N",
    "latest_status": "Delivered",
    "order": "PR-240826-YLNU39N",
@@ -528,7 +606,9 @@
    "offer_all": "34.00",
    "credit_all": "40.80",
    "offer_all_clean": "34.00",
-   "credit_all_clean": "40.80"
+   "credit_all_clean": "40.80",
+   "offer_all_std": "34.00",
+   "credit_all_std": "40.80"
   },
   "P-ROZANNE-DEVEREUX": {
    "cid": "003jV00000CfpDCQAZ",
@@ -536,6 +616,8 @@
    "email": "rozanne.devereux@example.com",
    "tier": "Pronto Plus",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240829-5WE179W",
    "latest_status": "Delivered",
    "order": "PR-240829-5WE179W",
@@ -555,7 +637,9 @@
    "offer_all": "41.70",
    "credit_all": "50.04",
    "offer_all_clean": "41.70",
-   "credit_all_clean": "50.04"
+   "credit_all_clean": "50.04",
+   "offer_all_std": "41.70",
+   "credit_all_std": "50.04"
   },
   "P-PEYTON-BATRICK": {
    "cid": "003jV00000CfpCiQAJ",
@@ -563,6 +647,8 @@
    "email": "peyton.batrick@example.com",
    "tier": "Pronto Plus",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240826-AL2NKVM",
    "latest_status": "Delivered",
    "order": "PR-240826-AL2NKVM",
@@ -582,7 +668,9 @@
    "offer_all": "43.60",
    "credit_all": "52.32",
    "offer_all_clean": "43.60",
-   "credit_all_clean": "52.32"
+   "credit_all_clean": "52.32",
+   "offer_all_std": "43.60",
+   "credit_all_std": "52.32"
   },
   "P-DORE-BRIANT": {
    "cid": "003jV00000CfpCpQAJ",
@@ -590,6 +678,8 @@
    "email": "dore.briant@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240827-L9KMKYL",
    "latest_status": "Delivered",
    "order": "PR-240827-L9KMKYL",
@@ -603,7 +693,9 @@
    "offer_all": "16.20",
    "credit_all": "18.63",
    "offer_all_clean": "16.20",
-   "credit_all_clean": "18.63"
+   "credit_all_clean": "18.63",
+   "offer_all_std": "16.20",
+   "credit_all_std": "18.63"
   },
   "P-BRUCE-CLEMENDOT": {
    "cid": "003jV00000CfpCzQAJ",
@@ -611,6 +703,8 @@
    "email": "bruce.clemendot@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240827-HQ2DT25",
    "latest_status": "Delivered",
    "order": "PR-240827-HQ2DT25",
@@ -624,7 +718,9 @@
    "offer_all": "27.20",
    "credit_all": "31.28",
    "offer_all_clean": "27.20",
-   "credit_all_clean": "31.28"
+   "credit_all_clean": "31.28",
+   "offer_all_std": "27.20",
+   "credit_all_std": "31.28"
   },
   "P-PENNY-DANFORTH": {
    "cid": "003jV00000CfpD9QAJ",
@@ -632,6 +728,8 @@
    "email": "penny.danforth@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240828-ZO28CZ7",
    "latest_status": "Delivered",
    "order": "PR-240828-ZO28CZ7",
@@ -645,7 +743,9 @@
    "offer_all": "12.90",
    "credit_all": "14.84",
    "offer_all_clean": "12.90",
-   "credit_all_clean": "14.84"
+   "credit_all_clean": "14.84",
+   "offer_all_std": "12.90",
+   "credit_all_std": "14.84"
   },
   "P-ANGELE-EVINS": {
    "cid": "003jV00000CfpDNQAZ",
@@ -653,6 +753,8 @@
    "email": "angele.evins@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240830-VD327CL",
    "latest_status": "Out for Delivery",
    "order": "PR-240812-BACIUK4",
@@ -669,10 +771,12 @@
    "credit_one": "12.30",
    "offer_two": "21.40",
    "credit_two": "24.61",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "P-ELLERY-COLLOPY": {
    "cid": "003jV00000CfpD2QAJ",
@@ -680,6 +784,8 @@
    "email": "ellery.collopy@example.com",
    "tier": "Pronto Plus",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240828-7RFIQSL",
    "latest_status": "Preparing",
    "order": "PR-240811-7CPITCY",
@@ -696,10 +802,12 @@
    "credit_one": "13.40",
    "offer_two": "22.34",
    "credit_two": "26.81",
-   "offer_all": "60.00",
-   "credit_all": "72.00",
+   "offer_all": "78.20",
+   "credit_all": "93.84",
    "offer_all_clean": "78.20",
-   "credit_all_clean": "93.84"
+   "credit_all_clean": "93.84",
+   "offer_all_std": "60.00",
+   "credit_all_std": "72.00"
   },
   "P-CORIE-FAIRLEIGH": {
    "cid": "003jV00000CfpDOQAZ",
@@ -707,6 +815,8 @@
    "email": "corie.fairleigh@example.com",
    "tier": "Pronto Plus",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240830-HQGS8WQ",
    "latest_status": "Preparing",
    "order": "PR-240813-9UVJYIW",
@@ -723,10 +833,12 @@
    "credit_one": "12.67",
    "offer_two": "21.12",
    "credit_two": "25.34",
-   "offer_all": "60.00",
-   "credit_all": "72.00",
+   "offer_all": "80.00",
+   "credit_all": "96.00",
    "offer_all_clean": "80.00",
-   "credit_all_clean": "96.00"
+   "credit_all_clean": "96.00",
+   "offer_all_std": "60.00",
+   "credit_all_std": "72.00"
   },
   "P-KARENA-COWBURN": {
    "cid": "003jV00000CfpD4QAJ",
@@ -734,6 +846,8 @@
    "email": "karena.cowburn@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240828-SPQ6VBC",
    "latest_status": "Canceled",
    "order": "PR-240811-CE4ZLFE",
@@ -750,10 +864,12 @@
    "credit_one": "12.44",
    "offer_two": "21.64",
    "credit_two": "24.89",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "P-EVANNE-FOSBERRY": {
    "cid": "003jV00000CfpDVQAZ",
@@ -761,6 +877,8 @@
    "email": "evanne.fosberry@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240830-X8IB5Q7",
    "latest_status": "Canceled",
    "order": "PR-240813-VC2DRCB",
@@ -777,10 +895,12 @@
    "credit_one": "16.41",
    "offer_two": "28.54",
    "credit_two": "32.82",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "P-CANDACE-PIGFORD": {
    "cid": "003jV00000CfpEvQAJ",
@@ -788,6 +908,8 @@
    "email": "candace.pigford@example.com",
    "tier": "Explorer",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240821-TH740O6",
    "latest_status": "Canceled",
    "order": "PR-240804-UB0FQSZ",
@@ -800,12 +922,14 @@
    "price2": "14.55",
    "offer_one": "14.55",
    "credit_one": "16.00",
-   "offer_two": "25.00",
-   "credit_two": "27.50",
-   "offer_all": "25.00",
-   "credit_all": "27.50",
+   "offer_two": "29.10",
+   "credit_two": "32.01",
+   "offer_all": "29.10",
+   "credit_all": "32.01",
    "offer_all_clean": "29.10",
-   "credit_all_clean": "32.01"
+   "credit_all_clean": "32.01",
+   "offer_all_std": "25.00",
+   "credit_all_std": "27.50"
   },
   "FX-CLEAN": {
    "cid": "003jV00000CfpDZQAZ",
@@ -813,6 +937,8 @@
    "email": "darren.gommery@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240831-SO0F85U",
    "latest_status": "Delivered",
    "order": "PR-240831-SO0F85U",
@@ -829,10 +955,43 @@
    "credit_one": "11.04",
    "offer_two": "19.20",
    "credit_two": "22.08",
+   "offer_all": "48.00",
+   "credit_all": "55.20",
+   "offer_all_clean": "48.00",
+   "credit_all_clean": "55.20",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
+  },
+  "FX-NOTCLEAN": {
+   "cid": "003jV00000CfpFNQAZ",
+   "name": "Bathsheba Thatcham",
+   "email": "bathsheba.thatcham@example.com",
+   "tier": "Insider",
+   "cases": 1,
+   "issues": 1,
+   "risk": "NOT_CLEAN",
+   "latest": "PR-240823-0ZUOKSO",
+   "latest_status": "Delivered",
+   "order": "PR-240823-0ZUOKSO",
+   "total": "70.80",
+   "item_count": 6,
+   "items_all": "Cold Brew, Garlic Bread, Cookie, Chicken Tacos, Turkey Avocado Sandwich and Kombucha",
+   "item1": "Cold Brew",
+   "price1": "11.80",
+   "item2": "Garlic Bread",
+   "price2": "11.80",
+   "item3": "Cookie",
+   "price3": "11.80",
+   "offer_one": "11.80",
+   "credit_one": "13.57",
+   "offer_two": "23.60",
+   "credit_two": "27.14",
    "offer_all": "40.00",
    "credit_all": "46.00",
-   "offer_all_clean": "48.00",
-   "credit_all_clean": "55.20"
+   "offer_all_clean": "55.00",
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-DEEANN-BRUMBLE": {
    "cid": "003jV00000CfpCqQAJ",
@@ -840,6 +999,8 @@
    "email": "deeann.brumble@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240827-PBMSVGB",
    "latest_status": "Delivered",
    "order": "PR-240827-PBMSVGB",
@@ -857,7 +1018,9 @@
    "offer_all": "25.80",
    "credit_all": "29.67",
    "offer_all_clean": "25.80",
-   "credit_all_clean": "29.67"
+   "credit_all_clean": "29.67",
+   "offer_all_std": "25.80",
+   "credit_all_std": "29.67"
   },
   "E-DULCE-BUCKTHORPE": {
    "cid": "003jV00000CfpCrQAJ",
@@ -865,6 +1028,8 @@
    "email": "dulce.buckthorpe@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240827-2CNBKRM",
    "latest_status": "Delivered",
    "order": "PR-240827-2CNBKRM",
@@ -884,7 +1049,9 @@
    "offer_all": "35.40",
    "credit_all": "40.71",
    "offer_all_clean": "35.40",
-   "credit_all_clean": "40.71"
+   "credit_all_clean": "40.71",
+   "offer_all_std": "35.40",
+   "credit_all_std": "40.71"
   },
   "E-DULCE-SHEARDS": {
    "cid": "003jV00000CfpF8QAJ",
@@ -892,6 +1059,8 @@
    "email": "dulce.sheards@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240822-5OK8496",
    "latest_status": "Delivered",
    "order": "PR-240822-5OK8496",
@@ -905,7 +1074,9 @@
    "offer_all": "11.80",
    "credit_all": "13.57",
    "offer_all_clean": "11.80",
-   "credit_all_clean": "13.57"
+   "credit_all_clean": "13.57",
+   "offer_all_std": "11.80",
+   "credit_all_std": "13.57"
   },
   "E-EDGARD-PENGILLY": {
    "cid": "003jV00000CfpEtQAJ",
@@ -913,6 +1084,8 @@
    "email": "edgard.pengilly@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240821-ITZU96D",
    "latest_status": "Delivered",
    "order": "PR-240821-ITZU96D",
@@ -929,10 +1102,12 @@
    "credit_one": "12.09",
    "offer_two": "21.02",
    "credit_two": "24.17",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-ELISSA-DOWSING": {
    "cid": "003jV00000CfpDIQAZ",
@@ -940,6 +1115,8 @@
    "email": "elissa.dowsing@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240829-S215SD8",
    "latest_status": "Delivered",
    "order": "PR-240829-S215SD8",
@@ -953,7 +1130,9 @@
    "offer_all": "23.90",
    "credit_all": "27.48",
    "offer_all_clean": "23.90",
-   "credit_all_clean": "27.48"
+   "credit_all_clean": "27.48",
+   "offer_all_std": "23.90",
+   "credit_all_std": "27.48"
   },
   "E-EMMET-PAOLONI": {
    "cid": "003jV00000CfpErQAJ",
@@ -961,6 +1140,8 @@
    "email": "emmet.paoloni@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240820-ZFBCIR2",
    "latest_status": "Delivered",
    "order": "PR-240820-ZFBCIR2",
@@ -977,10 +1158,12 @@
    "credit_one": "12.62",
    "offer_two": "21.94",
    "credit_two": "25.23",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "43.90",
+   "credit_all": "50.48",
    "offer_all_clean": "43.90",
-   "credit_all_clean": "50.48"
+   "credit_all_clean": "50.48",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-EVANGELINA-HARRIMAN": {
    "cid": "003jV00000CfpDkQAJ",
@@ -988,6 +1171,8 @@
    "email": "evangelina.harriman@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240814-O8G688G",
    "latest_status": "Delivered",
    "order": "PR-240814-O8G688G",
@@ -1004,10 +1189,12 @@
    "credit_one": "11.67",
    "offer_two": "20.30",
    "credit_two": "23.34",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-FAYTHE-MINARD": {
    "cid": "003jV00000CfpEaQAJ",
@@ -1015,6 +1202,8 @@
    "email": "faythe.minard@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240819-FYNM7IE",
    "latest_status": "Delivered",
    "order": "PR-240819-FYNM7IE",
@@ -1031,10 +1220,12 @@
    "credit_one": "12.30",
    "offer_two": "21.40",
    "credit_two": "24.61",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-FERDINANDA-YELIASHEV": {
    "cid": "003jV00000CfpFhQAJ",
@@ -1042,6 +1233,8 @@
    "email": "ferdinanda.yeliashev@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240825-J1Z31XX",
    "latest_status": "Delivered",
    "order": "PR-240825-J1Z31XX",
@@ -1058,10 +1251,12 @@
    "credit_one": "13.88",
    "offer_two": "24.14",
    "credit_two": "27.76",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "48.30",
+   "credit_all": "55.54",
    "offer_all_clean": "48.30",
-   "credit_all_clean": "55.54"
+   "credit_all_clean": "55.54",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-GEORDIE-KEESE": {
    "cid": "003jV00000CfpE3QAJ",
@@ -1069,6 +1264,8 @@
    "email": "geordie.keese@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240816-TGAH9PA",
    "latest_status": "Delivered",
    "order": "PR-240816-TGAH9PA",
@@ -1085,10 +1282,12 @@
    "credit_one": "11.25",
    "offer_two": "19.56",
    "credit_two": "22.49",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-GERALDA-FERNEY": {
    "cid": "003jV00000CfpDPQAZ",
@@ -1096,6 +1295,8 @@
    "email": "geralda.ferney@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240830-9BXAHPA",
    "latest_status": "Delivered",
    "order": "PR-240830-9BXAHPA",
@@ -1112,10 +1313,12 @@
    "credit_one": "13.78",
    "offer_two": "23.96",
    "credit_two": "27.55",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-GERT-UC": {
    "cid": "003jV00000CfpFSQAZ",
@@ -1123,6 +1326,8 @@
    "email": "gert.uc@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240824-F5CENHI",
    "latest_status": "Delivered",
    "order": "PR-240824-F5CENHI",
@@ -1136,7 +1341,9 @@
    "offer_all": "8.50",
    "credit_all": "9.78",
    "offer_all_clean": "8.50",
-   "credit_all_clean": "9.78"
+   "credit_all_clean": "9.78",
+   "offer_all_std": "8.50",
+   "credit_all_std": "9.78"
   },
   "E-JASON-LATHAYE": {
    "cid": "003jV00000CfpECQAZ",
@@ -1144,6 +1351,8 @@
    "email": "jason.lathaye@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240817-1DP8AT4",
    "latest_status": "Delivered",
    "order": "PR-240817-1DP8AT4",
@@ -1160,10 +1369,12 @@
    "credit_one": "13.82",
    "offer_two": "24.04",
    "credit_two": "27.65",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-JAYSON-HAVESIDES": {
    "cid": "003jV00000CfpDmQAJ",
@@ -1171,6 +1382,8 @@
    "email": "jayson.havesides@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240814-SJ18HYI",
    "latest_status": "Delivered",
    "order": "PR-240814-SJ18HYI",
@@ -1187,10 +1400,12 @@
    "credit_one": "11.59",
    "offer_two": "20.16",
    "credit_two": "23.18",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-JOAN-HEASELGRAVE": {
    "cid": "003jV00000CfpDqQAJ",
@@ -1198,6 +1413,8 @@
    "email": "joan.heaselgrave@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240815-AWYOEZ1",
    "latest_status": "Delivered",
    "order": "PR-240815-AWYOEZ1",
@@ -1214,10 +1431,12 @@
    "credit_one": "16.94",
    "offer_two": "29.46",
    "credit_two": "33.88",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "44.20",
+   "credit_all": "50.83",
    "offer_all_clean": "44.20",
-   "credit_all_clean": "50.83"
+   "credit_all_clean": "50.83",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-JOELLEN-MACSHANE": {
    "cid": "003jV00000CfpENQAZ",
@@ -1225,6 +1444,8 @@
    "email": "joellen.macshane@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240818-01VMEEQ",
    "latest_status": "Delivered",
    "order": "PR-240818-01VMEEQ",
@@ -1241,10 +1462,12 @@
    "credit_one": "10.61",
    "offer_two": "18.46",
    "credit_two": "21.23",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-JOHANN-TAUNTON": {
    "cid": "003jV00000CfpFMQAZ",
@@ -1252,6 +1475,8 @@
    "email": "johann.taunton@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240823-WQ1K4UH",
    "latest_status": "Delivered",
    "order": "PR-240823-WQ1K4UH",
@@ -1268,10 +1493,12 @@
    "credit_one": "14.08",
    "offer_two": "24.48",
    "credit_two": "28.15",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-JONATHAN-LEWING": {
    "cid": "003jV00000CfpEFQAZ",
@@ -1279,6 +1506,8 @@
    "email": "jonathan.lewing@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240817-V6HZH50",
    "latest_status": "Delivered",
    "order": "PR-240817-V6HZH50",
@@ -1295,10 +1524,12 @@
    "credit_one": "12.78",
    "offer_two": "22.22",
    "credit_two": "25.55",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-JORGAN-ANTLIFF": {
    "cid": "003jV00000CfpCaQAJ",
@@ -1306,6 +1537,8 @@
    "email": "jorgan.antliff@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240825-AKNA9HM",
    "latest_status": "Delivered",
    "order": "PR-240825-AKNA9HM",
@@ -1322,10 +1555,12 @@
    "credit_one": "12.30",
    "offer_two": "21.40",
    "credit_two": "24.61",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-JULEE-MACKIESON": {
    "cid": "003jV00000CfpELQAZ",
@@ -1333,6 +1568,8 @@
    "email": "julee.mackieson@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240818-8CQUE6G",
    "latest_status": "Delivered",
    "order": "PR-240818-8CQUE6G",
@@ -1352,7 +1589,9 @@
    "offer_all": "36.20",
    "credit_all": "41.63",
    "offer_all_clean": "36.20",
-   "credit_all_clean": "41.63"
+   "credit_all_clean": "41.63",
+   "offer_all_std": "36.20",
+   "credit_all_std": "41.63"
   },
   "E-KARIN-HADLAND": {
    "cid": "003jV00000CfpDiQAJ",
@@ -1360,6 +1599,8 @@
    "email": "karin.hadland@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240814-Q74NWUN",
    "latest_status": "Delivered",
    "order": "PR-240814-Q74NWUN",
@@ -1376,10 +1617,12 @@
    "credit_one": "12.05",
    "offer_two": "20.96",
    "credit_two": "24.10",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "52.40",
+   "credit_all": "60.26",
    "offer_all_clean": "52.40",
-   "credit_all_clean": "60.26"
+   "credit_all_clean": "60.26",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-KATHIE-CHESON": {
    "cid": "003jV00000CfpCxQAJ",
@@ -1387,6 +1630,8 @@
    "email": "kathie.cheson@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240827-B2A07F5",
    "latest_status": "Delivered",
    "order": "PR-240827-B2A07F5",
@@ -1403,10 +1648,12 @@
    "credit_one": "11.98",
    "offer_two": "20.84",
    "credit_two": "23.97",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-KIN-THICKIN": {
    "cid": "003jV00000CfpFOQAZ",
@@ -1414,6 +1661,8 @@
    "email": "kin.thickin@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240823-SOGR2UK",
    "latest_status": "Delivered",
    "order": "PR-240823-SOGR2UK",
@@ -1430,10 +1679,12 @@
    "credit_one": "13.20",
    "offer_two": "22.96",
    "credit_two": "26.40",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-LURETTE-CASTLAKE": {
    "cid": "003jV00000CfpCvQAJ",
@@ -1441,6 +1692,8 @@
    "email": "lurette.castlake@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240827-6MJKENI",
    "latest_status": "Delivered",
    "order": "PR-240827-6MJKENI",
@@ -1457,10 +1710,12 @@
    "credit_one": "12.30",
    "offer_two": "21.40",
    "credit_two": "24.61",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-LAW-CLAPPSON": {
    "cid": "003jV00000CfpCyQAJ",
@@ -1468,6 +1723,8 @@
    "email": "law.clappson@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240827-AGCBYY0",
    "latest_status": "Delivered",
    "order": "PR-240827-AGCBYY0",
@@ -1484,10 +1741,12 @@
    "credit_one": "11.80",
    "offer_two": "20.52",
    "credit_two": "23.60",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-LEANORA-RICHFIELD": {
    "cid": "003jV00000CfpF3QAJ",
@@ -1495,6 +1754,8 @@
    "email": "leanora.richfield@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240822-8USMHSQ",
    "latest_status": "Delivered",
    "order": "PR-240822-8USMHSQ",
@@ -1511,10 +1772,12 @@
    "credit_one": "13.74",
    "offer_two": "23.90",
    "credit_two": "27.48",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-LEEANN-LIEBER": {
    "cid": "003jV00000CfpEGQAZ",
@@ -1522,6 +1785,8 @@
    "email": "leeann.lieber@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240817-YDU951R",
    "latest_status": "Delivered",
    "order": "PR-240817-YDU951R",
@@ -1538,10 +1803,12 @@
    "credit_one": "12.58",
    "offer_two": "21.88",
    "credit_two": "25.16",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-LEOLA-OLIVA": {
    "cid": "003jV00000CfpEkQAJ",
@@ -1549,6 +1816,8 @@
    "email": "leola.oliva@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240820-MCTJF6L",
    "latest_status": "Delivered",
    "order": "PR-240820-MCTJF6L",
@@ -1565,10 +1834,12 @@
    "credit_one": "10.25",
    "offer_two": "17.82",
    "credit_two": "20.49",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-LINDI-HARGESS": {
    "cid": "003jV00000CfpDjQAJ",
@@ -1576,6 +1847,8 @@
    "email": "lindi.hargess@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240814-J2MZFOJ",
    "latest_status": "Delivered",
    "order": "PR-240814-J2MZFOJ",
@@ -1592,10 +1865,12 @@
    "credit_one": "11.88",
    "offer_two": "20.66",
    "credit_two": "23.76",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MARCELLO-COLLEYMORE": {
    "cid": "003jV00000CfpD1QAJ",
@@ -1603,6 +1878,8 @@
    "email": "marcello.colleymore@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240828-WHSKTEE",
    "latest_status": "Delivered",
    "order": "PR-240828-WHSKTEE",
@@ -1619,10 +1896,12 @@
    "credit_one": "17.78",
    "offer_two": "30.92",
    "credit_two": "35.56",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "46.40",
+   "credit_all": "53.36",
    "offer_all_clean": "46.40",
-   "credit_all_clean": "53.36"
+   "credit_all_clean": "53.36",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MIGUEL-SIDDEN": {
    "cid": "003jV00000CfpFCQAZ",
@@ -1630,6 +1909,8 @@
    "email": "miguel.sidden@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240822-EZP9VKL",
    "latest_status": "Delivered",
    "order": "PR-240822-EZP9VKL",
@@ -1646,10 +1927,12 @@
    "credit_one": "11.55",
    "offer_two": "20.08",
    "credit_two": "23.09",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "50.20",
+   "credit_all": "57.73",
    "offer_all_clean": "50.20",
-   "credit_all_clean": "57.73"
+   "credit_all_clean": "57.73",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MITCHELL-CHISLETT": {
    "cid": "003jV00000CfpCuQAJ",
@@ -1657,6 +1940,8 @@
    "email": "mitchell.chislett@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240827-96PE5M5",
    "latest_status": "Delivered",
    "order": "PR-240827-96PE5M5",
@@ -1673,10 +1958,12 @@
    "credit_one": "11.88",
    "offer_two": "20.66",
    "credit_two": "23.76",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MONROE-MELLOY": {
    "cid": "003jV00000CfpEXQAZ",
@@ -1684,6 +1971,8 @@
    "email": "monroe.melloy@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240819-7J2683E",
    "latest_status": "Delivered",
    "order": "PR-240819-7J2683E",
@@ -1700,10 +1989,12 @@
    "credit_one": "12.72",
    "offer_two": "22.12",
    "credit_two": "25.44",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MORDECAI-MORE": {
    "cid": "003jV00000CfpEbQAJ",
@@ -1711,6 +2002,8 @@
    "email": "mordecai.more@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240819-K6ZR4K4",
    "latest_status": "Delivered",
    "order": "PR-240819-K6ZR4K4",
@@ -1727,10 +2020,12 @@
    "credit_one": "12.16",
    "offer_two": "21.14",
    "credit_two": "24.31",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MORTON-KITLEE": {
    "cid": "003jV00000CfpE6QAJ",
@@ -1738,6 +2033,8 @@
    "email": "morton.kitlee@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240816-X0J9SIE",
    "latest_status": "Delivered",
    "order": "PR-240816-X0J9SIE",
@@ -1754,10 +2051,12 @@
    "credit_one": "11.19",
    "offer_two": "19.46",
    "credit_two": "22.38",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MORTON-ZOEPHEL": {
    "cid": "003jV00000CfpFiQAJ",
@@ -1765,6 +2064,8 @@
    "email": "morton.zoephel@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240825-ICBV62B",
    "latest_status": "Delivered",
    "order": "PR-240825-ICBV62B",
@@ -1781,10 +2082,12 @@
    "credit_one": "13.32",
    "offer_two": "23.16",
    "credit_two": "26.63",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MUNMRO-WESTGARTH": {
    "cid": "003jV00000CfpFdQAJ",
@@ -1792,6 +2095,8 @@
    "email": "munmro.westgarth@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240825-AO57FHO",
    "latest_status": "Delivered",
    "order": "PR-240825-AO57FHO",
@@ -1808,10 +2113,12 @@
    "credit_one": "10.89",
    "offer_two": "18.94",
    "credit_two": "21.78",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MURDOCH-DORCEY": {
    "cid": "003jV00000CfpDHQAZ",
@@ -1819,6 +2126,8 @@
    "email": "murdoch.dorcey@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240829-9XLO0YL",
    "latest_status": "Delivered",
    "order": "PR-240829-9XLO0YL",
@@ -1835,10 +2144,12 @@
    "credit_one": "11.45",
    "offer_two": "19.92",
    "credit_two": "22.91",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   },
   "E-MURRY-MARQUIS": {
    "cid": "003jV00000CfpETQAZ",
@@ -1846,6 +2157,8 @@
    "email": "murry.marquis@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240818-DJ6UXK4",
    "latest_status": "Delivered",
    "order": "PR-240818-DJ6UXK4",
@@ -1859,7 +2172,9 @@
    "offer_all": "18.40",
    "credit_all": "21.16",
    "offer_all_clean": "18.40",
-   "credit_all_clean": "21.16"
+   "credit_all_clean": "21.16",
+   "offer_all_std": "18.40",
+   "credit_all_std": "21.16"
   },
   "E-NATHAN-TIDBOLD": {
    "cid": "003jV00000CfpFPQAZ",
@@ -1867,6 +2182,8 @@
    "email": "nathan.tidbold@example.com",
    "tier": "Insider",
    "cases": 0,
+   "issues": 0,
+   "risk": "CLEAN",
    "latest": "PR-240824-2ACGGUZ",
    "latest_status": "Delivered",
    "order": "PR-240824-2ACGGUZ",
@@ -1883,10 +2200,12 @@
    "credit_one": "12.94",
    "offer_two": "22.50",
    "credit_two": "25.88",
-   "offer_all": "40.00",
-   "credit_all": "46.00",
+   "offer_all": "55.00",
+   "credit_all": "63.25",
    "offer_all_clean": "55.00",
-   "credit_all_clean": "63.25"
+   "credit_all_clean": "63.25",
+   "offer_all_std": "40.00",
+   "credit_all_std": "46.00"
   }
  },
  "pools": {

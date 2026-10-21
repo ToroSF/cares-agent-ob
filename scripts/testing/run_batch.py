@@ -278,12 +278,12 @@ def check(sc, sessions, fx):
     problems = [("ERROR " + s["error"]) for s in sessions if s.get("error")]
     # The platform's generic failure reply with no model step is an infrastructure error, not an agent result
     for s in sessions:
-        for who, t in s["convo"]:
+        for who, t in s.get("convo", []):  # a session that failed to start has no convo
             if who == "agent" and GENERIC_ERROR.search(t):
                 problems.append("ERROR platform: " + GENERIC_ERROR.search(t).group(0))
         # A turn that ran no sub-agent at all and said nothing is the same outage (seen at its start, G-090)
-        replies = [t for who, t in s["convo"] if who == "agent"]
-        if replies and not s["trace"]["path"] and all(t.replace("<EndOfTurn>", "").strip() == "" for t in replies):
+        replies = [t for who, t in s.get("convo", []) if who == "agent"]
+        if replies and not s.get("trace", {}).get("path") and all(t.replace("<EndOfTurn>", "").strip() == "" for t in replies):
             problems.append("ERROR platform: empty turn with no sub-agent")
     problems += expect_problems(sc.get("expect", {}), sessions, fx)
     inv, notes = invariant_problems(sc, sessions)

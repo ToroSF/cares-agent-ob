@@ -327,6 +327,49 @@ function loadTestingCenter() {
     .sort((a, b) => String(a.runAt).localeCompare(String(b.runAt)));
 }
 
+// ---------- live batch runs (scripts/testing/run_batch.py) ----------
+
+// Counts only: outcomes per run and the latest outcome per scenario, from test-results.json
+const OUTCOMES = ["PASS", "EXPECTED_FAIL", "FLAKY", "FAIL", "UNEXPECTED_PASS", "N/A"];
+function loadBatch() {
+  const results = JSON.parse(readRepo(".claude/skills/cares-testing/test-results.json") || '{"runs":[]}');
+  const dir = ".claude/skills/cares-testing/scenarios";
+  const files = (git("ls-tree", "--name-only", docsRef || "HEAD", `${dir}/`) || "").split("\n").filter((f) => f.endsWith(".json"));
+  const checked = new Set(files.flatMap((f) => (JSON.parse(readRepo(f) || '{"scenarios":[]}').scenarios || []).map((s) => s.id.replace(/[a-z]$/, ""))));
+  // Persona of each scenario, as written in personas.md (run labels are not personas)
+  const personaOf = {};
+  let persona = "";
+  for (const line of (readRepo(".claude/skills/cares-testing/personas.md") || "").split("\n")) {
+    const h = line.match(/^## (P\d+)\.\s*(.+)/);
+    if (h) persona = `${h[1]} ${h[2].replace(/\(.*?\)/g, "").trim()}`;
+    const m = line.match(/\*\*(B-[A-Z]+-\d+)\*\*/);
+    if (m && persona) personaOf[m[1]] ??= persona;
+  }
+  const outcomeOf = (r) => r.result || ((u) => (u.length === 1 ? u[0] : "FLAKY"))([...new Set((r.outcomes || []).filter((o) => o !== "ERROR"))]);
+  const latest = {};
+  const runs = (results.runs || []).filter((run) => run.tier === "L").map((run) => {
+    const rows = Object.values(run.personas || {}).flatMap((p) => p.results || []);
+    for (const r of rows) latest[r.scenario] = { outcome: outcomeOf(r), persona: personaOf[r.scenario.replace(/[a-z]$/, "")] || "other" };
+    return {
+      at: run.timestamp,
+      file: String(run.scenarioFile || "").replace(/^.*\//, "").replace(/ .*/, ""),
+      agentVersion: run.agentVersion,
+      scenarios: rows.length,
+      sessions: run.summary?.runs ?? null,
+      byOutcome: count(rows, outcomeOf),
+    };
+  });
+  const latestRows = Object.values(latest);
+  return {
+    checkedScenarios: checked.size,
+    runs,
+    totalSessions: runs.reduce((a, r) => a + (r.sessions || 0), 0),
+    latest: { total: latestRows.length, byOutcome: count(latestRows, "outcome") },
+    byPersona: Object.fromEntries(Object.entries(latestRows.reduce((o, r) => ((o[r.persona] ??= []).push(r), o), {})).map(([k, v]) => [k, count(v, "outcome")])),
+    outcomes: OUTCOMES,
+  };
+}
+
 // ---------- build ----------
 
 mkdirSync(TC_DIR, { recursive: true });
@@ -353,6 +396,7 @@ const data = {
   docs: parseDocs(),
   org,
   testing: loadTestingCenter().map((run) => ({ ...run, findings: findings[run.suite] || [] })),
+  batch: loadBatch(),
 };
 
 const template = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "dashboard.template.html"), "utf8");

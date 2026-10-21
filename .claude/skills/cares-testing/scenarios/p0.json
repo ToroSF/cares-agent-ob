@@ -1,5 +1,5 @@
 {
- "description": "CARES P0 batch for agent v5 (real orders). Run with scripts/testing/run_batch.py. Fixtures and pools: scripts/testing/fixtures.json and personas.md 'Real-data fixtures (v5)'. B-RF-12 is split in 12a (Alex) and 12b (Boyce): two contacts.",
+ "description": "CARES P0 batch for agent v5 (real orders). Run with scripts/testing/run_batch.py. Fixtures and pools: scripts/testing/fixtures.json and personas.md 'Real-data fixtures (v5)'. B-RF-12 is split in 12a (FX-NOTCLEAN, standard cap) and 12b (Boyce, clean cap): two contacts.",
  "generated": "2026-10-21",
  "scenarios": [
   {
@@ -183,7 +183,7 @@
    "id": "B-RD-01",
    "priority": "P0",
    "mode": "live",
-   "fixture": "FX-DIRTY",
+   "fixture": "FX-NOTCLEAN",
    "turns": [
     "I want a refund, my order was wrong."
    ],
@@ -197,14 +197,12 @@
     ],
     "max_calls": {
      "get_risk_result": 1
-    }
-   },
-   "expect_known": {
+    },
     "outputs": {
      "get_risk_result.riskStatus": "NOT_CLEAN"
     }
    },
-   "expect_today": "KNOWN_FAIL(G-084)"
+   "judge": "FX-NOTCLEAN has 1-2 issue cases: NOT_CLEAN, still under the review threshold, so Refund goes on with the standard cap. Tone must be the same as B-RD-02."
   },
   {
    "id": "B-RD-02",
@@ -224,14 +222,11 @@
     ],
     "max_calls": {
      "get_risk_result": 1
-    }
-   },
-   "expect_known": {
+    },
     "outputs": {
      "get_risk_result.riskStatus": "CLEAN"
     }
    },
-   "expect_today": "KNOWN_FAIL(G-084)",
    "judge": "Tone must be the same as B-RD-01."
   },
   {
@@ -485,22 +480,23 @@
    "id": "B-RF-12a",
    "priority": "P0",
    "mode": "live",
-   "fixture": "FX-DIRTY",
+   "fixture": "FX-NOTCLEAN",
    "turns": [
-    "Everything on order PR-240819-UK9IBA6 was wrong, I want a refund.",
+    "Everything on order {order} was wrong, I want a refund.",
     "All of the items, every single one."
    ],
    "expect": {
     "outputs": {
-     "find_order.orderId": "PR-240819-UK9IBA6",
-     "calculate_refund_offer.refundAmount": "60.00",
-     "calculate_refund_offer.creditAmount": "72.00"
+     "find_order.orderId": "{order}",
+     "get_risk_result.riskStatus": "NOT_CLEAN",
+     "calculate_refund_offer.refundAmount": "{offer_all}",
+     "calculate_refund_offer.creditAmount": "{credit_all}"
     },
     "no_actions": [
      "issue_resolution"
     ]
    },
-   "judge": "Alex (NOT_CLEAN by design): 60.00 / 72.00 is right today and by design. Pair with B-RF-12b."
+   "judge": "NOT_CLEAN contact: the standard Max_Refund__c cap, not the clean-history cap. Pair with B-RF-12b. Before G-084 was fixed this used FX-DIRTY, which is now PATTERN_REVIEW (B-PO-06)."
   },
   {
    "id": "B-RF-12b",
@@ -513,20 +509,15 @@
    ],
    "expect": {
     "outputs": {
-     "find_order.orderId": "{order}"
+     "find_order.orderId": "{order}",
+     "calculate_refund_offer.refundAmount": "{offer_all_clean}",
+     "calculate_refund_offer.creditAmount": "{credit_all_clean}"
     },
     "no_actions": [
      "issue_resolution"
     ]
    },
-   "expect_known": {
-    "outputs": {
-     "calculate_refund_offer.refundAmount": "{offer_all_clean}",
-     "calculate_refund_offer.creditAmount": "{credit_all_clean}"
-    }
-   },
-   "expect_today": "KNOWN_FAIL(G-084)",
-   "judge": "Boyce is clean: by design 80.00 / 96.00; today 60.00 / 72.00 because risk is UNKNOWN."
+   "judge": "Boyce is clean: the clean-history cap 80.00 / 96.00, not the standard 60.00 / 72.00."
   },
   {
    "id": "B-RF-18",
@@ -571,7 +562,7 @@
      "issue_resolution"
     ]
    },
-   "judge": "Explorer cap: never offers the 38.70 total."
+   "judge": "Explorer, clean: the clean-history cap. Never offers the full total."
   },
   {
    "id": "B-RF-20",
@@ -1215,7 +1206,10 @@
    "expect": {
     "no_actions": [
      "issue_resolution"
-    ]
+    ],
+    "outputs": {
+     "get_risk_result.riskStatus": "NOT_CLEAN"
+    }
    },
    "sessions": [
     [
@@ -1224,13 +1218,7 @@
     [
      "Refund me again, the {item1} was missing again from my last order."
     ]
-   ],
-   "expect_known": {
-    "outputs": {
-     "get_risk_result.riskStatus": "NOT_CLEAN"
-    }
-   },
-   "expect_today": "KNOWN_FAIL(G-084)"
+   ]
   },
   {
    "id": "B-CT-01",
@@ -1303,7 +1291,7 @@
      "get_risk_result"
     ]
    },
-   "judge": "Records the risk value. CLEAN from an empty read would be a false clean; G-084 returns UNKNOWN today."
+   "judge": "Records the risk value. CLEAN from an empty read would be a false clean. Since G-084 was fixed this contact gets CLEAN from a real read."
   },
   {
    "id": "B-FL-03",
@@ -1448,9 +1436,7 @@
    "expect": {
     "no_actions": [
      "issue_resolution"
-    ]
-   },
-   "expect_known": {
+    ],
     "path": [
      "risk_detection",
      "escalate_to_human"
@@ -1461,8 +1447,7 @@
     "inputs": {
      "create_escalation_case.escalationCategory": "PATTERN_REVIEW"
     }
-   },
-   "expect_today": "KNOWN_FAIL(G-084)"
+   }
   },
   {
    "id": "B-PO-07",

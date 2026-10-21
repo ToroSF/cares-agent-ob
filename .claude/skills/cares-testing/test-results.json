@@ -4545,6 +4545,627 @@
         "runsLostToPlatform": 0,
         "changedVsEarlierRuns": 0
       }
+    },
+    {
+      "tier": "L",
+      "configHash": "26f41d647b95d645",
+      "agentVersion": "v5 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p0.json",
+      "timestamp": "2026-10-21T13:52:53Z",
+      "commit": "b72b774",
+      "runner": "scripts/testing/run_batch.py --runs 1 --workers 2 --only <the 50 P0 scenarios without burns>",
+      "why": "First P0 run after Account Read was added to CARES_Experience_Rating_Access (PR #34, G-089). It also fixed G-084, so the risk scenarios changed.",
+      "counts": {
+        "before": {
+          "Case": 151,
+          "CaseComment": 20,
+          "CARES_Resolution__c": 17
+        }
+      },
+      "personas": {
+        "P0-after-account-read": {
+          "name": "P0 after the Account Read deploy (G-084, G-089)",
+          "mode": "live",
+          "totalScenarios": 50,
+          "passed": 40,
+          "failed": 4,
+          "flaky": 0,
+          "expectedFail": 1,
+          "blocked": 0,
+          "status": "PASS 40/50",
+          "results": [
+            {
+              "scenario": "B-AD-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-16",
+              "repeats": 1,
+              "outcomes": [
+                "UNEXPECTED_PASS"
+              ],
+              "result": "UNEXPECTED_PASS",
+              "notes": "Was KNOWN_FAIL(G-084): passes since the Account Read fix"
+            },
+            {
+              "scenario": "B-CT-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-FL-01",
+              "repeats": 1,
+              "outcomes": [
+                "N/A"
+              ],
+              "result": "N/A",
+              "notes": ""
+            },
+            {
+              "scenario": "B-FL-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-FL-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-09",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-02",
+              "repeats": 1,
+              "outcomes": [
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "Guard topic answers (G-088), unchanged"
+            },
+            {
+              "scenario": "B-PO-06",
+              "repeats": 1,
+              "outcomes": [
+                "UNEXPECTED_PASS"
+              ],
+              "result": "UNEXPECTED_PASS",
+              "notes": "Was KNOWN_FAIL(G-084): passes since the Account Read fix"
+            },
+            {
+              "scenario": "B-PO-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-08",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-01",
+              "repeats": 1,
+              "outcomes": [
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "FX-DIRTY now PATTERN_REVIEW (5 issue cases), so no Refund. Expectation written for Risk UNKNOWN; after the G-084 fix the real risk changes the outcome. Expectation updated and re-run in 20261021T145104Z"
+            },
+            {
+              "scenario": "B-RD-02",
+              "repeats": 1,
+              "outcomes": [
+                "UNEXPECTED_PASS"
+              ],
+              "result": "UNEXPECTED_PASS",
+              "notes": "Was KNOWN_FAIL(G-084): passes since the Account Read fix"
+            },
+            {
+              "scenario": "B-RD-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-04",
+              "repeats": 1,
+              "outcomes": [
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-12a",
+              "repeats": 1,
+              "outcomes": [
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "FX-DIRTY now PATTERN_REVIEW, no offer. Expectation written for Risk UNKNOWN; after the G-084 fix the real risk changes the outcome. Expectation updated and re-run in 20261021T145104Z"
+            },
+            {
+              "scenario": "B-RF-12b",
+              "repeats": 1,
+              "outcomes": [
+                "UNEXPECTED_PASS"
+              ],
+              "result": "UNEXPECTED_PASS",
+              "notes": "Was KNOWN_FAIL(G-084): passes since the Account Read fix"
+            },
+            {
+              "scenario": "B-RF-18",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-19",
+              "repeats": 1,
+              "outcomes": [
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "FX-EXP is CLEAN now: clean cap 35.00 / 38.50. Expectation written for Risk UNKNOWN; after the G-084 fix the real risk changes the outcome. Expectation updated and re-run in 20261021T145104Z"
+            },
+            {
+              "scenario": "B-RF-20",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-22",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-23",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-24",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            }
+          ]
+        }
+      },
+      "summary": {
+        "scenarios": 50,
+        "PASS": 40,
+        "UNEXPECTED_PASS": 4,
+        "N/A": 1,
+        "FAIL": 4,
+        "EXPECTED_FAIL": 1,
+        "runs": 50,
+        "runsLostToPlatform": 0,
+        "changedVsEarlierRuns": 8
+      }
+    },
+    {
+      "tier": "L",
+      "configHash": "26f41d647b95d645",
+      "agentVersion": "v5 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p0.json",
+      "timestamp": "2026-10-21T14:51:04Z",
+      "commit": "b72b774 + PR #35 expectations",
+      "runner": "scripts/testing/run_batch.py --runs 3 --workers 2 --only B-RD-01,B-RD-02,B-AD-16,B-PO-06,B-RF-12a,B-RF-12b,B-RF-19,B-FL-02",
+      "why": "Re-run of the risk scenarios with expectations for a working Risk Flow: clean-aware offers from build_fixtures.py and the new FX-NOTCLEAN fixture.",
+      "counts": {
+        "after": {
+          "Case": 152,
+          "CaseComment": 36,
+          "CARES_Resolution__c": 17,
+          "CSAT_Rating__c": 6
+        }
+      },
+      "personas": {
+        "P0-risk-rerun": {
+          "name": "Risk scenarios, new expectations",
+          "mode": "live",
+          "totalScenarios": 8,
+          "passed": 8,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "status": "PASS 8/8",
+          "results": [
+            {
+              "scenario": "B-AD-16",
+              "repeats": 3,
+              "outcomes": [
+                "PASS",
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": "Both sessions PATTERN_REVIEW; same placeholder reply (G-086)"
+            },
+            {
+              "scenario": "B-FL-02",
+              "repeats": 3,
+              "outcomes": [
+                "PASS",
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": "CLEAN from a real read"
+            },
+            {
+              "scenario": "B-PO-06",
+              "repeats": 3,
+              "outcomes": [
+                "PASS",
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": "PATTERN_REVIEW; the customer sees \"User requested escalation to human.\" (G-086)"
+            },
+            {
+              "scenario": "B-RD-01",
+              "repeats": 3,
+              "outcomes": [
+                "PASS",
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": "FX-NOTCLEAN (1 issue case): NOT_CLEAN, Refund, standard cap"
+            },
+            {
+              "scenario": "B-RD-02",
+              "repeats": 3,
+              "outcomes": [
+                "PASS",
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": "CLEAN"
+            },
+            {
+              "scenario": "B-RF-12a",
+              "repeats": 3,
+              "outcomes": [
+                "PASS",
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": "FX-NOTCLEAN: 40.00 / 46.00, not the clean 55.00"
+            },
+            {
+              "scenario": "B-RF-12b",
+              "repeats": 3,
+              "outcomes": [
+                "PASS",
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": "Clean cap 80.00 / 96.00"
+            },
+            {
+              "scenario": "B-RF-19",
+              "repeats": 3,
+              "outcomes": [
+                "PASS",
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": "Clean cap 35.00 / 38.50"
+            }
+          ]
+        }
+      },
+      "summary": {
+        "scenarios": 8,
+        "PASS": 8,
+        "runs": 24,
+        "runsLostToPlatform": 0,
+        "changedVsEarlierRuns": 0
+      }
     }
   ]
 }

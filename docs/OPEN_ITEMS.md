@@ -2,6 +2,8 @@
 
 Status date: 2026-10-19. All three subagent PRs (#1 Risk Detection, #2 Experience Rating, #3 Stolen & Delayed Orders) are merged into `main`. This file lists what is still missing to call CARES done, and the connections between subagents that exist in the code but are not yet backed by real infrastructure (org config, metadata, or a deploy). Each row is tagged with the GitHub username whose subagent scope it falls under, so the right person picks it up. Cross-cutting items are tagged `Team` or `Merger` per the ownership rules in `CONTRIBUTING.md`.
 
+> 2026-10-21: this checklist is history. `CARES_Experience_Rating_Access` is assigned to the agent user and has Account Read (G-089, PR #34). The current list is `V6_FOCUS.md`, and `GAPS.md` holds the status of each gap.
+
 This file does not replace `GAPS.md` or `DECISIONS.md` — it is the merge-time checklist. Items already tracked there are referenced by ID instead of repeated.
 
 ## 1. Subagents not yet built
