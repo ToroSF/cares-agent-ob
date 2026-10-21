@@ -19,8 +19,8 @@ v5 stays Active until the team agrees on v6. Each line points to its gap in `GAP
 
 | #   | Fix                                                                                                  | Gap          |
 | --- | ---------------------------------------------------------------------------------------------------- | ------------ |
-| 8   | Set the order id on the Stolen & Delayed escalation case before the platform call **Built on `feature/escalation-handoff`, not deployed (D-083 to D-087).** | G-098        |
-| 9   | Stolen & Delayed reads the real orders (`Order__dlm`), not the mock platform                         | G-081        |
+| 8   | Set the order id on the Stolen & Delayed escalation case before the platform call **Built on `feature/escalation-handoff`, not deployed (D-083 to D-087).** | G-098 — **done on `fix/refund-sd-real-data` (D-089), not yet re-run or deployed** |
+| 9   | Stolen & Delayed reads the real orders (`Order__dlm`), not the mock platform                         | G-081 — **done on `fix/refund-sd-real-data` (D-089, D-090), not yet re-run or deployed** |
 | 10  | `apply_settlement` is still a stub: no payout is made, only the `CARES_Resolution__c` row            | —            |
 | 11  | Human handoff design: where the summary goes, who gets it, members for the `CARES_Escalations` queue **Built on `feature/escalation-handoff`, not deployed (D-083 to D-087).** | G-082, G-068 |
 | 12  | Orders are from 2024-25; shift the dates in a copy if the demo needs "last night"                    | G-080        |

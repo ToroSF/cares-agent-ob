@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Platform_Enabled__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description
+  >Turn on only when the CARES_Delivery_Platform Named Credential exists. Then the platform adds photos, GPS, driver and fraud data, re-dispatch and trust events to the real order data (D-089).</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Platform Enabled</label>
+    <type>Checkbox</type>
+</CustomField>

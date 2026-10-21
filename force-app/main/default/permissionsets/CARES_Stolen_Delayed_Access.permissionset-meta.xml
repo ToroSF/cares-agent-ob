@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <label>CARES Stolen Delayed Access</label>
-    <description>Lets the CARES agent user run the Stolen &amp; Delayed Orders invocable Apex actions. Assigning it is an explicit rollout step, not a side effect of deploying the agent.</description>
+    <description>Lets the CARES agent user run the Stolen &amp; Delayed Orders actions and read the order link and resolutions they check (D-089). Assigning it is an explicit rollout step.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <classAccesses>
         <apexClass>CARES_StolenDelayedEvaluateAction</apexClass>
@@ -11,4 +11,27 @@
         <apexClass>CARES_StolenDelayedHandoffAction</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <fieldPermissions>
+        <field>Contact.Pronto_App_Account_Id__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <objectPermissions>
+        <object>CARES_Resolution__c</object>
+        <allowCreate>false</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <object>Contact</object>
+        <allowCreate>false</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>false</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
 </PermissionSet>

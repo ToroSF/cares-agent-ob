@@ -47,6 +47,10 @@
         <value xsi:type="xsd:double">180</value>
     </values>
     <values>
+        <field>Platform_Enabled__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
         <field>Sensitive_Keywords__c</field>
         <value xsi:nil="true" />
     </values>

@@ -156,13 +156,13 @@ What the matrix gives with only these fields:
   - `DATA_UNAVAILABLE` → `ESCALATE` / `DATA_UNAVAILABLE` (unchanged).
   - A found order with status `Canceled` → `ESCALATE` / `ORDER_CANCELED` (new reason code, B-D3). It's checked right after the order is found, before the value and trust rules.
 - **Order number format:** `CARES_OrderData.normalizeOrderNumber` (`PR-YYMMDD-XXXXXXX`) replaces S&D's looser `^[A-Za-z0-9-]{1,40}$` check. Refund, Order Status and S&D then agree on what an order number is (D-038).
-- **Platform enrichment (B-D2):** if the Named Credential exists, the platform fills in only the fields `Order__dlm` lacks. If it doesn't exist or fails, those fields stay null. That changes `DATA_UNAVAILABLE` from "the whole check failed" to "the order check failed".
+- **Platform enrichment (B-D2):** as built, a checkbox `CARES_Stolen_Delayed_Policy__mdt.Platform_Enabled__c` (default off) switches it on. Detecting the Named Credential at run time would need setup access the agent user may not have. When on, the platform fills in only the fields `Order__dlm` lacks. If it doesn't exist or fails, those fields stay null. That changes `DATA_UNAVAILABLE` from "the whole check failed" to "the order check failed".
 - **Re-dispatch and trust events** still need the platform. Without it:
   - `redispatchEligible` is false, so the agent never offers to send the order again
   - `CARES_StolenDelayedTrustScoreJob` is not queued, instead of failing in the background (SD-G4)
 
 ### B3.2 The order id on every return (G-098)
-- `evaluate` sets `d.orderId` on every return, including the four early ones. It uses the normalized number when the customer gave a valid one, otherwise the raw text the customer typed (trimmed, at most 40 characters).
+- `evaluate` sets `d.orderId` on every return, including the early ones and every lookup failure (`NO_ACCOUNT_LINK`, `DATA_UNAVAILABLE`, `INVALID_ORDER_ID`). As built: the real order's id when found, otherwise the number the customer gave **if it is well-formed** (letters, digits and dashes, at most 40). Malformed text is dropped, keeping the rule PR #40 introduced (test `earlyEscalationDropsAMalformedOrderId`), so nothing odd lands on a Case.
 - So `stolen_delayed_order_id` and the escalation Case always carry what the customer said.
 - No agent change is needed: `check_order` already copies `@outputs.orderId`.
 
@@ -178,6 +178,7 @@ What the matrix gives with only these fields:
 - Read on `Order__dlm` comes from `AgentforceServiceAgentUserPsg` (DEPLOY_CHECKLIST).
 
 ### B3.5 Agent descriptions
+- As built, three descriptions merged in PRs #37 and #40 were over the 255-character publish limit (G-051): `refund_order_summary`, `escalation_reason` and the router's `go_to_risk_detection`. They're shortened on this branch, keeping their meaning, so the next publish doesn't fail.
 - `evaluate_delivery_exception`: the input `orderId` says "Pronto order number (PR-...)". The `decision` output adds the reason `NO_ACCOUNT_LINK`.
 - Fix the G-081 wording in `docs/GAPS.md`, and SD-G1 and SD-G3 in `docs/subagents/stolen-delayed-orders.md` (SD-G3 is stale: Refund reads the S&D context since PR #5).
 
