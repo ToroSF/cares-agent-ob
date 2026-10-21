@@ -41,19 +41,4 @@
         <readable>true</readable>
         <editable>true</editable>
     </fieldPermissions>
-    <fieldPermissions>
-        <field>CSAT_Rating__c.Score__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CSAT_Rating__c.Contact__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CSAT_Rating__c.Interaction_Date__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
 </PermissionSet>

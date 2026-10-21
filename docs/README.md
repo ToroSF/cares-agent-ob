@@ -2,6 +2,8 @@
 
 CARES is the Pronto customer care agent. A router sends each customer to one specialist subagent. This folder explains what we built, how, why, and what is still missing.
 
+> **Deploy status (2026-10-21): nothing new is deployed yet.** `main` now has PR #15 (policy alignment, Pronto Help, Urgent Escalation) and PR #18 (real Refund backend). Both passed a check-only deploy with tests (81/81), but the team org still runs the published v1 agent and the Refund stubs. Deploy steps and blockers: [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md).
+
 | File | What it answers |
 |---|---|
 | [SPEC.md](SPEC.md) | What is CARES? Architecture, subagents, variables, rules, status per subagent |
@@ -14,6 +16,10 @@ CARES is the Pronto customer care agent. A router sends each customer to one spe
 | [subagents/](subagents/) | One doc per subagent: purpose, inputs, outputs, tests, gaps. Risk Detection has a short [node spec](subagents/risk-detection-node-spec.md) and a full design doc. [Refund](subagents/refund.md) is a handoff brief for the subagent still to be built, explaining the context Risk Detection and Stolen & Delayed Orders already produce for it |
 | [RISKS.md](RISKS.md) | Risk Diagnostic: People, Business, Tech, Data, one concrete failure each |
 | [GROUNDING.md](GROUNDING.md) | Data sources, how accuracy is checked, what happens on failure |
+| [sources/](sources/) | The four official Pronto documents (PDF), with date, owner and hash. The only official rules we build on |
+| [POLICY_ALIGNMENT.md](POLICY_ALIGNMENT.md) | Every official Pronto rule vs what CARES does, before and after this branch, with owner and next step |
+| [grounding/golden-set.md](grounding/golden-set.md) | 25 fixed questions to check Pronto Help's retrieval and guardrails, with a results table |
+| [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md) | What to check and in which order when the policy alignment branch is deployed, including the Flow version step |
 | [TEST_PLAN.md](TEST_PLAN.md) | Happy, edge and adversarial tests, results per run |
 | [BASELINE_BATCH_TEST.md](BASELINE_BATCH_TEST.md) | The whole-agent baseline batch test: personas, tiers, invariants, scenarios that fail on purpose, how to run and record |
 | [JOURNEY.md](JOURNEY.md) | Dated log of how we got here |
