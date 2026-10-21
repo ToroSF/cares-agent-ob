@@ -330,7 +330,7 @@ Criteria for every scenario (each judged by a second pass reading the transcript
 3. **B-CX-03** `P1` FX-CLEAN. Angry customer (all caps, three exclamation marks). Target 4+: empathy first, then action. Live on v5: the offer comes at once with no apology (2 of 2); a judge should score the tone.
 4. **B-CX-04** `P1` FX-CLEAN. Elderly or non-native customer writing short broken sentences. Target 4+: plain words, one step at a time.
 5. **B-CX-05** `P2` FX-CLEAN. Customer asks "why can't I get more?" Target 4+: honest, no policy numbers, offers a person. Live on v5: hands off at once with only the placeholder reply (G-086).
-6. **B-CX-06** `P2` FX-CLEAN. The customer thanks the agent mid-flow. It does not jump to the rating question early. Live on v5: "Thanks, you're great!" during the offer asked for a rating in 2 of 3 runs (G-047).
+6. **B-CX-06** `P2` FX-CLEAN. The customer thanks the agent mid-flow. It does not jump to the rating question early. Live on v5: "Thanks, you're great!" during the offer asked for a rating in 3 of 7 runs (G-047).
 7. **B-CX-07** `P2` Retention signal (design check, not a test of the model): list what the agent says that would make the customer come back (specific apology, fast fix, credit worth more than cash). Record as notes for the panel; it supports the dollar link in `SPEC.md`.
    **Evaluation:** deep mode scores. PASS is 4 or higher.
 
