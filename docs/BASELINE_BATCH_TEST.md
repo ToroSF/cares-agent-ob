@@ -1,6 +1,6 @@
 # Baseline batch test (whole agent)
 
-Status date: 2026-10-20. Status: `PROPOSAL`, written and committed, **never run**. Source of truth for the scenarios: [`.claude/skills/cares-testing/personas.md`](../.claude/skills/cares-testing/personas.md). How to run them: [`.claude/skills/cares-testing/SKILL.md`](../.claude/skills/cares-testing/SKILL.md). This page is the short, human version, so teammates and their assistants share the same picture.
+Status date: 2026-10-21. Status: refreshed for agent v5 (real orders). The P0 set now runs live with a script (see "Extension (2026-10-21, v5)" below); results are in `docs/TEST_PLAN.md` and `test-results.json`. Source of truth for the scenarios: [`.claude/skills/cares-testing/personas.md`](../.claude/skills/cares-testing/personas.md). How to run them: [`.claude/skills/cares-testing/SKILL.md`](../.claude/skills/cares-testing/SKILL.md). This page is the short, human version, so teammates and their assistants share the same picture.
 
 ## Why this exists
 
@@ -8,14 +8,14 @@ Every subagent has its own tests (`docs/subagents/`), but nobody has tested the 
 
 ## What is in the batch
 
-143 scenarios, 12 personas, 50 of them `P0` (must pass before the panel, or it is a finding). 131 were in the first version; 11 were added on 2026-10-20 for agent branches no scenario reached (see "Extension" below); 1 more (B-ER-13) was added the same day on `feature/experience-rating-thumbs` for the thumbs up/down redesign (D-044).
+180 scenarios, 14 personas, 72 of them `P0` (must pass before the panel, or it is a finding). 131 were in the first version; 11 were added on 2026-10-20 for agent branches no scenario reached (see "Extension" below); 1 more (B-ER-13) was added the same day on `feature/experience-rating-thumbs` for the thumbs up/down redesign (D-044). P12 Pronto policy (16) came with the policy alignment branch, and P13 Order Status (13) plus B-RF-19..B-RF-26 with v5 on 2026-10-21.
 
 | Persona                 | What it checks                                                                                                                                                                  | Scenarios |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | P0 Harness and smoke    | The test setup works (session, `ContactId` really applied, trace readable, no action validation error)                                                                          | 7         |
 | P1 Router               | Every route, multi-intent, typos, another language                                                                                                                              | 11        |
 | P2 Risk Detection       | Runs once, before Refund, in silence; clean vs not clean; missing data                                                                                                          | 14        |
-| P3 Refund, direct       | Script-made offer, explicit yes, one issue, no negotiation, blank contact, not eligible, no settlement                                                                          | 18        |
+| P3 Refund, direct       | Script-made offer, explicit yes, one issue, no negotiation, blank contact, not eligible, no settlement; v5: tier caps, canceled and undelivered orders, double payout           | 26        |
 | P4 Stolen & Delayed     | Triggers, three-try limit, never pays, platform missing, escalation through Escalate to Human                                                                                   | 15        |
 | P5 Contracts            | Hand-offs fixed in PR #7: no dead end, no double payout, no stale choice, reset, unpaid claim, change of mind                                                                   | 15        |
 | P6 Experience Rating    | Thumbs up/down only (no typed score, no dictated comment), asked at the right time, saved once, never claimed unless saved, blank contact, summary stays free of sensitive data | 13        |
@@ -24,13 +24,15 @@ Every subagent has its own tests (`docs/subagents/`), but nobody has tested the 
 | P9 Continuity           | One-word replies go back to the open task (`router_active_task`)                                                                                                                | 8         |
 | P10 Failure             | Missing data, access, components; fail closed                                                                                                                                   | 10        |
 | P11 Customer experience | Tone, empathy, clarity, scored 1-5                                                                                                                                              | 7         |
+| P12 Pronto policy       | One scenario per official Pronto rule CARES handles or misses (urgent safety, allergens, card data, case reuse)                                                                 | 16        |
+| P13 Order Status        | Real status and estimate, only the customer's own orders, never money                                                                                                           | 13        |
 
 ## Two tiers, and what each can prove
 
 | Tier          | Runs                                                                    | Proves                                                             | Cannot prove                                                             |
 | ------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
 | S (simulated) | `--simulate-actions`; an AI invents action results. Needs no deploy     | Routing, gates, what the script allows or hides, wording, refusals | Real amounts, Flow wiring, permissions                                   |
-| L (live)      | `--use-live-actions`; real Apex and Flows. Needs the end-of-week deploy | Stub amounts, Flow results, permission failures, failure behavior  | Anything about the real delivery platform (it does not exist yet, SD-G1) |
+| L (live)      | `--use-live-actions`; real Apex and Flows (v5: real orders)             | Real amounts, Flow results, permission failures, failure behavior  | Anything about the real delivery platform (it does not exist yet, SD-G1) |
 
 A Tier S pass is written as "routing and gates OK in simulation", never as "works".
 
@@ -47,20 +49,19 @@ They prove a documented gap. A fail is recorded as `EXPECTED_FAIL`. A pass is re
 | B-RD-09                            | The Risk Detection Flow's account-only branch is not connected (found in the review of PR #1)                                                  | D-013, G-010 |
 | B-RD-10                            | An account with several contacts cannot be assigned to one person                                                                              | G-016        |
 | B-RD-14                            | Escalation Cases have no Type and count as issues in the next conversation                                                                     | G-045        |
-| B-RF-12, B-RF-13                   | The Refund stub gives 15.00 / 18.00 to everyone and ignores the affected item, so "a clean record earns a better offer" is designed, not built | G-023, G-024 |
+| B-RF-12, B-RD-01, B-RD-02, B-PO-06, B-AD-16 (Tier L) | v5: risk returns `UNKNOWN` in preview, so the clean-history ceiling and the review threshold never fire | G-084 |
 | B-ER-01, B-ER-08, B-FL-07          | The rating permission set is not assigned, so the save fails; the test checks the agent says so honestly                                       | OPEN_ITEMS   |
 | B-IN-11, B-ES-06, B-FL-08          | Permission set not assigned, transfer may be unconfigured. The Flow is active since 2026-10-20, so B-FL-08 needs it switched off first         | G-046, G-007 |
-| B-RF-08 (Tier L)                   | The Refund stub accepts any named item, even one not on the order                                                                              | G-023        |
-| B-RF-17 (Tier L)                   | The stub is always eligible, so the not-eligible branch is BLOCKED live                                                                        | G-024        |
+| B-RF-17 (Tier L)                   | v5: every real customer has a tier and all 12 policy rows exist, so no real customer is ineligible: BLOCKED live                                 |              |
 | B-IN-12                            | No designed behavior when the customer changes method on the READY path                                                                        | G-049        |
 | B-FL-01                            | N/A: `main` was deployed before the baseline ran                                                                                               |              |
-| B-IN-07, B-IN-08, B-IN-09, B-FL-03 | Need a real order lookup or a mock platform with several orders and EUR                                                                        | D-038, SD-G1 |
+| B-IN-07, B-IN-08, B-IN-09          | Stolen & Delayed reads its mock platform, not the real orders; no EUR order                                                                    | G-081, SD-G1 |
 
-On 2026-10-21 the org still runs the Refund stubs, so the Refund rows above stay true for Tier L. After `main` with PR #18 is deployed, B-RF-08, B-RF-12 and B-RF-13 should pass, and B-RF-17 becomes reachable (with no tier or policy rows, every direct-path offer is ineligible: R-17). Check `expect_today` again after that deploy.
+Since v5 (2026-10-21) the Refund stubs are gone: B-RF-08 and B-RF-13 should pass, and B-FL-03 runs with a made-up order number. Check `expect_today` again after each deploy.
 
 ## Test data warning
 
-All cases in the shared org were created on 2026-09-28. They leave the 30-day window on **2026-10-28**, and the "not clean" contact becomes clean. Record the case dates in every run, or add dated data first (G-011).
+The "not clean" contact (Alex Morgan) has 5 cases dated 2026-09-28 to 2026-10-20. The oldest leave the 30-day window from **2026-10-28**. Record the case dates in every run, or add dated data first (G-011). Live runs also write data: a successful refund blocks a second one for the same order (D-048), and escalations add Cases. The runner gives those scenarios their own contact from a pool so nothing else is touched.
 
 ## How to run (short)
 
@@ -69,9 +70,10 @@ All cases in the shared org were created on 2026-09-28. They leave the 30-day wi
 3. Tier L only after the team confirms the deploy and agrees live runs may write Cases and rating rows. Use the checklist in the skill.
 4. Run each scenario twice (three times for P0 red team). Differences are `FLAKY`, not a pass.
 5. Append the run to `test-results.json`. Never edit old runs. Show the delta against the previous run.
-6. For each real failure: reproduce with the same fixture, read the trace, find the layer (routing, action, data, instruction), fix at the lowest layer, add the case here. Say when to escalate instead of digging.
+6. P0 runs with one command: `python3 scripts/testing/run_batch.py --scenarios .claude/skills/cares-testing/scenarios/p0.json --runs 2 --workers 3`.
+7. For each real failure: reproduce with the same fixture, read the trace, find the layer (routing, action, data, instruction), fix at the lowest layer, add the case here. Say when to escalate instead of digging.
 
-Nobody deploys, publishes or activates from this work. The batch only reads, previews and records.
+Nobody deploys, publishes or activates from this work. The batch reads, previews and records; live runs write only what the actions write (Cases, ratings, refund records).
 
 ## Extension (2026-10-20, `test/baseline-batch-coverage`)
 
@@ -104,6 +106,15 @@ Experience Rating redesigned per D-044: thumbs up/down instead of a typed 1-5 sc
 | Scenario | Branch it covers                                                                                                                             |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | B-ER-13  | Generated summary never includes sensitive data (payment details, verification codes) surfaced earlier in the conversation (D-044 guardrail) |
+
+## Extension (2026-10-21, v5, `test/v5-real-data`)
+
+Agent v5 reads real orders from Data Cloud, so the expected amounts can now be checked to the cent. What changed:
+
+- **Fixtures are real demo customers.** `scripts/testing/build_fixtures.py` dumps orders and contacts and writes `scripts/testing/fixtures.json`: each customer's latest order, item values and the expected offers. The table is in personas.md, "Real-data fixtures (v5)".
+- **New scenarios.** B-RF-19..B-RF-26 (tier caps, a single-item order, the latest order canceled, an order not delivered yet, another customer's order, a second payout across sessions, a 10-item order) and P13 Order Status, B-OS-01..B-OS-13.
+- **Machine-checked P0.** `scenarios/p0.json` holds the 72 P0 scenarios with their checks (B-RF-12 is two entries, one per customer). `scripts/testing/run_batch.py` runs them and reads the trace: path, actions, inputs, outputs, amounts, and the invariants that text can show.
+- **Changed expectations.** With no contact, Refund now asks for the email (Identify Customer) instead of escalating (B-SM-03, B-RD-03, B-RF-16). "Order 1042" is not a Pronto number any more, so Stolen & Delayed scenarios use the customer's real order number. The G-084 scenarios check the rest of the scenario as usual and keep only the risk value as the expected fail.
 
 ## What the batch does not cover
 
