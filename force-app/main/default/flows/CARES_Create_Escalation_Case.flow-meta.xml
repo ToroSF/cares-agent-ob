@@ -111,7 +111,8 @@
       <label>Found</label>
     </rules>
   </decisions>
-  <description>CARES Escalate to Human. Logs the context the person needs (category, order, Stolen &amp; Delayed decision and reason, risk status, offer, customer choice) so the customer does not have to repeat the story. Playbook rules: if the contact already has an open CARES case for the same category and order, a private comment is added to it instead of a duplicate. New cases get Type, Reason, Priority and Status from the category and go to the CARES Escalations queue when it exists. URGENT (food safety, harassment, fraud) is High priority. The description is internal: the risk status must never be shown to the customer. Any problem creating the case returns success = false and no case number.</description>
+  <description
+  >CARES Escalate to Human. Logs the context the person needs (category, order, Stolen &amp; Delayed decision and reason, risk status, offer, customer choice) so the customer does not have to repeat the story. Playbook rules: if the contact already has an open CARES case for the same category and order, a private comment is added to it instead of a duplicate. New cases get Type, Reason, Priority and Status from the category and go to the CARES Escalations queue when it exists. URGENT (food safety, harassment, fraud) is High priority. The description is internal: the risk status must never be shown to the customer. Any problem creating the case returns success = false and no case number.</description>
   <environments>Default</environments>
   <formulas>
     <name>caseDescription</name>
@@ -152,17 +153,20 @@
   <formulas>
     <name>casePriority</name>
     <dataType>String</dataType>
-    <expression>CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;High&quot;, &quot;Medium&quot;)</expression>
+    <expression
+    >CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;High&quot;, &quot;Medium&quot;)</expression>
   </formulas>
   <formulas>
     <name>caseStatus</name>
     <dataType>String</dataType>
-    <expression>CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;Escalated&quot;, &quot;New&quot;)</expression>
+    <expression
+    >CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;Escalated&quot;, &quot;New&quot;)</expression>
   </formulas>
   <formulas>
     <name>caseOwnerId</name>
     <dataType>String</dataType>
-    <expression>IF(ISBLANK({!queueRecord.Id}), {!$User.Id}, {!queueRecord.Id})</expression>
+    <expression
+    >IF(ISBLANK({!queueRecord.Id}), {!$User.Id}, {!queueRecord.Id})</expression>
   </formulas>
   <formulas>
     <name>orderRef</name>
@@ -231,6 +235,12 @@
       <field>Description</field>
       <value>
         <elementReference>caseDescription</elementReference>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
+      <field>CARES_Escalation__c</field>
+      <value>
+        <booleanValue>true</booleanValue>
       </value>
     </inputAssignments>
     <inputAssignments>
