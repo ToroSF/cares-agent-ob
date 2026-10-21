@@ -1,6 +1,6 @@
 # Deploy checklist: `feature/grounding-policy-alignment` (PR #15) and PR #18
 
-What the person who deploys must do after this branch is merged into `main`. Follows the order in [CONTRIBUTING.md](CONTRIBUTING.md): merge → validate → one person deploys → tests → that person publishes and activates. Written 2026-10-20 by @Mateus-Goes. Nothing here has been deployed yet.
+What the person who deploys must do after this branch is merged into `main`. Follows the order in [CONTRIBUTING.md](CONTRIBUTING.md): merge → validate → one person deploys → tests → that person publishes and activates. Written 2026-10-20 by @Mateus-Goes. Deployed to the team org on 2026-10-21 (agent v4): seed run (3 tiers, 12 policies, 187 contacts) and option A below done (both Flows on their new version, v2).
 
 **Updated 2026-10-21:** this branch now includes `main` after PR #18 (audit and the real Refund backend). None of PR #18 is in the org yet either (checked 2026-10-21: the org still runs the Refund stubs and has no `CARES_Tier__c`). Its Apex tests first ran in a check-only deploy on 2026-10-21, and two deploy blockers were fixed on this branch (G-078). So the deploy below carries both.
 

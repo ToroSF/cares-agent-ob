@@ -33,7 +33,7 @@ Rule for the report: a Tier S pass is never reported as "works". Write "routing 
 
 ## Using sf agent preview (programmatic mode)
 The interactive command needs a TTY, so use start / send / end. Always use `--json` and a 120000 ms timeout.
-- Start (simulated): `sf agent preview start -o team-pronto --authoring-bundle CARES --simulate-actions [--context-variables ContactId=<id>] --json`
+- Start (simulated): `sf agent preview start -o team-pronto --authoring-bundle CARES --simulate-actions [--context-variables '$Context.ContactId=<id>'] --json`
 - Start (live): same with `--use-live-actions` instead of `--simulate-actions`.
 - Send: `sf agent preview send -o team-pronto --authoring-bundle CARES --session-id <ID> -u "<utterance>" --json`
 - End: `sf agent preview end -o team-pronto --authoring-bundle CARES --session-id <ID> --json`
@@ -41,7 +41,7 @@ The interactive command needs a TTY, so use start / send / end. Always use `--js
 - Traces are written under `.sfdx/agents/CARES/sessions/<id>/` (gitignored). Read them to check which subagent, which action and which variables changed. A reply that looks right is not enough (lesson from Weeks 3-4: assert the action too).
 - The CLI prints an update warning on stderr; do not feed the whole output to `jq` without separating stderr.
 
-To verify on the first run (do not assume): the JSON field names for `sessionId`, the agent reply and the trace path; whether `--context-variables ContactId=...` really sets the linked variable (scenario B-SM-02 checks it); whether mutable variables such as `risk_lookback_days` can be set the same way.
+To verify on the first run (do not assume): the JSON field names for `sessionId`, the agent reply and the trace path; whether the context variable really sets the linked variable (scenario B-SM-02 checks it). Checked 2026-10-21: `ContactId=<id>` shows the value in the trace state but the script's conditions read it as empty (linked variables compile to `variables.ContactId`); use `'$Context.ContactId=<id>'`, which works; whether mutable variables such as `risk_lookback_days` can be set the same way.
 
 ## Fixtures (resolve at run time; never write ids into files)
 Customer identity comes from `ContactId`, so a scenario names a fixture and the runner looks the id up with SOQL (`sf data query`, read only) and passes it with `--context-variables`.
@@ -53,7 +53,7 @@ Customer identity comes from `ContactId`, so a scenario names a fixture and the 
 | FX-ACCT | Only contact on an account that has contact-less cases (D-013) | Cases with `ContactId = null` and an `AccountId`, then count the account's contacts |
 | FX-SHARED | Contact on an account with several contacts and a contact-less case (G-016) | Same query, account with 3 contacts |
 | FX-NONE | `ContactId` not set (what preview does by default, G-029) | Do not pass the variable |
-| FX-BLANK | `ContactId` set to an empty string | `--context-variables ContactId=` (check it is accepted) |
+| FX-BLANK | `ContactId` set to an empty string | `--context-variables '$Context.ContactId='` (check it is accepted) |
 | FX-FAKE | A well-formed `003` id that does not exist | Make one up; confirm with SOQL that it returns 0 rows |
 
 Date warning: all test cases in the org were created on 2026-09-28 (G-011). They leave the 30-day window on 2026-10-28, so FX-DIRTY becomes clean after that date unless dated test data is added. Check the case dates before every run and record them in the run.
