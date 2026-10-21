@@ -354,23 +354,35 @@ public without sharing class CARES_EscalationAlerts implements Queueable, Databa
     };
   }
 
+  // The job runs as the agent user, who cannot read these in user mode. A failed
+  // lookup means no bell, never a failed job: Slack and the status still go out.
   private static Id supportGroupId() {
-    List<Group> groups = [
-      SELECT Id
-      FROM Group
-      WHERE DeveloperName = :SUPPORT_GROUP AND Type = 'Regular'
-      LIMIT 1
-    ];
-    return groups.isEmpty() ? null : groups[0].Id;
+    try {
+      List<Group> groups = [
+        SELECT Id
+        FROM Group
+        WHERE DeveloperName = :SUPPORT_GROUP AND Type = 'Regular'
+        WITH SYSTEM_MODE
+        LIMIT 1
+      ];
+      return groups.isEmpty() ? null : groups[0].Id;
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   private static Id notificationTypeId() {
-    List<CustomNotificationType> types = [
-      SELECT Id
-      FROM CustomNotificationType
-      WHERE DeveloperName = :NOTIFICATION_TYPE
-      LIMIT 1
-    ];
-    return types.isEmpty() ? null : types[0].Id;
+    try {
+      List<CustomNotificationType> types = [
+        SELECT Id
+        FROM CustomNotificationType
+        WHERE DeveloperName = :NOTIFICATION_TYPE
+        WITH SYSTEM_MODE
+        LIMIT 1
+      ];
+      return types.isEmpty() ? null : types[0].Id;
+    } catch (Exception e) {
+      return null;
+    }
   }
 }

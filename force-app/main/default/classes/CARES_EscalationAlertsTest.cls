@@ -68,6 +68,38 @@ private class CARES_EscalationAlertsTest {
     Assert.isTrue(body.contains('Open conversation'), 'Live chat gets a link');
   }
 
+  // The job runs as the agent user that logged the case. Live, its first run
+  // failed on the notification type lookup, which the admin runner never sees
+  @IsTest
+  static void agentProfileJobRingsTheBell() {
+    mock(CARES_EscalationAlerts.MODE_OFF);
+    Profile p = [SELECT Id FROM Profile WHERE Name = 'Einstein Agent User' LIMIT 1];
+    User u = new User(
+      Alias = 'escag',
+      Email = 'esc.agent@example.com',
+      EmailEncodingKey = 'UTF-8',
+      LastName = 'Escalation Agent',
+      LanguageLocaleKey = 'en_US',
+      LocaleSidKey = 'en_US',
+      ProfileId = p.Id,
+      TimeZoneSidKey = 'America/Los_Angeles',
+      UserName = 'esc.agent.' + System.currentTimeMillis() + '@example.com'
+    );
+    insert u;
+    PermissionSet ps = [SELECT Id FROM PermissionSet WHERE Name = 'CARES_Escalation_Access' LIMIT 1];
+    insert new PermissionSetAssignment(AssigneeId = u.Id, PermissionSetId = ps.Id);
+    Case c = new Case(Subject = 'CARES escalation', Origin = 'Agentforce', Priority = 'Medium');
+    Database.insert(c, AccessLevel.SYSTEM_MODE);
+
+    System.runAs(u) {
+      Test.startTest();
+      System.enqueueJob(new CARES_EscalationAlerts(new List<Id>{ c.Id }));
+      Test.stopTest();
+    }
+    c = [SELECT CARES_Alert_Status__c FROM Case WHERE Id = :c.Id WITH SYSTEM_MODE];
+    Assert.areEqual('Bell: Sent | Slack: Off', c.CARES_Alert_Status__c);
+  }
+
   @IsTest
   static void slackGetsNoPersonalData() {
     SlackMock m = mock(CARES_EscalationAlerts.MODE_BOT);
