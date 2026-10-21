@@ -256,7 +256,7 @@ What the matrix gives with only these fields:
 | D-D1 | Which objects get a tab? | `CARES_Refund_Policy__c`, `CARES_Tier__c` and `CARES_Resolution__c`. Not `CARES_Stolen_Delayed_Policy__mdt`: custom metadata can't have a normal tab, and it stays under Setup → Custom Metadata Types |
 | D-D2 | Where do the tabs show up? | A new Lightning app, **CARES Admin**, in the App Launcher, holding only these three tabs |
 | D-D3 | Who sees them? | Policy admins only: tab and app visibility in `CARES_Refund_Policy_Admin`. Not the agent user, not support staff |
-| D-D4 | Ready-made list views? | Yes, the four in D3.4 |
+| D-D4 | Ready-made list views? | Yes, the ones in D3.4 (four, plus All tiers added on request) |
 
 ## D3. Change (all new metadata under `force-app/main/default/`)
 
@@ -283,6 +283,7 @@ What the matrix gives with only these fields:
 |---|---|---|
 | Refund Policy | **Active policies by tier** | `Active__c = true`; columns Tier, Outcome, Max, Clean-History Max, Bonus %; sorted by Tier |
 | Refund Policy | **Inactive policies** | `Active__c = false`, to see what the agent ignores |
+| Tier | **All tiers** | Every tier; columns Name, Rank, Active, last modified (added 2026-10-21) |
 | Resolution | **Needing review** | `Settlement_Status__c = Needs_Review` (from Part C), so it's built after Part C's fields |
 | Resolution | **This week** | Created this week; columns Name, Contact, Order Id, Type, Amount, Status |
 
