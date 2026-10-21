@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>CARES_Escalation__c</fullName>
     <defaultValue>false</defaultValue>
-    <description
-  >True when the CARES_Create_Escalation_Case Flow opened this case. CARES_Get_Risk_Result does not count these cases, so a hand-off made by CARES never makes the customer look risky (D-009).</description>
+    <description>True when the CARES_Create_Escalation_Case Flow opened this case. CARES_Get_Risk_Result does not count these cases, so a hand-off made by CARES never makes the customer look risky (D-009).</description>
     <externalId>false</externalId>
     <label>CARES Escalation</label>
     <trackHistory>false</trackHistory>
