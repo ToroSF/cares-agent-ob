@@ -3,7 +3,7 @@
 
 Usage:
   python3 scripts/testing/run_batch.py --scenarios .claude/skills/cares-testing/scenarios/p0.json \
-      --runs 2 --workers 3 [--only B-RF-01,B-OS-01] [--org team-pronto] [--out .sfdx/cares-batch]
+      --runs 2 [--workers 1] [--pace 3] [--only B-RF-01,B-OS-01] [--org team-pronto] [--out .sfdx/cares-batch]
   python3 scripts/testing/run_batch.py --scenarios ... --rescore .sfdx/cares-batch/<stamp>   # no org calls
 
 Each scenario run is one preview session (or several, for "sessions" scenarios). The script
@@ -12,6 +12,11 @@ action outputs, expected amounts, and the invariants that can be read from text 
 INV-3, INV-4, INV-9, the Risk gate; INV-6 as a note). Checks in "expect" must pass, checks in
 "expect_known" are a documented gap (EXPECTED_FAIL while they fail), checks in "soft" become FINDING notes.
 A person still reads every FAIL and every scenario marked "judge".
+The org has a fixed AI usage allowance per time window (G-090, D-094): a P0 batch with 3 workers sent
+814 LLM requests in 7 minutes and every agent in the org then failed for about 45 minutes. So the
+defaults are 1 worker and a pause between turns, and the run stops at the first sign of the block
+(2 runs in a row with the generic platform error): the rest is BLOCKED and the --only list to resume
+is printed.
 Fixtures and pools come from scripts/testing/fixtures.json. Read-only except for what the
 live actions write (Cases, CARES_Resolution__c rows, ratings).
 """
@@ -23,9 +28,13 @@ import os
 import re
 import subprocess
 import threading
+import time
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 BUNDLE = "CARES"
+PACE = [3.0]  # seconds before each turn (--pace)
+# Set after 2 runs in a row hit the org's AI usage block, so no more calls are sent
+BLOCK = {"lock": threading.Lock(), "streak": 0, "stop": threading.Event()}
 ENV = {**os.environ, "SF_SKIP_NEW_VERSION_CHECK": "true", "SF_DISABLE_TELEMETRY": "true"}
 
 # Text a customer must never see (INV-1, INV-2)
@@ -86,6 +95,10 @@ def preview(mode, contact, turns, org):
     err = None
     try:
         for u in turns:
+            if BLOCK["stop"].is_set():
+                err = "stopped: org AI usage block"
+                break
+            time.sleep(PACE[0])
             convo.append(("user", u))
             s = sf(["agent", "preview", "send", "--authoring-bundle", BUNDLE, "--session-id", sid, "-u", u], org)
             if s.get("status") != 0:
@@ -341,6 +354,9 @@ def run_one(sc, run, args, fixtures, alloc):
         log(f"{'N/A':<16} {sc['id']} r{run} {sc['skip']}")
         return {"scenario": sc["id"], "run": run, "priority": sc.get("priority"), "outcome": "N/A",
                 "problems": [sc["skip"]]}
+    if BLOCK["stop"].is_set():
+        return {"scenario": sc["id"], "run": run, "priority": sc.get("priority"), "outcome": "BLOCKED",
+                "problems": ["not run: org AI usage block (G-090)"]}
     try:
         cid, fx = resolve_fixture(sc.get("fixture"), fixtures, alloc, sc, run)
     except RuntimeError as e:
@@ -358,6 +374,14 @@ def run_one(sc, run, args, fixtures, alloc):
            "path": path, "actions": names,
            "sessions": [{"id": s.get("sessionId"), "convo": s.get("convo"), "error": s.get("error"),
                          "actions": s["trace"]["actions"] if "trace" in s else []} for s in sessions]}
+    blocked = any(p.startswith("ERROR platform") for p in problems)
+    with BLOCK["lock"]:
+        BLOCK["streak"] = BLOCK["streak"] + 1 if blocked else 0
+        if BLOCK["streak"] >= 2 and not BLOCK["stop"].is_set():
+            BLOCK["stop"].set()
+            log("STOP: 2 runs in a row hit the org's AI usage block (G-090). No more calls; wait 20-40 min")
+    if blocked and BLOCK["stop"].is_set():
+        res["outcome"] = "BLOCKED"  # kept out of the scores, rerun later
     log(f"{res['outcome']:<16} {sc['id']} r{run} {res['fixture']} {'; '.join(problems + (known or []))[:240]}")
     return res
 
@@ -388,7 +412,8 @@ def main():
     ap.add_argument("--scenarios", required=True)
     ap.add_argument("--fixtures", default=os.path.join(REPO, "scripts", "testing", "fixtures.json"))
     ap.add_argument("--runs", type=int, default=2)
-    ap.add_argument("--workers", type=int, default=3)
+    ap.add_argument("--workers", type=int, default=1, help="more than 1 can hit the org's AI usage block")
+    ap.add_argument("--pace", type=float, default=3.0, help="seconds to wait before each turn")
     ap.add_argument("--only", default="")
     ap.add_argument("--org", default="team-pronto")
     ap.add_argument("--burned", default="", help="comma list of order ids that already have a resolution")
@@ -402,6 +427,13 @@ def main():
     if args.only:
         keep = set(args.only.split(","))
         scenarios = [s for s in scenarios if s["id"] in keep]
+    PACE[0] = args.pace
+    if args.workers > 1:
+        log(f"WARNING: {args.workers} workers. Parallel runs can use up the org's AI allowance (G-090)")
+    turns = sum(len(t) for s in scenarios for t in s.get("sessions", [s.get("turns", [])]))
+    # Each turn costs several LLM calls (router, sub-agent, guardrails); about 4 is what the gateway log shows
+    log(f"About {turns * args.runs} turns, {turns * args.runs * 4} LLM requests: {len(scenarios)} scenarios x "
+        f"{args.runs} runs, {args.workers} worker(s), {args.pace:g}s pace")
     fixtures = json.load(open(args.fixtures))
     alloc = {"lock": threading.Lock(), "taken": {}, "used": set(),
              "burned": set(x for x in args.burned.split(",") if x)}
@@ -431,6 +463,9 @@ def main():
     for k, v in sorted(by.items()):
         flag = "FLAKY" if len(set(v)) > 1 else v[0]
         log(f"{k:<10} {flag:<16} {v}")
+    blocked = sorted({r["scenario"] for r in results if r["outcome"] == "BLOCKED"})
+    if BLOCK["stop"].is_set() and blocked:
+        log("RESUME with --only " + ",".join(blocked))
     log("OUT", out)
 
 
