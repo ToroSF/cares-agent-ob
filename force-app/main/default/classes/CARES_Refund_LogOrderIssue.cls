@@ -4,6 +4,11 @@ public with sharing class CARES_Refund_LogOrderIssue {
 
     public class Request {
         @InvocableVariable(
+            label='Contact ID'
+            description='Customer Contact ID from the messaging channel, never from the chat; needed to value the items'
+        )
+        public String contactId;
+        @InvocableVariable(
             label='Order ID'
             description='Delivery platform order id, the same id Stolen & Delayed Orders uses'
             required=true
@@ -54,10 +59,8 @@ public with sharing class CARES_Refund_LogOrderIssue {
         description='Records a customer-reported wrong/missing item or quality issue and values the affected items'
     )
     public static List<Result> execute(List<Request> requests) {
-        // Order data is still a stub (G-004), but the affected items are now
-        // validated against CARES_Refund_FindOrder's explicit line-item list
-        // instead of accepted as free text (closes the "accepts an item not on
-        // the order, values it at 12.00" part of G-023).
+        // The affected items are valued from the customer's real order (D-071, D-072), read again
+        // here so the value never comes from the chat. An item not on that order is rejected (G-023).
         List<Result> results = new List<Result>();
         for (Request req : requests) {
             Result r = new Result();
@@ -70,7 +73,7 @@ public with sharing class CARES_Refund_LogOrderIssue {
                 continue;
             }
             if (ITEM_TYPES.contains(req.issueType)) {
-                Decimal matchedValue = matchAffectedItems(req.affectedItems);
+                Decimal matchedValue = matchAffectedItems(req.contactId, req.orderId, req.affectedItems);
                 r.accepted = matchedValue != null;
                 r.orderOutcome = r.accepted ? req.issueType : '';
                 r.affectedValue = r.accepted ? matchedValue : 0;
@@ -86,19 +89,24 @@ public with sharing class CARES_Refund_LogOrderIssue {
     }
 
     // Returns the summed price of every named item when all of them are on the
-    // stub order's line-item list; null when the list is blank or any name
-    // doesn't match (reject rather than accept an unlisted item at a guessed value).
-    private static Decimal matchAffectedItems(String affectedItems) {
-        if (String.isBlank(affectedItems)) {
+    // customer's order; null when the list is blank, the order is not theirs, or
+    // any name doesn't match (reject rather than accept an unlisted item at a guessed value).
+    private static Decimal matchAffectedItems(String contactId, String orderId, String affectedItems) {
+        if (String.isBlank(affectedItems) || String.isBlank(orderId)) {
+            return null;
+        }
+        CARES_OrderData.Lookup lookup = CARES_OrderData.find(contactId, orderId, true);
+        if (!lookup.found) {
             return null;
         }
         Map<String, Decimal> pricesByLowerName = new Map<String, Decimal>();
-        for (String name : CARES_Refund_FindOrder.STUB_LINE_ITEM_NAMES) {
-            pricesByLowerName.put(name.toLowerCase(), CARES_Refund_FindOrder.STUB_LINE_ITEM_PRICES.get(name));
+        for (CARES_OrderData.Item item : lookup.order.items) {
+            pricesByLowerName.put(item.name.toLowerCase(), item.price);
         }
         Decimal total = 0;
         for (String rawName : affectedItems.split('[,;]')) {
-            String name = rawName.trim();
+            // The model may copy the price from the item list: "Iced Tea $13.12"
+            String name = rawName.trim().replaceFirst('\\s*\\$[0-9.]+$', '');
             if (String.isBlank(name)) {
                 continue;
             }
