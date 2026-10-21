@@ -36,7 +36,7 @@ POOLS = {
     "R-CANC": ["Rubia A'Barrow", "Karena Cowburn", "Evanne Fosberry", "Candace Pigford"],
 }
 REVIEW_AT = 3  # risk_review_threshold: this many issue cases go to PATTERN_REVIEW (D-062)
-ESC_SIZE = 41  # Insiders with no cases: FX-CLEAN, then one each for scenarios that issue or create Cases
+ESC_SIZE = 41  # contacts with no cases: FX-CLEAN (an Insider), then one each for scenarios that issue or create Cases
 ESC_LOW_SIZE = 8  # contacts Stolen & Delayed does not trust, for the "never arrived" scenarios that escalate
 # Stolen & Delayed trusts a customer only with this many non-canceled orders and a claim rate at most this
 # (High_Trust_Min_Orders__c and High_Trust_Max_Claim_Rate__c on CARES_Stolen_Delayed_Policy.Default, D-090).
@@ -165,8 +165,11 @@ def main():
 
     fresh = [(n, app, c) for n, (app, c) in sorted(by_name.items()) if c["cases"] == 0 and n not in used
              and app in orders and fixture(c, orders[app])["order"] not in paid]
-    # ESC: trusted Insiders, so a "never arrived" claim is not sent to a person for lack of trust
-    esc = [n for n, app, c in fresh if c["tier"] == "Insider" and not low_trust(app, c)][:ESC_SIZE]
+    # ESC: trusted contacts, so a "never arrived" claim is not sent to a person for lack of trust. Any tier:
+    # the offers are computed per tier. FX-CLEAN stays an Insider
+    trusted = [n for n, app, c in fresh if not low_trust(app, c)]
+    clean = next(n for n in trusted if by_name[n][1]["tier"] == "Insider")
+    esc = [clean] + [n for n in trusted if n != clean][:ESC_SIZE - 1]
     # ESC-LOW: any tier, but Stolen & Delayed does not trust them (too few orders or too many claims),
     # so a "never arrived" claim always goes to a person. The pools never share a contact
     esc_low = [n for n, app, c in fresh if low_trust(app, c)][:ESC_LOW_SIZE]

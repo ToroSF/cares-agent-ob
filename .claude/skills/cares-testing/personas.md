@@ -68,7 +68,7 @@ Rotation pools (0 cases, latest order delivered unless stated). Take the next un
 | R-OFD      | Devin De Mattia, Angele Evins `…DNQAZ` (`PR-240830-VD327CL`), Garrik Forman (only when he is not FX-OTHER)          |
 | R-PREP     | Delmore Decroix, Ellery Collopy `…D2QAJ` (`PR-240828-7RFIQSL`), Corie Fairleigh `…DOQAZ` (`PR-240830-HQGS8WQ`)       |
 | R-CANC     | Rubia A'Barrow, Karena Cowburn `…D4QAJ`, Evanne Fosberry `…DVQAZ`, Candace Pigford `…EvQAJ`                          |
-| ESC        | Any other Insider with 0 cases and no payout yet (`build_fixtures.py` skips orders already in `CARES_Resolution__c`). Never Alex Morgan or Abdel Cornill (they already have cases). FX-CLEAN is the first of them |
+| ESC        | Any other contact (any tier: offers are computed per tier) with 0 cases and no payout yet (`build_fixtures.py` skips orders already in `CARES_Resolution__c`) whom Stolen & Delayed trusts. Never Alex Morgan or Abdel Cornill (they already have cases). FX-CLEAN is the first Insider of them |
 | ESC-LOW    | Contacts of any tier with 0 cases and no payout that Stolen & Delayed does not trust: fewer than 5 non-canceled orders, or a claim rate above 5% (D-090). A "never arrived" claim from them always ends in `MANUAL_REVIEW` and goes to a person. ESC holds only trusted Insiders, so the two never share a contact |
 
 FX-CLEAN changed on 2026-10-21: the first P0 and P1 runs gave the old one (Adoree Di Bernardo, `003jV00000CfpDEQAZ`) 3 escalation Cases, because scenarios that escalate used it. Those scenarios (B-RT-02, B-RT-03, B-RF-05, B-RF-09, B-AD-08, B-CT-04, B-RT-09, B-PO-12) now take an ESC contact, and FX-CLEAN is now Darren Gommery. Use FX-CLEAN only for scenarios that never escalate and never issue.
