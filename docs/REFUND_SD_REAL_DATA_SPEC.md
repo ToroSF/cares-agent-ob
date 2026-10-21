@@ -276,7 +276,7 @@ What the matrix gives with only these fields:
   - **Refund Policy:** Tier, Order Outcome, Max Refund, Clean-History Max Refund, Store Credit Bonus %, Active.
   - **Tier:** Name, Rank, Active, and a related list of its policy rows.
   - **Resolution:** Contact, Order Id, Resolution Type, Amount, Status, Tier, Risk Status, Order Outcome, plus Part C's Driver Compensation, Restaurant Reimbursement, Loss Absorption and Settlement Status.
-- **Read-only on Resolution:** every field is read-only, because the payout record is written only by `issue_resolution` (D-048). The layout keeps that clear even though the permission set already gives admins no edit.
+- **Read-only on Resolution:** the payout record is written only by `issue_resolution` (D-048). As built: required fields can't be read-only on a layout, so `Contact__c`, `Order_Id__c`, `Resolution_Type__c`, `Amount__c` and `Status__c` stay Required and every other field is read-only. Admins still can't edit, because `CARES_Refund_Policy_Admin` grants read only on resolutions.
 
 ### D3.4 List views (`objects/<object>/listViews/`)
 | Object | View | Filter / columns |
