@@ -1,1 +1,1398 @@
-{ "agent": "CARES", "org": "team-pronto", "configHash": null, "commitAtGeneration": "d9824ad", "configHashAtGeneration": "248ae33fe9857384", "runs": [] }
+{
+  "agent": "CARES",
+  "org": "team-pronto",
+  "configHash": "26f41d647b95d645",
+  "commitAtGeneration": "d9824ad",
+  "configHashAtGeneration": "248ae33fe9857384",
+  "runs": [
+    {
+      "timestamp": "2026-10-21T08:14:31Z",
+      "tier": "L",
+      "configHash": "26f41d647b95d645",
+      "commit": "ff79b44",
+      "agentVersion": "v5 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p0.json",
+      "runner": "scripts/testing/run_batch.py --runs 2 --workers 3 (rescored with the runner of this PR)",
+      "fixtures": {
+        "FX-EXP": {
+          "order": "PR-240825-QN0SODC",
+          "tier": "Explorer",
+          "cases": 0
+        },
+        "FX-EXP-2": {
+          "order": "PR-240819-CNK6KC0",
+          "tier": "Explorer",
+          "cases": 0
+        },
+        "FX-INS": {
+          "order": "PR-240818-2XDHU3O",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "FX-INS-2": {
+          "order": "PR-240824-XEE47I3",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "FX-PP": {
+          "order": "PR-240826-BSL3NHL",
+          "tier": "Pronto Plus",
+          "cases": 0
+        },
+        "FX-PP-2": {
+          "order": "PR-240830-A2F7G72",
+          "tier": "Pronto Plus",
+          "cases": 0
+        },
+        "FX-ONE": {
+          "order": "PR-240826-VS09AEQ",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "FX-BIG": {
+          "order": "PR-240824-CNVVHNB",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "FX-OFD": {
+          "order": "PR-240725-1V95D3F",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "FX-PREP": {
+          "order": "PR-240811-8WZAVTE",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "FX-CANC": {
+          "order": "PR-240808-7VHCQ11",
+          "tier": "Explorer",
+          "cases": 0
+        },
+        "FX-OTHER": {
+          "order": "PR-240813-8TAT0JC",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "FX-DIRTY": {
+          "order": "PR-250812-0LNZ2JM",
+          "tier": "Pronto Plus",
+          "cases": 5
+        },
+        "FX-CLEAN-BIG": {
+          "order": "PR-240826-B9FGO67",
+          "tier": "Pronto Plus",
+          "cases": 0
+        },
+        "P-PETRONILLE-LYSTE": {
+          "order": "PR-240817-5W2XCC5",
+          "tier": "Explorer",
+          "cases": 0
+        },
+        "P-JEFFREY-VALENTINE": {
+          "order": "PR-240824-HE7TUW7",
+          "tier": "Explorer",
+          "cases": 0
+        },
+        "P-HUMFRID-JENDRUSCH": {
+          "order": "PR-240816-CSQI55B",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "P-BEATRIX-SHOOTER": {
+          "order": "PR-240822-GY8RVKV",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "P-DIANE-MARIE-PANTRY": {
+          "order": "PR-240820-YGHQOJM",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "P-MARTA-BASSINDALE": {
+          "order": "PR-240826-YLNU39N",
+          "tier": "Pronto Plus",
+          "cases": 0
+        },
+        "P-ROZANNE-DEVEREUX": {
+          "order": "PR-240829-5WE179W",
+          "tier": "Pronto Plus",
+          "cases": 0
+        },
+        "P-PEYTON-BATRICK": {
+          "order": "PR-240826-AL2NKVM",
+          "tier": "Pronto Plus",
+          "cases": 0
+        },
+        "P-DORE-BRIANT": {
+          "order": "PR-240827-L9KMKYL",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "P-BRUCE-CLEMENDOT": {
+          "order": "PR-240827-HQ2DT25",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "P-PENNY-DANFORTH": {
+          "order": "PR-240828-ZO28CZ7",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "P-ANGELE-EVINS": {
+          "order": "PR-240812-BACIUK4",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "P-ELLERY-COLLOPY": {
+          "order": "PR-240811-7CPITCY",
+          "tier": "Pronto Plus",
+          "cases": 0
+        },
+        "P-CORIE-FAIRLEIGH": {
+          "order": "PR-240813-9UVJYIW",
+          "tier": "Pronto Plus",
+          "cases": 0
+        },
+        "P-KARENA-COWBURN": {
+          "order": "PR-240811-CE4ZLFE",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "P-EVANNE-FOSBERRY": {
+          "order": "PR-240813-VC2DRCB",
+          "tier": "Insider",
+          "cases": 0
+        },
+        "P-CANDACE-PIGFORD": {
+          "order": "PR-240804-UB0FQSZ",
+          "tier": "Explorer",
+          "cases": 0
+        },
+        "FX-CLEAN": {
+          "order": "PR-240829-WHRMQ5Y",
+          "tier": "Insider",
+          "cases": 0
+        }
+      },
+      "counts": {
+        "before": {
+          "Case": 92,
+          "CaseComment": 0,
+          "CSAT_Rating__c": 0,
+          "CARES_Resolution__c": 1
+        },
+        "after": {
+          "Case": 116,
+          "CaseComment": 5,
+          "CSAT_Rating__c": 0,
+          "CARES_Resolution__c": 9
+        }
+      },
+      "summary": {
+        "scenarios": 73,
+        "PASS": 58,
+        "EXPECTED_FAIL": 8,
+        "FAIL": 5,
+        "FLAKY": 1,
+        "N/A": 1,
+        "runs": 146,
+        "runsLostToPlatform": 24
+      },
+      "personas": {
+        "P0": {
+          "name": "Harness and smoke",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 4,
+          "passed": 4,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-SM-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            }
+          ],
+          "status": "PASS 4/4"
+        },
+        "P1": {
+          "name": "Router",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 4,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 2,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-RT-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-02",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-087"
+            },
+            {
+              "scenario": "B-RT-03",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-087"
+            },
+            {
+              "scenario": "B-RT-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            }
+          ],
+          "status": "2/4 pass"
+        },
+        "P2": {
+          "name": "Risk Detection",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 5,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 3,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-RD-01",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-084"
+            },
+            {
+              "scenario": "B-RD-02",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-084"
+            },
+            {
+              "scenario": "B-RD-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-04",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-088"
+            },
+            {
+              "scenario": "B-RD-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            }
+          ],
+          "status": "2/5 pass"
+        },
+        "P3": {
+          "name": "Refund, direct path",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 15,
+          "passed": 14,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 1,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-RF-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-12a",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-12b",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-084"
+            },
+            {
+              "scenario": "B-RF-18",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-19",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-20",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-22",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-092 (finding)"
+            },
+            {
+              "scenario": "B-RF-23",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-24",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-25",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-091 (finding)"
+            }
+          ],
+          "status": "14/15 pass"
+        },
+        "P4": {
+          "name": "Stolen & Delayed",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 6,
+          "passed": 6,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-SD-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-14",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            }
+          ],
+          "status": "PASS 6/6"
+        },
+        "P5": {
+          "name": "Contracts",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 3,
+          "passed": 3,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-IN-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            }
+          ],
+          "status": "PASS 3/3"
+        },
+        "P6": {
+          "name": "Experience Rating",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 5,
+          "passed": 3,
+          "failed": 2,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-ER-01",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "FAIL"
+              ],
+              "accuracy": "FAIL",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-089"
+            },
+            {
+              "scenario": "B-ER-02",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "FAIL"
+              ],
+              "accuracy": "FAIL",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-089"
+            },
+            {
+              "scenario": "B-ER-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            }
+          ],
+          "status": "3/5 pass"
+        },
+        "P7": {
+          "name": "Escalate to Human",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 3,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 1,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-ES-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-03",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "FAIL",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-088"
+            }
+          ],
+          "status": "2/3 pass"
+        },
+        "P8": {
+          "name": "Red team",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 7,
+          "passed": 6,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 1,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-AD-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-AD-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-AD-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-AD-16",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-084; one run lost to the platform outage (G-090)"
+            }
+          ],
+          "status": "6/7 pass"
+        },
+        "P9": {
+          "name": "Continuity",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 2,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-CT-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-CT-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            }
+          ],
+          "status": "PASS 2/2"
+        },
+        "P10": {
+          "name": "Failure",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 3,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 1,
+          "results": [
+            {
+              "scenario": "B-FL-01",
+              "repeats": 2,
+              "outcomes": [
+                "N/A",
+                "N/A"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-FL-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-FL-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            }
+          ],
+          "status": "PASS 2/2"
+        },
+        "P12": {
+          "name": "Pronto policy",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 9,
+          "passed": 5,
+          "failed": 3,
+          "flaky": 0,
+          "expectedFail": 1,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-PO-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-PO-02",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "FAIL",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-088; one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-PO-03",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "FAIL",
+              "invariants": "PASS",
+              "notes": "G-086; one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-PO-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-PO-05",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "FAIL",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-088; one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-PO-06",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-084; one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-PO-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-PO-08",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "G-088 (finding); one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-PO-14",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            }
+          ],
+          "status": "5/9 pass"
+        },
+        "P13": {
+          "name": "Order Status",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 7,
+          "passed": 7,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-OS-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-OS-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-OS-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-OS-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-OS-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-OS-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            },
+            {
+              "scenario": "B-OS-09",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "ERROR"
+              ],
+              "accuracy": "PASS",
+              "grounding": "PASS",
+              "subagent": "PASS",
+              "clarification": "PASS",
+              "invariants": "PASS",
+              "notes": "one run lost to the platform outage (G-090)"
+            }
+          ],
+          "status": "PASS 7/7"
+        }
+      },
+      "fixturesNote": "Order dates are in the order id (PR-YYMMDD-...), 2024-08. Case counts are the contact's cases when fixtures.json was built; the Risk Detection window is 30 days."
+    }
+  ]
+}

@@ -102,6 +102,8 @@ Use sub-agents, at most 3 concurrent sessions (limit set to avoid org API thrott
 - `expect` must pass. `expect_known` holds the checks of a documented gap: EXPECTED_FAIL while they fail, UNEXPECTED_PASS when they pass. `soft` checks become `FINDING` notes. `judge` says what a person still reads.
 - Pools: `burns: true` takes an exclusive contact per run, so a payout (D-048) or an escalation Case never touches another scenario. Pass `--burned` with the `Order_Id__c` values already in `CARES_Resolution__c` so those contacts are skipped.
 - Simulated scenarios (`mode: sim`) write nothing; they are the ones whose result depends on an invented Stolen & Delayed decision.
+- The platform's "Sorry, it looks like something has gone wrong" reply is `ERROR`, not a result: run that scenario again (G-090). An action that throws is a hard problem (`ACTION-ERROR`), whatever the agent says.
+- `--rescore <run dir>` checks a saved run again with the current `p0.json` and rules, without calling the org, and writes `summary-rescored.json`.
 
 ### Flakiness
 Run every scenario at least twice (3 times for P0 adversarial ones). If results differ, mark it FLAKY and report both outcomes. One run proves nothing (Weeks 3-4 lesson 2). Judge a change by the trend, not by one run.
