@@ -154,9 +154,9 @@ public without sharing class CARES_EscalationAlerts implements Queueable, Databa
       );
       n.setBody(
         'Why: ' +
-          reasonOf(c) +
+          reasonText(c) +
           '. Order: ' +
-          c.CARES_Order_Ref__c +
+          orderText(c) +
           '.' +
           (hasLiveChat(c) ? ' The customer is waiting in a live chat.' : '')
       );
@@ -238,8 +238,8 @@ public without sharing class CARES_EscalationAlerts implements Queueable, Databa
         'fields' => new List<Object>{
           mrkdwn('*Case*\n<' + caseUrl(c) + '|' + c.CaseNumber + '>'),
           mrkdwn('*Priority*\n' + escape(c.Priority)),
-          mrkdwn('*Why*\n' + escape(reasonOf(c))),
-          mrkdwn('*Order*\n' + escape(c.CARES_Order_Ref__c)),
+          mrkdwn('*Why*\n' + escape(reasonText(c))),
+          mrkdwn('*Order*\n' + escape(orderText(c))),
           mrkdwn(
             '*Live chat*\n' +
             (hasLiveChat(c)
@@ -274,16 +274,20 @@ public without sharing class CARES_EscalationAlerts implements Queueable, Databa
     };
   }
 
-  /** Flat text variables for a Slack Workflow Builder webhook. */
+  /** Flat text variables for a Slack Workflow Builder webhook, written for people. */
   @TestVisible
   private static Map<String, Object> workflowMessage(Case c) {
     return new Map<String, Object>{
+      'headline' => (isUrgent(c) ? '🔴 URGENT' : '🟡 New escalation') +
+        ' · Case ' +
+        c.CaseNumber,
       'case_number' => c.CaseNumber,
       'case_url' => caseUrl(c),
       'urgent' => isUrgent(c) ? 'yes' : 'no',
       'priority' => c.Priority,
-      'reason' => reasonOf(c),
-      'order_ref' => c.CARES_Order_Ref__c,
+      'reason' => reasonText(c),
+      'reason_code' => reasonOf(c),
+      'order_ref' => orderText(c),
       'live_chat' => hasLiveChat(c) ? 'yes' : 'no',
       'conversation_url' => hasLiveChat(c) ? sessionUrl(c) : ''
     };
@@ -304,6 +308,34 @@ public without sharing class CARES_EscalationAlerts implements Queueable, Databa
     return String.isBlank(c.CARES_Escalation_Reason__c)
       ? 'NOT_GIVEN'
       : c.CARES_Escalation_Reason__c;
+  }
+
+  // Plain words for the reason codes the agent sets (D-085). A new code shows as is.
+  private static final Map<String, String> REASON_TEXT = new Map<String, String>{
+    'SAFETY' => 'Safety, health, fraud or legal issue',
+    'REPEATED_ISSUES' => 'Many past issues, needs a review',
+    'CLAIM_REVIEW' => 'Claim needs a person to review',
+    'IDENTITY_FAILED' => 'Customer could not be verified',
+    'ISSUE_FAILED' => 'Refund could not be issued',
+    'CLAIM_FAILED' => 'Claim could not be handed off',
+    'ORDER_NOT_FOUND' => 'Order not found',
+    'NOT_ELIGIBLE' => 'Not eligible for a refund',
+    'OFFER_DISPUTED' => 'Customer did not accept the offer',
+    'CUSTOMER_REQUEST' => 'Customer asked for a person',
+    'NOT_GIVEN' => 'Not given'
+  };
+
+  @TestVisible
+  private static String reasonText(Case c) {
+    String code = reasonOf(c);
+    return REASON_TEXT.containsKey(code) ? REASON_TEXT.get(code) : code;
+  }
+
+  // The Flow writes NONE when the case has no order.
+  @TestVisible
+  private static String orderText(Case c) {
+    String ref = c.CARES_Order_Ref__c;
+    return String.isBlank(ref) || ref == 'NONE' ? 'No order linked' : ref;
   }
 
   private static String caseUrl(Case c) {

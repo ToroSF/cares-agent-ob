@@ -162,8 +162,40 @@ private class CARES_EscalationAlertsTest {
     );
     Assert.areEqual(c.CaseNumber, vars.get('case_number'));
     Assert.areEqual('yes', vars.get('urgent'));
-    Assert.areEqual('SAFETY', vars.get('reason'));
+    Assert.areEqual(
+      '🔴 URGENT · Case ' + c.CaseNumber,
+      vars.get('headline')
+    );
+    Assert.areEqual(
+      'Safety, health, fraud or legal issue',
+      vars.get('reason')
+    );
+    Assert.areEqual('SAFETY', vars.get('reason_code'));
     Assert.isFalse(vars.containsKey('blocks'));
+  }
+
+  @IsTest
+  static void reasonAndOrderReadForPeople() {
+    Case c = new Case(
+      Priority = 'Medium',
+      CARES_Escalation_Reason__c = 'CUSTOMER_REQUEST',
+      CARES_Order_Ref__c = 'NONE'
+    );
+    Assert.areEqual(
+      'Customer asked for a person',
+      CARES_EscalationAlerts.reasonText(c)
+    );
+    Assert.areEqual('No order linked', CARES_EscalationAlerts.orderText(c));
+    c.CARES_Escalation_Reason__c = 'SOME_NEW_CODE';
+    c.CARES_Order_Ref__c = 'a0B000000000001';
+    Assert.areEqual('SOME_NEW_CODE', CARES_EscalationAlerts.reasonText(c));
+    Assert.areEqual('a0B000000000001', CARES_EscalationAlerts.orderText(c));
+    c.CARES_Escalation_Reason__c = null;
+    Assert.areEqual('Not given', CARES_EscalationAlerts.reasonText(c));
+    Map<String, Object> vars = CARES_EscalationAlerts.workflowMessage(c);
+    Assert.isTrue(
+      ((String) vars.get('headline')).startsWith('🟡 New escalation')
+    );
   }
 
   @IsTest
