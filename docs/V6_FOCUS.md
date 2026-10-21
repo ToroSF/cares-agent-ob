@@ -5,25 +5,25 @@ v5 stays Active until the team agrees on v6. Each line points to its gap in `GAP
 
 ## 1. What the customer sees (first)
 
-| # | Fix | Gap | Shown by |
-|---|-----|-----|----------|
-| 1 | Every escalation must end with a real sentence: what happens next and the case number. Today the turn ends with no text, or with the platform text "User requested escalation to human." (also on the new PATTERN_REVIEW path) | G-086, G-082 | B-ES-01, B-PO-01, B-SD-01, B-PO-06 |
-| 2 | Stop counting CARES's own escalation cases as issues in Risk Detection. Since G-084 was fixed, a customer escalated three times in 30 days goes to PATTERN_REVIEW and gets no offer | G-074, G-045 | B-RD-14; 59 of 63 issue cases in the org come from CARES |
-| 3 | Real requests blocked by the platform guard topics ("Sorry, I can't assist with that"): safety, fraud, "skip the check" | G-088 | B-PO-02, B-ES-03, B-AD-08, B-RD-04 |
-| 4 | Refund keeps or escalates things that are not a refund: two requests in one message, a late order mid-offer, whole-order complaints with no item | G-097, G-096, G-087 | B-RT-09, B-CT-03, B-RT-02, B-RT-03 |
-| 5 | A second claim on a paid order is refused only after the customer accepts the offer. Check before the offer | G-091 | B-RF-25 |
-| 6 | Experience Rating: a typed "5 out of 5" saves nothing; "Thanks, you're great!" mid-offer asks for a rating (3 of 7 runs) | G-099, G-047 | B-ER-06, B-CX-06 |
-| 7 | Small wording fixes: name the order when the latest one is canceled, a second email after a miss, a person promised but not called, Off Topic promising a hand-off | G-092, G-094, G-093, G-095 | B-RF-22, B-OS-08, B-ID-02, B-AD-14 |
+| #   | Fix                                                                                                                                                                                                                            | Gap                        | Shown by                                                                                                                                                                              |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Every escalation must end with a real sentence: what happens next and the case number. Today the turn ends with no text, or with the platform text "User requested escalation to human." (also on the new PATTERN_REVIEW path) | G-086, G-082               | B-ES-01, B-PO-01, B-SD-01, B-PO-06                                                                                                                                                    |
+| 2   | Stop counting CARES's own escalation cases as issues in Risk Detection. Since G-084 was fixed, a customer escalated three times in 30 days goes to PATTERN_REVIEW and gets no offer                                            | G-074, G-045               | B-RD-14; 59 of 63 issue cases in the org come from CARES                                                                                                                              |
+| 3   | Real requests blocked by the platform guard topics ("Sorry, I can't assist with that"): safety, fraud, "skip the check"                                                                                                        | G-088                      | B-PO-02, B-ES-03, B-AD-08, B-RD-04                                                                                                                                                    |
+| 4   | Refund keeps or escalates things that are not a refund: two requests in one message, a late order mid-offer, whole-order complaints with no item                                                                               | G-097, G-096, G-087        | B-RT-09, B-CT-03, B-RT-02, B-RT-03                                                                                                                                                    |
+| 5   | A second claim on a paid order is refused only after the customer accepts the offer. Check before the offer                                                                                                                    | G-091                      | B-RF-25                                                                                                                                                                               |
+| 6   | Experience Rating: a typed "5 out of 5" saves nothing; "Thanks, you're great!" mid-offer asks for a rating (3 of 7 runs)                                                                                                       | G-099, G-047               | B-ER-06, B-CX-06 — **done on `fix/v6-rating-polish` (D-078, D-079), not yet re-run or deployed**                                                                                      |
+| 7   | Small wording fixes: name the order when the latest one is canceled, a second email after a miss, a person promised but not called, Off Topic promising a hand-off                                                             | G-092, G-094, G-093, G-095 | B-RF-22, B-OS-08, B-ID-02 — **done on `fix/v6-rating-polish` (D-080, D-081), not yet re-run or deployed**; B-AD-14 (Off Topic hand-off, G-095) still open, out of this branch's scope |
 
 ## 2. Data and back end
 
-| # | Fix | Gap |
-|---|-----|-----|
-| 8 | Set the order id on the Stolen & Delayed escalation case before the platform call | G-098 |
-| 9 | Stolen & Delayed reads the real orders (`Order__dlm`), not the mock platform | G-081 |
-| 10 | `apply_settlement` is still a stub: no payout is made, only the `CARES_Resolution__c` row | — |
-| 11 | Human handoff design: where the summary goes, who gets it, members for the `CARES_Escalations` queue | G-082, G-068 |
-| 12 | Orders are from 2024-25; shift the dates in a copy if the demo needs "last night" | G-080 |
+| #   | Fix                                                                                                  | Gap          |
+| --- | ---------------------------------------------------------------------------------------------------- | ------------ |
+| 8   | Set the order id on the Stolen & Delayed escalation case before the platform call                    | G-098        |
+| 9   | Stolen & Delayed reads the real orders (`Order__dlm`), not the mock platform                         | G-081        |
+| 10  | `apply_settlement` is still a stub: no payout is made, only the `CARES_Resolution__c` row            | —            |
+| 11  | Human handoff design: where the summary goes, who gets it, members for the `CARES_Escalations` queue | G-082, G-068 |
+| 12  | Orders are from 2024-25; shift the dates in a copy if the demo needs "last night"                    | G-080        |
 
 ## 3. Tests
 
