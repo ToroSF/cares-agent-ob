@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Group xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>People who take over CARES escalations. Member of the CARES Escalations queue (cases) and the CARES Support Chat queue (live chats), and the target of the CARES Escalation Alert bell. Members are added by scripts/apex/setup-escalation-team.apex, not by deploy (D-086).</description>
+    <doesIncludeBosses>false</doesIncludeBosses>
+    <name>CARES Support Team</name>
+</Group>

@@ -320,6 +320,18 @@ private class CARES_StolenDelayedPolicyTest {
     );
     Assert.areEqual('SENSITIVE_TOPIC', d.reasonCode);
     Assert.areEqual(0, mock.requests.size());
+    Assert.areEqual('ORD-1', d.orderId, 'G-098: the case keeps the order the customer named');
+  }
+
+  @IsTest
+  static void earlyEscalationDropsAMalformedOrderId() {
+    CARES_StolenDelayedPolicy.Outcome d = CARES_StolenDelayedPolicy.evaluate(
+      '003000000000001',
+      '../admin?x=1',
+      'The driver assaulted me'
+    );
+    Assert.areEqual('SENSITIVE_TOPIC', d.reasonCode);
+    Assert.isNull(d.orderId, 'Only a well-formed order id goes on the case');
   }
 
   // Settings

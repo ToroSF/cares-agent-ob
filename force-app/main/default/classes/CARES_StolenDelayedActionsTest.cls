@@ -89,6 +89,7 @@ private class CARES_StolenDelayedActionsTest {
     Assert.areEqual(CARES_StolenDelayedPolicy.ESCALATE, r.decision);
     Assert.areEqual('DATA_UNAVAILABLE', r.reasonCode);
     Assert.isTrue(r.needsPerson);
+    Assert.areEqual(ORDER_ID, r.orderId, 'The escalation case keeps the order the customer named (G-098)');
   }
 
   @IsTest
@@ -113,6 +114,7 @@ private class CARES_StolenDelayedActionsTest {
     )[0];
     Assert.areEqual('NO_VERIFIED_CONTACT', res.reasonCode);
     Assert.areEqual(0, mock.requests.size());
+    Assert.areEqual(ORDER_ID, res.orderId, 'G-098');
   }
 
   @IsTest

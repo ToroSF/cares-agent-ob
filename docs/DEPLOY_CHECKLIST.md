@@ -84,6 +84,39 @@ Adds `CARES_OrderData`, `CARES_Order_GetStatus` and `CARES_OrderDataTest`, chang
 - The preview found one problem: the not-found prompt used a real order number of another customer as the format example. Fixed in PR #22 before the publish.
 - Smoke test on the published v5 (`--api-name`, no ContactId, identified by email): status and missing-item refund both worked.
 
+## v6 block 1: escalation that lands (`feature/escalation-handoff`)
+
+Decisions D-083 to D-087, gaps G-086, G-082, G-068. Design: [subagents/escalate-to-human.md](subagents/escalate-to-human.md). Demo: [DEMO_ESCALATION.md](DEMO_ESCALATION.md).
+
+| Component | Type | New or changed | Notes |
+|---|---|---|---|
+| `Case.CARES_Escalation_Reason__c`, `CARES_Messaging_Session_Id__c`, `CARES_Alert_Status__c` | Custom fields | New | Reason code, chat link, alert result |
+| `CARES_Escalation_Access` | Permission set | Changed | Edit on the reason and session fields. Still no Edit on Case |
+| `CARES_Create_Escalation_Case` | Flow | Changed, **saved as Active** | Fixed summary, AccountId, reason, session, `caseId` output. New inputs are optional, so v5 keeps working (reason `NOT_GIVEN`) |
+| `CARES_Route_To_Support` | Flow (Omni-Channel, Active) | New | Links the case to the chat and routes to `CARES_Support_Chat` |
+| `CARES_Support_Team` | Public group | New | Members are added by the setup script, not by the deploy |
+| `CARES_Escalations` | Queue | Changed | Member: the group |
+| `CARES_Support_Chat`, `CARES_Support_Routing` | Queue (MessagingSession), routing config | New | The human chat queue |
+| `CARES_Escalation_Alert` | Custom notification type | New | Bell and mobile push |
+| `CARES_Alert_Setting__mdt` + record `Default` | Custom metadata | New | Slack mode `OFF` by default |
+| `CARES_EscalationAlerts`, `CARES_EscalationCaseTrigger` | Apex class, trigger (after insert on Case) | New | Only for CARES escalation cases (`CARES_Escalation__c` = true, D-082) |
+| `CARES` | Authoring bundle | Changed | `connection messaging:` block, reason code, reply first, gated transfer, hand-off wording |
+
+1. Check-only (2026-10-21: 94 components, 122/122 tests after the rebase onto `main` (PR #36 to #38), `CARES_EscalationAlerts` 95%, trigger 100%):
+   `sf project deploy validate --source-dir force-app --test-level RunSpecifiedTests --tests CARES_Identity_FindContactByEmailTest --tests CARES_Refund_ActionsTest --tests CARES_StolenDelayedActionsTest --tests CARES_StolenDelayedPolicyTest --tests CsatRatingSaverTest --tests CARES_OrderDataTest --tests CARES_EscalationAlertsTest --tests CARES_EscalationCaseFlowTest --target-org <team org> --json`
+2. Deploy with the same test list. **This changes the active v5 too:** the new Flow version becomes active and the trigger alerts on every new CARES escalation case (bell only while Slack is `OFF`). v5 does not send the new inputs, so its cases show `Why: Not given (NOT_GIVEN)` and no chat link. The agent bundle is deployed as a draft; v5 stays Active.
+3. Run the setup script once (adds the four team admins to the group, turns on Service Cloud User, assigns `Agent_Presence_Status_Access`). Try it with `DRY_RUN = true` first:
+   `sf apex run --file scripts/apex/setup-escalation-team.apex --target-org <team org> --json`
+4. Slack (optional, manual, G-103). Never put the token or the webhook URL in the repo (D-087).
+   - **BOT:** create a Slack app with the `chat:write` scope, install it, invite it to the channel. In Setup, create an External Credential with a custom header `Authorization: Bearer <bot token>`, and the Named Credential `CARES_Slack` with URL `https://slack.com/api` that uses it. Give the agent user's permission set access to the External Credential principal. Set `Default` to Mode `BOT` and Channel to the channel id (`C0...`).
+   - **WORKFLOW:** in Slack Workflow Builder, start a workflow from a webhook with the text variables `case_number`, `case_url`, `urgent`, `priority`, `reason`, `order_ref`, `live_chat`, `conversation_url`. Create the Named Credential `CARES_Slack` with the full webhook URL (no authentication). Set `Default` to Mode `WORKFLOW`.
+   - Test: one escalation in preview, then check `Case.CARES_Alert_Status__c` shows `Slack: Sent`.
+5. Omni-Channel: the person who takes chats sets the presence to **Available** in the Service Console. Nobody Available means the chat waits (G-102).
+6. Preview from the draft with live actions: "I want a human, now." and an urgent report. The reply has the case number, no placeholder, no "joining now". The case has the 12-line summary, the account and `CARES_Alert_Status__c` = `Bell: Sent | ...`.
+7. Run the escalation scenarios twice (B-ES-01, B-ES-06, B-ES-10, B-PO-01, B-PO-03, B-PO-06, B-SD-01, B-AD-16, B-CX-05), then the P0 set twice.
+8. A real chat on `CARES_Web` once v6 is active: the chat reaches `CARES_Support_Chat` and the case is linked to the session.
+9. Rollback: activate v5. To stop the alerts, set `Bell_Enabled__c` false and Mode `OFF` on `Default` (no deploy needed). To go back to the old case summary, activate Flow version 2 of `CARES_Create_Escalation_Case`.
+
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).

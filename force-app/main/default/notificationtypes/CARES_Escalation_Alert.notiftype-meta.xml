@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomNotificationType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customNotifTypeName>CARES Escalation Alert</customNotifTypeName>
+    <description>Bell and mobile push to the CARES Support Team when CARES logs an escalation case. Sent by CARES_EscalationAlerts (D-086).</description>
+    <desktop>true</desktop>
+    <masterLabel>CARES Escalation Alert</masterLabel>
+    <mobile>true</mobile>
+</CustomNotificationType>
