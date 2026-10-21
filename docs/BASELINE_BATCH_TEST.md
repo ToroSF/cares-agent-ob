@@ -78,7 +78,7 @@ The "not clean" contact (Alex Morgan) has 5 cases dated 2026-09-28 to 2026-10-20
 3. Tier L only after the team confirms the deploy and agrees live runs may write Cases and rating rows. Use the checklist in the skill.
 4. Run each scenario twice (three times for P0 red team). Differences are `FLAKY`, not a pass.
 5. Append the run to `test-results.json`. Never edit old runs. Show the delta against the previous run.
-6. P0 runs with one command: `python3 scripts/testing/run_batch.py --scenarios .claude/skills/cares-testing/scenarios/p0.json --runs 2 --workers 3`.
+6. P0 runs with one command: `python3 scripts/testing/run_batch.py --scenarios .claude/skills/cares-testing/scenarios/p0.json --runs 2` (1 worker and a 3 s pace by default, D-094: more workers can use up the org's AI allowance, G-090).
 7. For each real failure: reproduce with the same fixture, read the trace, find the layer (routing, action, data, instruction), fix at the lowest layer, add the case here. Say when to escalate instead of digging.
 
 Nobody deploys, publishes or activates from this work. The batch reads, previews and records; live runs write only what the actions write (Cases, ratings, refund records).
