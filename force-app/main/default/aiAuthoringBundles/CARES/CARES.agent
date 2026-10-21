@@ -275,7 +275,7 @@ subagent refund:
                 | The resolution has been issued. Tell the customer the confirmation message and reference number from the {!@actions.issue_resolution} result, then ask if there is anything else you can help with.
             else if @variables.refund_order_id == "":
                 | Current step: identify the order. If the customer has given an order number or said it's their most recent order, call {!@actions.find_order} now (leave orderNumber blank for the most recent order). Otherwise ask which order this is about.
-                  If no order is found, ask for the order number (it looks like PR-240828-PQYEQ89). If the result says the order is not delivered yet, tell the customer and offer to check its status. If the order data is unavailable, apologize and use {!@actions.go_to_escalate_human}. Never make up an order.
+                  If no order is found, ask for the order number (it looks like PR-250101-ABC1234; that example is made up). If the result says the order is not delivered yet, tell the customer and offer to check its status. If the order data is unavailable, apologize and use {!@actions.go_to_escalate_human}. Never make up an order.
             else if @variables.refund_order_outcome == "" and @variables.refund_sd_path == "STANDARD":
                 | Current step: ask the customer whether the order was stolen (marked delivered but never received) or late. Then call {!@actions.log_order_issue} with issue type Stolen or Delayed and the customer's words; leave the affected items blank.
             else if @variables.refund_order_outcome == "":
@@ -1074,7 +1074,7 @@ subagent order_status:
                 | You can't find the customer's account, so you can't look up their order. Apologize, tell them a member of the team can help, and use {!@actions.go_to_escalate_human}.
             else:
                 | Call {!@actions.get_order_status} with the order number the customer gave, or leave it blank for their most recent order. Then tell the customer the status in one or two short sentences, using only the status summary from the result.
-                  If no order is found, ask for the order number (it looks like PR-240828-PQYEQ89). If the order data is unavailable, apologize and offer to connect them with a person.
+                  If no order is found, ask for the order number (it looks like PR-250101-ABC1234; that example is made up). If the order data is unavailable, apologize and offer to connect them with a person.
                   If the customer says the order is late, has not moved, or shows delivered but never arrived, use {!@actions.go_to_stolen_delayed}.
                   If the customer wants a refund or credit, use {!@actions.go_to_refund_check}.
             | Never invent a status, time or order number. Never promise a delivery time: an estimate can change.
