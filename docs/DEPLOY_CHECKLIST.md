@@ -14,7 +14,8 @@ What the person who deploys must do after this branch is merged into `main`. Fol
 | `CARES_Get_Risk_Result` | Flow | Changed | G-066 fix (unknown contact → `UNKNOWN`, account-only branch reachable) |
 | `CARES` | Authoring bundle | Changed | Urgent Escalation, Pronto Help, never-list, review threshold, `knowledge:` block. Includes Identify Customer from PR #16 (merged into this branch) |
 | `CARES_Identity_FindContactByEmail`, `CARES_Identity_Access` | Apex class, permission set | In the org since PR #16; PR #18 changed formatting only | The bundle calls this class from Identify Customer. The agent user needs `CARES_Identity_Access`, or the bundle fails its startup action check (same as G-050) |
-| `CARES_Tier__c`, `CARES_Refund_Policy__c`, `CARES_Resolution__c`, `Contact.CARES_Tier__c` | Custom objects, field | New (PR #18) | Tier and policy rows set the refund ceilings (D-046, D-047); Resolution is the audit row (D-048). **No rows are seeded** (R-17) |
+| `CARES_Tier__c`, `CARES_Refund_Policy__c`, `CARES_Resolution__c`, `Contact.CARES_Tier__c` | Custom objects, field | New (PR #18) | Tier and policy rows set the refund ceilings (D-046, D-047); Resolution is the audit row (D-048). **No rows are seeded** by the deploy: run the seed script (R-17, D-073, step 6) |
+| `CARES_Refund_Policy_Admin` | Permission set | New (D-073) | For CRM users who maintain tiers and policy rows, and for whoever runs the seed script. Not for the agent user |
 | `CARES_Refund_CalculateOffer`, `CARES_Refund_IssueResolution`, `CARES_Refund_LogOrderIssue`, `CARES_Refund_FindOrder`, `CARES_Refund_ActionsTest` | Apex | Changed (PR #18) | Real policy, audit row, double-payout block, items must be on the order. `FindOrder` and `ApplySettlement` are still stubs (G-004) |
 | `CARES_Refund_Access`, `CARES_Experience_Rating_Access` | Permission sets | Changed (PR #18) | Access to the new objects; CSAT field and Contact read (D-056). Field access to required fields removed on this branch, or the deploy fails (G-078) |
 | `CARES_Customer_Policy` | Data Library | **Already in the org** (D-067) | Created 2026-10-20 in Setup; READY, 3 files indexed. Not used by any agent until the bundle above is deployed |
@@ -26,12 +27,18 @@ What the person who deploys must do after this branch is merged into `main`. Fol
 4. `sf agent validate authoring-bundle --api-name CARES --target-org <team org> --json` on merged `main`.
 5. Check-only deploy with tests on merged `main`. Use `RunSpecifiedTests`, not `RunLocalTests`: old `Agent*` classes in the org do not compile (G-079).
    `sf project deploy validate --source-dir force-app --test-level RunSpecifiedTests --tests CARES_Identity_FindContactByEmailTest --tests CARES_Refund_ActionsTest --tests CARES_StolenDelayedActionsTest --tests CARES_StolenDelayedPolicyTest --tests CsatRatingSaverTest --target-org <team org> --json`
-   Passed on this branch on 2026-10-21: 69 components, 81/81 tests. Use the same test list for the real deploy.
+   Passed on this branch on 2026-10-21: 69 components, 81/81 tests. With `CARES_Refund_Policy_Admin` (D-073): 70 components, 81/81. Use the same test list for the real deploy.
 6. **Blocking: Refund data (R-17).** At least one active `CARES_Tier__c` row and one active `CARES_Refund_Policy__c` row per order outcome (Stolen, Delayed, Wrong_Missing_Items, Quality_Issue) for that tier. Owner: the Refund owner. Without them every direct-path refund is ineligible (D-047, [refund.md](subagents/refund.md)).
+   The seed script does it (D-073). Run it right after the objects and permission sets are deployed:
+   1. Assign `CARES_Refund_Policy_Admin` to the person who runs the script (not to the agent user): `sf org assign permset --name CARES_Refund_Policy_Admin --target-org <team org> --json`.
+   2. Dry run first: set `DRY_RUN = true` in the script, then `sf apex run --file scripts/apex/seed-refund-tiers.apex --target-org <team org> --json`. The `SEED` lines show the tier counts.
+   3. Set `DRY_RUN = false` (don't commit the change) and run it again.
+   4. Expected: 3 active tiers, 12 active policy rows, 187 contacts with a tier (Explorer 26, Insider 130, Pronto Plus 31, on the data of 2026-10-21). Check with `SELECT COUNT() FROM CARES_Refund_Policy__c WHERE Active__c = true` and `SELECT CARES_Tier__r.Name, COUNT(Id) FROM Contact WHERE CARES_Tier__c != null GROUP BY CARES_Tier__r.Name`.
+   The amounts are `[$]` (D-065): the Refund owner reviews them before the publish. Running it again is safe.
 7. The agent user has `CARES_Refund_Access` with PR #18's object permissions (assign again if the permission set changed).
 
 ## Deploy order
-Objects and fields (Case field, PR #18 objects) → queue → permission sets → Apex → both Flows → authoring bundle. The Flows read the field and the queue, the Apex reads the objects, and the agent calls both, so each step needs the one before it. Refund data rows (step 6 above) go in right after the objects.
+Objects and fields (Case field, PR #18 objects) → queue → permission sets → Apex → both Flows → authoring bundle. The Flows read the field and the queue, the Apex reads the objects, and the agent calls both, so each step needs the one before it. Refund data rows (step 6 above) go in right after the objects and permission sets: the script needs both.
 
 ## ⚠️ Flow versions: decide before the deploy (G-075)
 Both Flow files have `<status>Draft</status>`, the same as on `main`. In the org, version 1 of each Flow is **Active**. Deploying a Draft Flow adds a new **inactive** version, and the agent keeps calling the old active one. Result if nobody acts:
