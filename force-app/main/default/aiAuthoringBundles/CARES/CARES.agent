@@ -150,16 +150,18 @@ start_agent agent_router:
     label: "Agent Router"
     description: "Welcome the customer and route to the right CARES sub-agent based on their issue"
 
-    before_reasoning:
-        if @variables.customer_id == "" and @variables.ContactId is not None and @variables.ContactId != "":
-            set @variables.customer_id = @variables.ContactId
+    # Transition-only router: an ordinary model sometimes answered the customer itself, e.g. "your refund is
+    # being processed" with no issue_resolution call (G-083). HyperClassifier can only pick a route, so it allows
+    # no before_reasoning: each subagent that reads customer_id copies ContactId itself.
+    model_config:
+        model: "model://sfdc_ai__DefaultEinsteinHyperClassifier"
 
     reasoning:
         instructions: ->
             | Safety comes first. If the customer's message reports a food safety problem (a foreign object, contamination, getting sick, an allergic reaction), harassment or an unsafe delivery, fraud or someone else using their account, or a legal threat, choose Urgent Escalation, even if another task is ongoing and even if they also ask for money.
               Otherwise, select the sub-agent that best matches the customer's message and conversation history:
-              - Refund: the customer wants a refund or credit for an order. Refund is only reachable after Risk Detection has run, so for a refund request choose Risk Detection first.
-              - Stolen & Delayed Orders: the customer reports a missing/stolen or late order, or an order that has not moved.
+              - Refund: the customer wants a refund or credit for an order, or the order arrived with an item missing, a wrong item or a food quality problem. Refund is only reachable after Risk Detection has run, so for these choose Risk Detection first.
+              - Stolen & Delayed Orders: the whole order never arrived, was stolen, is late, or has not moved. Not for one missing or wrong item in an order that did arrive.
               - Risk Detection: a silent internal check of the customer's recent history, used to inform how generously to treat them. The customer never asks for it and is never told about it.
               - Pronto Help: a question about how Pronto works, with no request for money: order status words and ETAs, changing an address or delivery instructions, promotions and promo codes, membership, gift certificates, allergens, storefronts and reviews.
               - Escalate to Human: the customer asks for a person, disputes an outcome, or no other sub-agent can resolve the issue.
@@ -182,9 +184,9 @@ start_agent agent_router:
                 description: "Route to the Refund sub-agent for refund/credit requests. Only available after the Risk Detection check has run."
                 available when @variables.risk_checked == True and @variables.risk_issue_count < @variables.risk_review_threshold
             go_to_stolen_delayed: @utils.transition to @subagent.stolen_delayed_orders
-                description: "Route to the Stolen & Delayed Orders sub-agent for missing or late order reports."
+                description: "The whole order never arrived, was stolen, is late or has not moved. Not for one missing or wrong item in an order that arrived."
             go_to_risk_detection: @utils.transition to @subagent.risk_detection
-                description: "Route here FIRST for any refund or credit request. It runs a silent history check and then hands over to Refund automatically."
+                description: "Route here FIRST for any refund or credit request, and for an order that arrived with a missing item, a wrong item or a food quality problem. It runs a silent history check and then hands over to Refund automatically."
             go_to_urgent_escalation: @utils.transition to @subagent.urgent_escalation
                 description: "Safety first: food safety, illness or allergic reaction, harassment or unsafe delivery, fraud or account takeover, or a legal threat. A person takes over before any offer."
             go_to_pronto_help: @utils.transition to @subagent.pronto_help
@@ -202,6 +204,8 @@ subagent refund:
     description: "Resolves stolen, delayed, wrong or missing item, and food quality complaints by offering a fixed refund or store credit within CRM-managed limits."
 
     before_reasoning:
+        if @variables.customer_id == "" and @variables.ContactId is not None and @variables.ContactId != "":
+            set @variables.customer_id = @variables.ContactId
         set @variables.router_active_task = "REFUND"
         if @variables.risk_checked == False:
             transition to @subagent.risk_detection
@@ -522,6 +526,8 @@ subagent stolen_delayed_orders:
     description: "Handles orders reported as stolen, missing or late. An Apex policy checks delivery evidence and trust and decides. Never issues refunds: approved claims go to Refund through Risk Detection. Can re-dispatch; risky cases go to a person."
 
     before_reasoning:
+        if @variables.customer_id == "" and @variables.ContactId is not None and @variables.ContactId != "":
+            set @variables.customer_id = @variables.ContactId
         # Refund paid the last claim: clear it so a new order can be checked
         if @variables.stolen_delayed_order_id != "" and @variables.stolen_delayed_order_id == @variables.refund_handled_order_id:
             set @variables.stolen_delayed_order_id = ""
@@ -776,6 +782,8 @@ subagent experience_rating:
     description: "Captures thumbs up / thumbs down feedback once a CARES interaction is resolved, with the agent's own written summary of how it went, saved on the customer's Contact. Skips the question when no Contact is identified."
 
     before_reasoning:
+        if @variables.customer_id == "" and @variables.ContactId is not None and @variables.ContactId != "":
+            set @variables.customer_id = @variables.ContactId
         set @variables.router_active_task = ""
         if @variables.customer_id == "":
             transition to @subagent.experience_rating_skipped
@@ -861,6 +869,8 @@ subagent escalate_to_human:
     description: "Hands the conversation to a live person after logging one case with the context: safety and fraud (URGENT), repeated issues, claim reviews, disputes, failed steps, or a customer asking for a person."
 
     before_reasoning:
+        if @variables.customer_id == "" and @variables.ContactId is not None and @variables.ContactId != "":
+            set @variables.customer_id = @variables.ContactId
         set @variables.router_active_task = ""
         # A person review from Stolen & Delayed is a claim review; URGENT and PATTERN_REVIEW are set before the transition
         if @variables.escalation_category == "" and @variables.stolen_delayed_needs_person == True:
@@ -1032,6 +1042,10 @@ subagent pronto_help:
 subagent identify_customer:
     label: "Identify Customer"
     description: "Used only when the chat has no linked contact: asks for the email on the customer's Pronto account, looks it up, and returns to the refund or order check."
+
+    before_reasoning:
+        if @variables.customer_id == "" and @variables.ContactId is not None and @variables.ContactId != "":
+            set @variables.customer_id = @variables.ContactId
 
     reasoning:
         instructions: ->
