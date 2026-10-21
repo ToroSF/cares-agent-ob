@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Trust flags from approved Stolen &amp; Delayed claims, one for the customer and one for the driver (D-096). Written in the background by CARES_StolenDelayedTrustScoreJob when mock telemetry is on, instead of sending them to the delivery platform.</description>
+    <label>CARES Trust Event</label>
+    <pluralLabel>CARES Trust Events</pluralLabel>
+    <nameField>
+        <label>CARES Trust Event Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>TRUST-{00000}</displayFormat>
+    </nameField>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

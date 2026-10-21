@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Scenario__c</fullName>
+    <label>Scenario</label>
+    <description>Demo label set by scripts/apex/seed-delivery-telemetry.apex, for example LOSS_ABSORPTION. Not read by the policy.</description>
+    <type>Text</type>
+    <length>40</length>
+    <required>false</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+</CustomField>

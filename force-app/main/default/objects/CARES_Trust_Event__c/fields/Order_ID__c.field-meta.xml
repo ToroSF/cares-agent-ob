@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Order_ID__c</fullName>
+    <label>Order ID</label>
+    <description>Pronto order number of the claim.</description>
+    <type>Text</type>
+    <length>40</length>
+    <required>true</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+</CustomField>

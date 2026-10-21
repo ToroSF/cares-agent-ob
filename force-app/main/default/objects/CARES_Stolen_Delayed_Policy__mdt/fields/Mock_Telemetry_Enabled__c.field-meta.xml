@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Mock_Telemetry_Enabled__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>When on, Stolen &amp; Delayed reads GPS, driver, fraud and re-dispatch data from the mock CARES_Delivery_Telemetry__c records, writes re-dispatch requests and trust events as records, and does not call the delivery platform (D-096).</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Mock Telemetry Enabled</label>
+    <type>Checkbox</type>
+</CustomField>

@@ -412,4 +412,97 @@ private class CARES_StolenDelayedPolicyTest {
         .reasonCode
     );
   }
+
+  // Trip geofence (D-097): a 1,025 m trip, radius = 512 m + 50 m tolerance, centered on its midpoint
+
+  private static CARES_StolenDelayedTelemetry trip(Decimal driverLat, Decimal driverLon) {
+    CARES_StolenDelayedTelemetry t = good();
+    t.restaurantLatitude = 40.741600;
+    t.restaurantLongitude = -73.990000;
+    t.dropoffLatitude = 40.750000;
+    t.dropoffLongitude = -73.985000;
+    t.driverLatitude = driverLat;
+    t.driverLongitude = driverLon;
+    return t;
+  }
+
+  @IsTest
+  static void geofenceIsCenteredOnTheMidpointWithHalfTheTripPlusTolerance() {
+    Location restaurant = Location.newInstance(40.741600, -73.990000);
+    Location dropoff = Location.newInstance(40.750000, -73.985000);
+    Location center = CARES_StolenDelayedPolicy.midpoint(restaurant, dropoff);
+    Assert.isTrue(Math.abs(center.getLatitude() - 40.745800) < 0.00001, String.valueOf(center.getLatitude()));
+    Assert.isTrue(Math.abs(center.getLongitude() - -73.987500) < 0.00001, String.valueOf(center.getLongitude()));
+    Decimal radius = CARES_StolenDelayedPolicy.geofenceRadiusMeters(restaurant, dropoff, settings());
+    Assert.isTrue(Math.abs(radius - 562.3) < 1, 'Half of 1,024.6 m plus 50 m, got ' + radius);
+  }
+
+  @IsTest
+  static void driverInsideTheGeofenceIsAMatchAndOutsideIsAMismatch() {
+    Assert.areEqual(
+      CARES_StolenDelayedPolicy.GPS_MATCH,
+      CARES_StolenDelayedPolicy.gpsResult(trip(40.749918, -73.985049), settings()),
+      'At the door'
+    );
+    Assert.areEqual(
+      CARES_StolenDelayedPolicy.GPS_MISMATCH,
+      CARES_StolenDelayedPolicy.gpsResult(trip(40.760000, -73.970000), settings()),
+      '2.2 km from the center'
+    );
+  }
+
+  @IsTest
+  static void geofenceNeverReturnsAmbiguous() {
+    CARES_StolenDelayedTelemetry t = trip(40.749918, -73.985049);
+    t.driverDistanceMeters = 75; // ambiguous under the old rule; ignored when there are locations
+    Assert.areEqual(CARES_StolenDelayedPolicy.GPS_MATCH, CARES_StolenDelayedPolicy.gpsResult(t, settings()));
+  }
+
+  @IsTest
+  static void toleranceKeepsADriverJustPastTheDoorInside() {
+    CARES_StolenDelayedTelemetry pastDoor = trip(40.750123, -73.984927);
+    Assert.areEqual(CARES_StolenDelayedPolicy.GPS_MATCH, CARES_StolenDelayedPolicy.gpsResult(pastDoor, settings()));
+    // Why the tolerance exists: without it the door is on the edge and 15 m past it is outside
+    CARES_StolenDelayedPolicy.Settings noTolerance = settings();
+    noTolerance.gpsMatchMaxMeters = 0;
+    Assert.areEqual(CARES_StolenDelayedPolicy.GPS_MISMATCH, CARES_StolenDelayedPolicy.gpsResult(pastDoor, noTolerance));
+  }
+
+  @IsTest
+  static void driverAtTheRestaurantIsInside() {
+    // Known consequence (G-111): the restaurant end of the trip is inside the geofence
+    Assert.areEqual(
+      CARES_StolenDelayedPolicy.GPS_MATCH,
+      CARES_StolenDelayedPolicy.gpsResult(trip(40.741600, -73.990000), settings())
+    );
+  }
+
+  @IsTest
+  static void aVeryShortTripStillHasTheToleranceAsRadius() {
+    Location restaurant = Location.newInstance(40.741600, -73.990000);
+    Location dropoff = Location.newInstance(40.741700, -73.990000); // about 11 m
+    Decimal radius = CARES_StolenDelayedPolicy.geofenceRadiusMeters(restaurant, dropoff, settings());
+    Assert.isTrue(radius >= 50 && radius < 60, String.valueOf(radius));
+  }
+
+  @IsTest
+  static void partialCoordinatesFallBackToTheDistanceRule() {
+    CARES_StolenDelayedTelemetry t = trip(null, null);
+    t.driverDistanceMeters = 450;
+    Assert.isFalse(t.hasGeofenceCoordinates());
+    Assert.areEqual(CARES_StolenDelayedPolicy.GPS_MISMATCH, CARES_StolenDelayedPolicy.gpsResult(t, settings()));
+    t.driverDistanceMeters = null;
+    Assert.areEqual(CARES_StolenDelayedPolicy.GPS_UNKNOWN, CARES_StolenDelayedPolicy.gpsResult(t, settings()));
+  }
+
+  @IsTest
+  static void enrichCopiesTheGeofenceLocations() {
+    CARES_StolenDelayedTelemetry fromPlatform = trip(40.749918, -73.985049);
+    fromPlatform.orderFound = true;
+    fromPlatform.customerMatches = true;
+    CARES_StolenDelayedTelemetry t = new CARES_StolenDelayedTelemetry();
+    CARES_StolenDelayedPolicy.enrich(t, fromPlatform);
+    Assert.isTrue(t.hasGeofenceCoordinates());
+    Assert.areEqual(40.749918, t.driverLatitude);
+  }
 }

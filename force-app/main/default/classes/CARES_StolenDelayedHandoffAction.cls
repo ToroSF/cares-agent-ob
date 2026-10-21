@@ -135,26 +135,29 @@ public with sharing class CARES_StolenDelayedHandoffAction {
     res.driverCompensation = d.driverCompensation;
     res.restaurantReimbursement = d.restaurantReimbursement;
 
-    // Trust events go to the delivery platform, so they are only queued when it is switched on (D-089, SD-G4)
-    Boolean platform = CARES_StolenDelayedPolicy.loadSettings().platformEnabled;
+    // Trust events go to the delivery platform or, with mock telemetry, to records, so they
+    // are only queued when one of them is switched on (D-089, D-096, SD-G4)
+    CARES_StolenDelayedPolicy.Settings settings = CARES_StolenDelayedPolicy.loadSettings();
+    Boolean connected = settings.platformEnabled || settings.mockTelemetryEnabled;
 
     if (res.customerChoice == CHOICE_REDISPATCH) {
       if (!d.redispatchEligible) {
         return status(res, BLOCKED, 'REDISPATCH_NOT_ELIGIBLE');
       }
       try {
-        res.redispatchReference = new CARES_StolenDelayedPlatformClient()
-          .redispatch(d.orderId, r.contactId);
+        res.redispatchReference = settings.mockTelemetryEnabled
+          ? CARES_StolenDelayedMockTelemetry.requestRedispatch(d.orderId, r.contactId)
+          : new CARES_StolenDelayedPlatformClient().redispatch(d.orderId, r.contactId);
       } catch (CARES_StolenDelayedPlatformClient.PlatformException e) {
         return status(res, FAILED, 'REDISPATCH_FAILED');
       }
-      if (platform) {
+      if (connected) {
         jobs.add(new CARES_StolenDelayedTrustScoreJob(d.orderId, r.contactId, d));
       }
       return status(res, REDISPATCHED, d.reasonCode);
     }
 
-    if (platform) {
+    if (connected) {
       jobs.add(new CARES_StolenDelayedTrustScoreJob(d.orderId, r.contactId, d));
     }
     return status(res, READY_FOR_REFUND, d.reasonCode);

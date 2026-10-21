@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Driver_Location__c</fullName>
+    <label>Driver Location</label>
+    <description>Where the driver was when the order was marked delivered. Inside the trip geofence = GPS match, outside = mismatch (D-097).</description>
+    <displayLocationInDecimal>true</displayLocationInDecimal>
+    <required>false</required>
+    <scale>6</scale>
+    <type>Location</type>
+</CustomField>

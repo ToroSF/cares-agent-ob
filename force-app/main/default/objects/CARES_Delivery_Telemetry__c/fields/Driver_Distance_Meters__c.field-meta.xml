@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Driver_Distance_Meters__c</fullName>
+    <label>Driver Distance (m)</label>
+    <description>Older rule, used only when the three locations are blank: driver distance from the drop-off when the order was marked delivered (match at or below GPS_Match_Max_Meters__c, mismatch above GPS_Mismatch_Min_Meters__c). With locations, the trip geofence decides (D-097).</description>
+    <type>Number</type>
+    <precision>7</precision>
+    <scale>1</scale>
+    <required>false</required>
+</CustomField>
