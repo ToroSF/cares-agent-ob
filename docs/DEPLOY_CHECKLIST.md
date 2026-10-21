@@ -75,6 +75,15 @@ Adds `CARES_OrderData`, `CARES_Order_GetStatus` and `CARES_OrderDataTest`, chang
 4. Preview from the authoring bundle with live actions and `'$Context.ContactId=<id>'` (demo customers in `.claude/skills/cares-testing/personas.md`): (a) a missing item on the latest order gets a real `PR-...` order and an offer within the order total; (b) "where is my order?" gives the real status and ETA; (c) another customer's order number is not found.
 5. Publish and activate v5. Rollback: activate v4 and deploy the Apex from tag `pre-v5`.
 
+**Done 2026-10-21 (agent v5 Active, v4 Inactive):**
+- Deploy: 8 components, 99/99 tests (the test list in step 2).
+- Preview, customer Alex Morgan:
+  - (a) "my last order was missing the lemonade": `PR-250812-0LNZ2JM`, Lemonade $9.14, cap $27.40. Offer: refund $9.14 or credit $10.97 (Pronto Plus).
+  - (b) "where is my order?": `PR-250814-C3V2D3K`, Picked Up, ETA Aug 14, 2025 4:37 PM UTC (the D-074 ETA fix).
+  - (c) Garrik Forman's `PR-240830-FWZ0TPF`: not found, both for status and for a refund.
+- The preview found one problem: the not-found prompt used a real order number of another customer as the format example. Fixed in PR #22 before the publish.
+- Smoke test on the published v5 (`--api-name`, no ContactId, identified by email): status and missing-item refund both worked.
+
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).
