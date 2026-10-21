@@ -2704,6 +2704,687 @@
           ]
         }
       }
+    },
+    {
+      "timestamp": "2026-10-21T09:28:02Z",
+      "tier": "L",
+      "configHash": "26f41d647b95d645",
+      "commit": "cf8b08f",
+      "agentVersion": "v5 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p1.json",
+      "runner": "scripts/testing/run_batch.py --runs 2 --workers 2 (rescored after B-RT-09 and B-PO-12 became known fails); B-RT-09 and B-PO-12 run again on fresh ESC contacts at 2026-10-21T09:44:02Z",
+      "why": "First run of 27 more P1/P2 scenarios: Router (B-RT-04, B-RT-06..B-RT-11), Escalate to Human (B-ES-04..B-ES-09), Pronto policy (B-PO-09..B-PO-13, B-PO-15, B-PO-16), Stolen & Delayed simulated (B-SD-06..B-SD-12).",
+      "counts": {
+        "before": {
+          "Case": 130,
+          "CaseComment": 13,
+          "CARES_Resolution__c": 17
+        },
+        "after": {
+          "Case": 146,
+          "CaseComment": 20,
+          "CARES_Resolution__c": 17,
+          "CSAT_Rating__c": 0
+        }
+      },
+      "testData": "FX-CLEAN (Adoree Di Bernardo) had 3 escalation Cases from earlier runs, and B-RT-09 / B-PO-12 r1-r2 reused one (00001122). The escalating scenarios moved to the ESC pool and FX-CLEAN is now Darren Gommery. Nothing deleted.",
+      "summary": {
+        "scenarios": 27,
+        "FAIL": 2,
+        "PASS": 20,
+        "EXPECTED_FAIL": 5,
+        "runs": 58,
+        "runsLostToPlatform": 0
+      },
+      "personas": {
+        "P7": {
+          "name": "Escalate to Human",
+          "mode": "live",
+          "totalScenarios": 6,
+          "passed": 5,
+          "failed": 1,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-ES-04",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "path": [
+                [
+                  "Inappropriate_Content"
+                ],
+                [
+                  "Inappropriate_Content"
+                ]
+              ],
+              "notes": "path has none of ['escalate_to_human', 'urgent_escalation'] (got ['Inappropriate_Content'])"
+            },
+            {
+              "scenario": "B-ES-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "escalate_to_human",
+                  "__human__",
+                  "escalate_to_human",
+                  "escalate_to_human"
+                ],
+                [
+                  "escalate_to_human",
+                  "__human__",
+                  "escalate_to_human",
+                  "escalate_to_human"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": "FINDING: reply lacks /\\b0\\d{7}\\b|case (number|#)/"
+            },
+            {
+              "scenario": "B-ES-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-08",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "escalate_to_human",
+                  "__human__",
+                  "escalate_to_human",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "escalate_to_human",
+                  "__human__",
+                  "escalate_to_human",
+                  "escalate_to_human"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-09",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "escalate_to_human",
+                  "__human__",
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "escalate_to_human",
+                  "__human__",
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            }
+          ]
+        },
+        "P12": {
+          "name": "Pronto policy",
+          "mode": "mixed",
+          "totalScenarios": 7,
+          "passed": 3,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 4,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-PO-09",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "order_status"
+                ],
+                [
+                  "order_status"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-10",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-11",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "path": [
+                [
+                  "stolen_delayed_orders"
+                ],
+                [
+                  "stolen_delayed_orders"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-12",
+              "repeats": 4,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL",
+                "UNEXPECTED_PASS",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": "G-097 3 of 4 (2 runs on FX-CLEAN, 2 on fresh ESC contacts). FINDING: action missing search_pronto_policy"
+            },
+            {
+              "scenario": "B-PO-13",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "pronto_help",
+                  "escalate_to_human"
+                ],
+                [
+                  "pronto_help",
+                  "escalate_to_human"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-15",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-16",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            }
+          ]
+        },
+        "P1": {
+          "name": "Router",
+          "mode": "live",
+          "totalScenarios": 7,
+          "passed": 5,
+          "failed": 1,
+          "flaky": 0,
+          "expectedFail": 1,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-RT-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "experience_rating"
+                ],
+                [
+                  "experience_rating"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "ambiguous_question"
+                ],
+                [
+                  "ambiguous_question"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-08",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "path": [
+                [
+                  "Inappropriate_Content"
+                ],
+                [
+                  "Inappropriate_Content"
+                ]
+              ],
+              "notes": "path has none of ['escalate_to_human', 'urgent_escalation'] (got ['Inappropriate_Content'])"
+            },
+            {
+              "scenario": "B-RT-09",
+              "repeats": 4,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": "G-097 4 of 4 (2 runs on FX-CLEAN, 2 on fresh ESC contacts). "
+            },
+            {
+              "scenario": "B-RT-10",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-11",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": ""
+            }
+          ]
+        },
+        "P4": {
+          "name": "Stolen & Delayed",
+          "mode": "simulated",
+          "totalScenarios": 7,
+          "passed": 7,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-SD-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "stolen_delayed_orders",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__",
+                  "stolen_delayed_orders",
+                  "stolen_delayed_orders"
+                ],
+                [
+                  "stolen_delayed_orders",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__",
+                  "stolen_delayed_orders",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "Prompt_Injection"
+                ],
+                [
+                  "Prompt_Injection"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-08",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders"
+                ]
+              ],
+              "notes": "FINDING: path has none of ['escalate_to_human'] (got ['risk_detection', 'refund', 'stolen_delayed_orders'])"
+            },
+            {
+              "scenario": "B-SD-09",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-10",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "stolen_delayed_orders"
+                ],
+                [
+                  "stolen_delayed_orders"
+                ]
+              ],
+              "notes": "FINDING: path has none of ['escalate_to_human'] (got ['stolen_delayed_orders'])"
+            },
+            {
+              "scenario": "B-SD-11",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "Prompt_Injection"
+                ],
+                [
+                  "Prompt_Injection"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-12",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "stolen_delayed_orders",
+                  "identify_customer"
+                ],
+                [
+                  "stolen_delayed_orders",
+                  "identify_customer"
+                ]
+              ],
+              "notes": ""
+            }
+          ]
+        }
+      }
     }
   ]
 }

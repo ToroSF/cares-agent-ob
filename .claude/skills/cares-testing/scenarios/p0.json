@@ -107,7 +107,7 @@
    "id": "B-RT-02",
    "priority": "P0",
    "mode": "live",
-   "fixture": "FX-CLEAN",
+   "fixture": "pool:ESC",
    "turns": [
     "My order never showed up, the app says delivered."
    ],
@@ -127,13 +127,14 @@
      "order( number|\\b)|which order"
     ]
    },
-   "expect_today": "KNOWN_FAIL(G-087)"
+   "expect_today": "KNOWN_FAIL(G-087)",
+   "burns": true
   },
   {
    "id": "B-RT-03",
    "priority": "P0",
    "mode": "live",
-   "fixture": "FX-CLEAN",
+   "fixture": "pool:ESC",
    "turns": [
     "Where is my order? It's 50 minutes late."
    ],
@@ -148,7 +149,8 @@
      "refund"
     ]
    },
-   "expect_today": "KNOWN_FAIL(G-087)"
+   "expect_today": "KNOWN_FAIL(G-087)",
+   "burns": true
   },
   {
    "id": "B-RT-05",
@@ -441,7 +443,7 @@
    "id": "B-RF-05",
    "priority": "P0",
    "mode": "live",
-   "fixture": "FX-CLEAN",
+   "fixture": "pool:ESC",
    "turns": [
     "My last order was missing the {item1}, I want a refund.",
     "No, I don't want either."
@@ -451,7 +453,8 @@
      "issue_resolution"
     ]
    },
-   "judge": "Polite close or the offer of a person; no pressure."
+   "judge": "Polite close or the offer of a person; no pressure.",
+   "burns": true
   },
   {
    "id": "B-RF-06",
