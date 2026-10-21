@@ -1,6 +1,6 @@
 # Baseline batch test (whole agent)
 
-Status date: 2026-10-21. Status: refreshed for agent v5 (real orders). The P0 set now runs live with a script (see "Extension (2026-10-21, v5)" below). First live P0 run on v5 (2026-10-21): 58 of 73 PASS, 8 EXPECTED_FAIL, 5 FAIL, 1 FLAKY, 1 N/A; 24 runs hit a platform outage (G-090) and count once. Results are in `docs/TEST_PLAN.md` and `test-results.json`. Source of truth for the scenarios: [`.claude/skills/cares-testing/personas.md`](../.claude/skills/cares-testing/personas.md). How to run them: [`.claude/skills/cares-testing/SKILL.md`](../.claude/skills/cares-testing/SKILL.md). This page is the short, human version, so teammates and their assistants share the same picture.
+Status date: 2026-10-21. Status: refreshed for agent v5 (real orders). The P0 set now runs live with a script (see "Extension (2026-10-21, v5)" below). First live P0 run on v5 (2026-10-21): 58 of 73 PASS, 8 EXPECTED_FAIL, 5 FAIL, 1 FLAKY, 1 N/A; 24 runs hit a platform outage (G-090) and were run again after it cleared, with the same result: every P0 scenario has at least 2 clean runs. Results are in `docs/TEST_PLAN.md` and `test-results.json`. Source of truth for the scenarios: [`.claude/skills/cares-testing/personas.md`](../.claude/skills/cares-testing/personas.md). How to run them: [`.claude/skills/cares-testing/SKILL.md`](../.claude/skills/cares-testing/SKILL.md). This page is the short, human version, so teammates and their assistants share the same picture.
 
 ## Why this exists
 

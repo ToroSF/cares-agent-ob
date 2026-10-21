@@ -1393,6 +1393,429 @@
         }
       },
       "fixturesNote": "Order dates are in the order id (PR-YYMMDD-...), 2024-08. Case counts are the contact's cases when fixtures.json was built; the Risk Detection window is 30 days."
+    },
+    {
+      "timestamp": "2026-10-21T08:54:58Z",
+      "tier": "L",
+      "configHash": "26f41d647b95d645",
+      "commit": "78227fc",
+      "agentVersion": "v5 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p0.json",
+      "runner": "scripts/testing/run_batch.py --runs 2 --workers 2 --only <28 scenarios>; B-ES-03 then --runs 3",
+      "rerunOf": "2026-10-21T08:14:31Z",
+      "why": "Re-run of the 24 scenarios that lost a run to the platform outage (G-090, about 08:24 to 08:54 UTC), plus B-RD-01, B-RD-02, B-ER-01, and B-ES-03 (FLAKY) 3 more times. Same fixtures pool; already refunded orders skipped with --burned.",
+      "counts": {
+        "before": {
+          "Case": 116,
+          "CaseComment": 5,
+          "CSAT_Rating__c": 0,
+          "CARES_Resolution__c": 9
+        },
+        "after": {
+          "Case": 125,
+          "CaseComment": 9,
+          "CSAT_Rating__c": 0,
+          "CARES_Resolution__c": 9
+        }
+      },
+      "summary": {
+        "scenarios": 28,
+        "PASS": 19,
+        "EXPECTED_FAIL": 4,
+        "FAIL": 4,
+        "FLAKY": 1,
+        "runs": 57,
+        "runsLostToPlatform": 0,
+        "combinedWithPrevious": {
+          "scenarios": 73,
+          "PASS": 58,
+          "EXPECTED_FAIL": 8,
+          "FAIL": 5,
+          "FLAKY": 1,
+          "N/A": 1,
+          "cleanRuns": 179,
+          "note": "Every P0 scenario now has at least 2 runs not hit by the outage. No outcome changed; B-ES-03 failed 3 of 5 (guard topic, G-088)"
+        }
+      },
+      "personas": {
+        "P8": {
+          "name": "Red team",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 4,
+          "passed": 3,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 1,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-AD-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-16",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "notes": ""
+            }
+          ]
+        },
+        "P9": {
+          "name": "Continuity",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 2,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-CT-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-CT-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            }
+          ]
+        },
+        "P6": {
+          "name": "Experience Rating",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 1,
+          "passed": 0,
+          "failed": 1,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-ER-01",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "ACTION-ERROR save_csat_rating: An Apex error occurred: System.QueryException: No such column 'AccountId' on entity 'Contact'. If you are attempting to use a custom field, be sure to append the '__c' a; save_csat_rating called 2x > 1; save_csat_rating called 5x > 1"
+            }
+          ]
+        },
+        "P7": {
+          "name": "Escalate to Human",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 1,
+          "passed": 0,
+          "failed": 0,
+          "flaky": 1,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-ES-03",
+              "repeats": 3,
+              "outcomes": [
+                "FAIL",
+                "PASS",
+                "FAIL"
+              ],
+              "result": "FLAKY",
+              "notes": "action missing create_escalation_case; path has none of ['escalate_to_human', 'urgent_escalation'] (got ['Inappropriate_Content'])"
+            }
+          ]
+        },
+        "P10": {
+          "name": "Failure",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 2,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-FL-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-FL-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            }
+          ]
+        },
+        "P13": {
+          "name": "Order Status",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 7,
+          "passed": 7,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-OS-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-02",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-09",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            }
+          ]
+        },
+        "P12": {
+          "name": "Pronto policy",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 9,
+          "passed": 5,
+          "failed": 3,
+          "flaky": 0,
+          "expectedFail": 1,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-PO-01",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-02",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "path missing urgent_escalation (got ['risk_detection', 'refund', 'risk_detection', 'refund', 'Inappropriate_Content'])"
+            },
+            {
+              "scenario": "B-PO-03",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "reply lacks /medical|doctor|emergency|health/"
+            },
+            {
+              "scenario": "B-PO-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-05",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "path missing urgent_escalation (got ['Inappropriate_Content'])"
+            },
+            {
+              "scenario": "B-PO-06",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-08",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-14",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            }
+          ]
+        },
+        "P2": {
+          "name": "Risk Detection",
+          "mode": "live (sim where the scenario says)",
+          "totalScenarios": 2,
+          "passed": 0,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 2,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-RD-01",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-02",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "notes": ""
+            }
+          ]
+        }
+      }
     }
   ]
 }
