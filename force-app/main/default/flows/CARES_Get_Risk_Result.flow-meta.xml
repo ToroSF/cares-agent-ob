@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8' ?>
+<?xml version='1.0' encoding='UTF-8'?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
   <apiVersion>67.0</apiVersion>
   <assignments>
@@ -184,8 +184,7 @@
     <defaultConnector>
       <targetReference>Is_Clean</targetReference>
     </defaultConnector>
-    <defaultConnectorLabel
-    >Several contacts: do not count account-only cases</defaultConnectorLabel>
+    <defaultConnectorLabel>Several contacts: do not count account-only cases</defaultConnectorLabel>
     <rules>
       <name>Is_Only</name>
       <conditionLogic>and</conditionLogic>
@@ -202,8 +201,7 @@
       <label>Only contact</label>
     </rules>
   </decisions>
-  <description
-  >CARES Risk Detection. Read-only. Counts a contact's issue cases in the last N days (plus account-only cases when the contact is the only one on the account) and returns CLEAN, NOT_CLEAN or UNKNOWN. Cases of type Refund / Compensation are ignored so a recovery made by CARES never makes the customer look risky. Any problem returns UNKNOWN.</description>
+  <description>CARES Risk Detection. Read-only. Counts a contact's issue cases in the last N days (plus account-only cases when the contact is the only one on the account) and returns CLEAN, NOT_CLEAN or UNKNOWN. Cases of type Refund / Compensation are ignored so a recovery made by CARES never makes the customer look risky. Any problem returns UNKNOWN.</description>
   <environments>Default</environments>
   <formulas>
     <name>windowStart</name>
