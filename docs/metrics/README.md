@@ -18,6 +18,14 @@
 3. Normalize it: `python3 -I scripts/metrics/normalize-testing-center.py docs/metrics/suites/<suite>.yaml <raw.json> docs/metrics/data/testing-center/<suite>.json <agent version>`.
 4. Add what you learned to `data/findings.json` under the suite name, then rebuild.
 
+## Runs so far
+| Suite | Agent | Run | Result |
+|---|---|---|---|
+| `CARES_Baseline_v3` | v3 | 2026-10-20 | 21/39 (54%); 19/25 on cases v3 was meant to handle |
+| `CARES_Baseline_v5` | v5 | 2026-10-21 | 24/39 (62%); policy-branch target cases 6/14 (v3: 2/14). Results move by 2 to 3 cases between runs |
+
+v5 uses the same 39 utterances. The only expectation changed is the Pronto Help action name (`AnswerQuestionsWithKnowledge`, the name Testing Center reports). The dashboard shows the newest run in detail and compares it with the one before.
+
 ## What is not measured yet
 Session Tracing (Data Cloud) is not on in the team org. It would add, for real conversations, which subagent ran, which actions fired and how long each turn took. Turning it on is an org change, so it needs the team's OK.
 

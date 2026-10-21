@@ -252,7 +252,8 @@ $("kpis").innerHTML = [
     parts: [{ label: "passed", value: v.passed, color: "#16a34a" }, { label: "failed", value: v.failed, color: "#fca5a5" }],
   }));
   const failed = (c) => typeof c.casePass === "boolean" ? !c.casePass : c.outcomePass === false || c.topicPass === false || c.actionPass === false;
-  const notInVersion = (c) => (c.tags || []).some((t) => t.includes("not_in"));
+  // Tag target_behavior_not_in_v3 means "not in v3": it is out of scope for runs on v3 or older, in scope for later versions
+  const notInVersion = (c, r = run) => (c.tags || []).some((t) => { const m = /not_in_v(\d+)/.exec(t); return m ? Number(m[1]) >= r.agentVersion : t.includes("not_in"); });
   const inScope = run.cases.filter((c) => !notInVersion(c));
   const inScopePassed = inScope.filter((c) => !failed(c)).length;
   const byPersona = {};
@@ -278,8 +279,18 @@ $("kpis").innerHTML = [
           ${f.cases.length ? `<div class="tags">${f.cases.map((id) => `<span class="tag">${esc(id)}</span>`).join("")}</div>` : ""}
         </div>`).join("")}</div></div>`
     : "";
+  const prev = D.testing.length > 1 ? D.testing[D.testing.length - 2] : null;
+  const prevById = Object.fromEntries((prev?.cases || []).map((c) => [c.id, c]));
+  const runStats = (r) => {
+    const sc = r.cases.filter((c) => !notInVersion(c, r));
+    const tg = r.cases.filter((c) => (c.tags || []).some((t) => t.startsWith("target_behavior_not_in")));
+    const n = (xs) => xs.filter((c) => !failed(c)).length;
+    const chk = (m) => `${r.byMetric?.[m]?.passed ?? "—"}/${(r.byMetric?.[m]?.passed ?? 0) + (r.byMetric?.[m]?.failed ?? 0)}`;
+    return { sc: `${n(sc)}/${sc.length}`, tg: `${n(tg)}/${tg.length}`, topic: chk("topic_assertion"), act: chk("actions_assertion"), out: chk("output_validation") };
+  };
   const runsCompare = D.testing.length > 1
-    ? `<div class="card"><h3>Pass rate by agent version</h3>${hbars(D.testing.map((r, i) => ({ label: `v${r.agentVersion} · ${String(r.runAt).slice(0, 10)}`, value: pct(r.totals.passed, r.totals.cases), color: PALETTE[i % PALETTE.length] })), { max: 100, suffix: "%" })}</div>`
+    ? `<div class="card"><h3>Pass rate by agent version</h3>${hbars(D.testing.map((r, i) => ({ label: `v${r.agentVersion} · ${String(r.runAt).slice(0, 10)}`, value: pct(r.totals.passed, r.totals.cases), color: PALETTE[i % PALETTE.length] })), { max: 100, suffix: "%" })}
+        <table style="margin-top:10px"><thead><tr><th></th>${D.testing.map((r) => `<th>v${r.agentVersion}</th>`).join("")}</tr></thead><tbody>${[["Cases passed", (r) => `${r.totals.passed}/${r.totals.cases}`], ["In scope for that version", (r) => runStats(r).sc], ["Policy-branch target cases", (r) => runStats(r).tg], ["Subagent checks", (r) => runStats(r).topic], ["Action checks", (r) => runStats(r).act], ["Outcome checks", (r) => runStats(r).out]].map(([l, f]) => `<tr><td>${l}</td>${D.testing.map((r) => `<td>${f(r)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
     : `<div class="card"><h3>Before / after</h3>${empty("One run so far", "Re-run the same suite on the next agent version to see what changed.")}</div>`;
   const ok = (v) => v === true ? `<span class="tag ok">pass</span>` : v === false ? `<span class="tag bad">fail</span>` : `<span class="tag">—</span>`;
   const rows = (filter) => run.cases.filter(filter).map((c) => `<tr>
@@ -287,6 +298,7 @@ $("kpis").innerHTML = [
       <td>${esc(c.utterance)}</td>
       <td>${ok(c.topicPass)}<div style="color:var(--mute);font-size:12px">${esc(c.subagentExpected || "")} → ${esc(c.subagentActual || "")}</div></td>
       <td>${ok(c.actionPass)}</td><td>${ok(c.outcomePass)}</td>
+      ${prev ? `<td>${prevById[c.id] ? ok(prevById[c.id].casePass) : ok(null)}</td>` : ""}
       <td style="color:var(--mute)">${esc(c.responseExcerpt)}</td></tr>`).join("");
   const filters = { All: () => true, Failed: failed, "In this version": (c) => !notInVersion(c), "Target not in this version": notInVersion };
   $("tc").innerHTML = `
@@ -306,7 +318,7 @@ $("kpis").innerHTML = [
     ${findings}
     <div class="card" style="margin-top:14px"><h3>Every case</h3>
       <div class="filters" id="tc-filters">${Object.keys(filters).map((k, i) => `<button class="${i ? "" : "on"}" data-k="${esc(k)}">${esc(k)} (${run.cases.filter(filters[k]).length})</button>`).join("")}</div>
-      <div class="scroll"><table><thead><tr><th>Case</th><th>Customer says</th><th>Subagent</th><th>Actions</th><th>Outcome</th><th>Agent replied</th></tr></thead><tbody id="tc-rows">${rows(filters.All)}</tbody></table></div>
+      <div class="scroll"><table><thead><tr><th>Case</th><th>Customer says</th><th>Subagent</th><th>Actions</th><th>Outcome</th>${prev ? `<th>Case on v${prev.agentVersion}</th>` : ""}<th>Agent replied</th></tr></thead><tbody id="tc-rows">${rows(filters.All)}</tbody></table></div>
     </div>`;
   $("tc-filters").addEventListener("click", (e) => {
     const k = e.target.dataset?.k; if (!k) return;
