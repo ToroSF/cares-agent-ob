@@ -1,16 +1,16 @@
 # Spec: Refund and Stolen & Delayed on real data (G-091, G-081, G-098, G-031)
 
-Status date: 2026-10-21. Status: `PROPOSAL`. Branch: `fix/refund-sd-real-data`. Source: `main` at `fe62128`. Nothing in this file is built yet.
+Status date: 2026-10-21. Status: `PROPOSAL`, decisions B-D1 to B-D3 and C-D1 `DECIDED` 2026-10-21 by @lucasmpalomanes (sections B5 and C3). Branch: `fix/refund-sd-real-data`. Source: `main` at `fe62128`. Nothing in this file is built yet.
 
 One branch, three parts. They are built and reviewed in this order, because each part's tests assume the one before it:
 
-| Part | Gap | What | Owner | Needs a decision first? |
+| Part | Gap | What | Owner | Decisions |
 |---|---|---|---|---|
-| A | G-091 | Refuse a second claim on a resolved order before any offer | @lucasmpalomanes (Refund) | No |
-| B | G-081, G-098, G-077 | Stolen & Delayed reads the real orders; the escalation Case always has the order id; transitions that fire | @rojasC10 (Stolen & Delayed) | Yes, B-D1 to B-D3 (section B5) |
-| C | G-031, V6 item 10 | What `apply_settlement` does with the driver and restaurant recommendations | @lucasmpalomanes / Team | Yes, C-D1 (section C3) |
+| A | G-091 | Refuse a second claim on a resolved order before any offer | @lucasmpalomanes (Refund) | None needed |
+| B | G-081, G-098, G-077 | Stolen & Delayed reads the real orders; the escalation Case always has the order id; transitions that fire | @rojasC10 (Stolen & Delayed) | B-D1 to B-D3 decided (section B5) |
+| C | G-031, V6 item 10 | What `apply_settlement` does with the driver and restaurant recommendations | @lucasmpalomanes / Team | C-D1 decided: record on the resolution (section C3) |
 
-Part B edits another owner's block, so @rojasC10 reviews it (CONTRIBUTING.md). Part C waits for its decision; if it isn't made in time, Part C ships as "record only" (C4) or moves to its own branch.
+Part B edits another owner's block, so @rojasC10 reviews it (CONTRIBUTING.md).
 
 # Part A. Refuse a second claim before the offer (G-091)
 
@@ -133,15 +133,15 @@ B-RF-25 runs two sessions on one pool contact (`burns: true`). New expectations 
 | `orderTotal` | `Total_Amount__c` |
 | `currencyIsoCode` | No column. Use `UserInfo.getDefaultCurrency()` (same rule as D-077); USD in the team org |
 | `priorClaimOnOrder` | `CARES_Resolution__c` exists for `Order_Id__c` (same query as Part A) |
-| `customerOrderCount`, `customerClaimRate` | See decision B-D1 |
-| Photos, GPS, wait time, calls and chats, driver rates, fraud flags, `redispatchEligible` | **Not in the data.** They stay null (unknown) unless the platform is configured (B-D2) |
+| `customerOrderCount`, `customerClaimRate` | Real counts (B-D1): non-canceled orders in `Order__dlm`; the contact's `CARES_Resolution__c` rows ÷ that count |
+| Photos, GPS, wait time, calls and chats, driver rates, fraud flags, `redispatchEligible` | **Not in the data.** They stay null (unknown) unless the platform is configured (B-D2: kept as optional enrichment) |
 
 What the matrix gives with only these fields:
 - not delivered → `STANDARD_PATH` (late, goes to Refund)
-- canceled → see B-D3
+- canceled → `ESCALATE` / `ORDER_CANCELED`, a person (B-D3)
 - over the escalation amount → `HIGH_VALUE` (a person)
 - delivered with no photo → trust decides (rules 8 to 11):
-  - with B-D1, a high-trust customer gets `FULL_REFUND`, with driver pay `HOLD_FOR_REVIEW` because GPS is unknown
+  - with the real counts (B-D1), a high-trust customer gets `FULL_REFUND`, with driver pay `HOLD_FOR_REVIEW` because GPS is unknown
   - everyone else → `MANUAL_REVIEW`
 - `LOSS_ABSORPTION` can't be reached without driver data; that's correct, not a bug.
 
@@ -153,6 +153,7 @@ What the matrix gives with only these fields:
   - `NOT_FOUND`, `NOT_A_PRONTO_ORDER_NUMBER` → `ORDER_NOT_FOUND`: the customer can retry; the existing 3-try cap still applies.
   - `NO_ACCOUNT_LINK` → `ESCALATE` / `NO_ACCOUNT_LINK` (new reason code).
   - `DATA_UNAVAILABLE` → `ESCALATE` / `DATA_UNAVAILABLE` (unchanged).
+  - A found order with status `Canceled` → `ESCALATE` / `ORDER_CANCELED` (new reason code, B-D3). It's checked right after the order is found, before the value and trust rules.
 - **Order number format:** `CARES_OrderData.normalizeOrderNumber` (`PR-YYMMDD-XXXXXXX`) replaces S&D's looser `^[A-Za-z0-9-]{1,40}$` check. Refund, Order Status and S&D then agree on what an order number is (D-038).
 - **Platform enrichment (B-D2):** if the Named Credential exists, the platform fills in only the fields `Order__dlm` lacks. If it doesn't exist or fails, those fields stay null. That changes `DATA_UNAVAILABLE` from "the whole check failed" to "the order check failed".
 - **Re-dispatch and trust events** still need the platform. Without it:
@@ -181,7 +182,7 @@ What the matrix gives with only these fields:
 
 ## B4. Tests
 - **`CARES_StolenDelayedPolicyTest` (25):** the `decide()` tests stay. Add tests for:
-  - the status mapping (`Delivered`, `Out for Delivery`, `Canceled`)
+  - the status mapping (`Delivered`, `Out for Delivery`), and a `Canceled` order giving `ESCALATE` / `ORDER_CANCELED`
   - every reason mapping
   - B-D1 trust from real counts: high, low, unknown when there are no orders
 - **`CARES_StolenDelayedActionsTest` (15):** evaluate tests move to real-order fixtures:
@@ -197,12 +198,12 @@ What the matrix gives with only these fields:
   - B-IN-01 and B-SD-09: STANDARD reaches Refund in the same turn.
   - New B-SD-16: a real delivered order for a high-trust fixture reaches `FULL_REFUND`, then Refund on the READY path.
 
-## B5. Decisions needed before Part B is built
-| ID | Question | Recommendation |
+## B5. Decisions (DECIDED 2026-10-21, @lucasmpalomanes)
+| ID | Question | Decision |
 |---|---|---|
-| B-D1 | Customer trust: compute `customerOrderCount` from `Order__dlm` (non-canceled orders) and `customerClaimRate` = the contact's `CARES_Resolution__c` count ÷ that order count? | **Yes.** Both are real data we own. Without them every delivered claim goes to `MANUAL_REVIEW` and `FULL_REFUND` is unreachable. The thresholds stay in `CARES_Stolen_Delayed_Policy__mdt` (`[$]`) |
-| B-D2 | Keep the platform client for the fields `Order__dlm` lacks (GPS, photos, driver, fraud, re-dispatch)? | **Yes, as optional enrichment.** Nothing calls it until the Named Credential exists; then no code change is needed |
-| B-D3 | A "never arrived" claim on a `Canceled` order? | **`ESCALATE` / `ORDER_CANCELED`** (a person). The FAQ treats canceled orders separately, and the matrix has no rule for them |
+| B-D1 | Customer trust: compute `customerOrderCount` from `Order__dlm` (non-canceled orders) and `customerClaimRate` = the contact's `CARES_Resolution__c` count ÷ that order count? | **Yes, real counts.** Both are real data we own. Without them every delivered claim goes to `MANUAL_REVIEW` and `FULL_REFUND` is unreachable. The thresholds stay in `CARES_Stolen_Delayed_Policy__mdt` (`[$]`) |
+| B-D2 | Keep the platform client for the fields `Order__dlm` lacks (GPS, photos, driver, fraud, re-dispatch)? | **Keep as optional enrichment.** Nothing calls it until the Named Credential exists; then no code change is needed |
+| B-D3 | A "never arrived" claim on a `Canceled` order? | **Escalate to a person: `ESCALATE` / `ORDER_CANCELED`.** The FAQ treats canceled orders separately, and the matrix has no rule for them |
 
 # Part C. `apply_settlement` (G-031)
 
@@ -219,12 +220,12 @@ What the matrix gives with only these fields:
 | C-2 External payout service | Call a Pronto payout API | No such API or credential exists; needs Pronto |
 | C-3 Out of CARES | Drop `apply_settlement`; driver and restaurant pay is handled outside the agent | Loses the audit link between the claim and the recommendation |
 
-## C3. Decision needed
-| ID | Question | Recommendation |
+## C3. Decision (DECIDED 2026-10-21, @lucasmpalomanes)
+| ID | Question | Decision |
 |---|---|---|
-| C-D1 | Where do settlements go? | **C-1, record only**, plus a review Case when a person must act. It's the only option buildable now, it keeps the audit trail on the row that already holds the payout, and it can later feed C-2 without changing the agent |
+| C-D1 | Where do settlements go? | **C-1, record on the resolution**, plus a review Case when a person must act. It's the only option buildable now, it keeps the audit trail on the row that already holds the payout, and it can later feed C-2 without changing the agent |
 
-## C4. Change, if C-1 is chosen
+## C4. Change
 - **Fields on `CARES_Resolution__c`** (non-required, so field permissions are allowed):
   - `Driver_Compensation__c` (picklist `PAY_IN_FULL`, `WITHHOLD_DELIVERY_PAY`, `HOLD_FOR_REVIEW`)
   - `Restaurant_Reimbursement__c` (picklist `REIMBURSE`, `NO_CHANGE`)
@@ -245,18 +246,18 @@ What the matrix gives with only these fields:
 ## Docs (on this branch)
 - **`docs/DECISIONS.md`:**
   - D-078: Part A
-  - D-079: S&D order data source and platform as enrichment (B-D2)
-  - D-080: trust from real counts (B-D1)
-  - D-081: canceled orders (B-D3)
-  - D-082: settlements recorded on the resolution (C-D1)
+  - D-079: S&D reads the real orders, with the platform kept as optional enrichment (B-D2)
+  - D-080: customer trust from real counts (B-D1)
+  - D-081: a claim on a canceled order goes to a person (B-D3)
+  - D-082: settlements recorded on the resolution row, plus a review Case; `apply_settlement` retired (C-D1)
 - **`docs/GAPS.md`:** G-091, G-081 (reworded), G-098, G-077 and G-031 closed on the branch. New gaps for anything still unknown live (GPS, photos and fraud stay out of the data).
 - **Subagent docs:** `docs/subagents/refund.md` and `docs/subagents/stolen-delayed-orders.md` (data source table, SD-G1 and SD-G3).
 - **`docs/V6_FOCUS.md`:** items 5, 8, 9 and 10.
 
 ## Order of work
 1. Part A, built and tested.
-2. Part B, after B-D1 to B-D3 are answered and @rojasC10 agrees.
-3. Part C, after C-D1. If C-D1 is not answered, Part C moves to its own branch, so A and B are not held up.
+2. Part B. The decisions are made; @rojasC10 reviews the Stolen & Delayed changes before merge.
+3. Part C. Its `issue_resolution` changes build on Part A's test helpers.
 
 ## Verification (whole branch, before the PR)
 1. Local AgentScript compiler: 0 errors. All descriptions ≤ 255 characters (G-051).
