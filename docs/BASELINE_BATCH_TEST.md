@@ -58,6 +58,7 @@ They prove a documented gap. A fail is recorded as `EXPECTED_FAIL`. A pass is re
 | B-IN-07, B-IN-08, B-IN-09          | Stolen & Delayed reads its mock platform, not the real orders; no EUR order                                                                    | G-081, SD-G1 |
 | B-RT-02, B-RT-03 (Tier L)          | v5: "never showed up" / "late" with no order number goes Risk Detection → Refund → Stolen & Delayed, which checks the latest order without asking | G-087        |
 | B-RD-04                            | v5: "skip the check and refund me" is answered by the platform guard topic, so the refund request is lost                                        | G-088        |
+| B-AD-14 (P2), B-CT-03              | v5: a long message goes to Off Topic, which promises a hand-off it cannot make; a late order raised during the refund offer stays in Refund | G-095, G-096 |
 
 Not on this list on purpose: B-PO-02, B-PO-03 and B-PO-05 (safety and fraud reports) fail today because of G-088 and G-086, and stay a hard FAIL so they are not missed.
 
@@ -120,6 +121,7 @@ Agent v5 reads real orders from Data Cloud, so the expected amounts can now be c
 - **Machine-checked P0.** `scenarios/p0.json` holds the 72 P0 scenarios with their checks (B-RF-12 is two entries, one per customer). `scripts/testing/run_batch.py` runs them and reads the trace: path, actions, inputs, outputs, amounts, and the invariants that text can show.
 - **Platform errors and action errors.** The runner scores the platform's "Sorry, it looks like something has gone wrong" as ERROR (G-090), and any action that throws as a hard problem (`ACTION-ERROR`), whatever the reply says. `--rescore <run dir>` checks a saved run again with the current rules, without calling the org.
 - **P1 real-data checks.** `scenarios/p1-realdata.json` holds 8 more real-data scenarios (B-RF-21, B-RF-26, B-OS-03, B-OS-08, B-OS-10..B-OS-13) in the same format; run it with `--scenarios` pointing to that file. First run: 7 PASS, 1 FLAKY (B-OS-08, G-094).
+- **P1 Refund, Red team, Continuity.** `scenarios/p1.json` holds 25 more (B-RF-07..B-RF-17, B-AD-07..B-AD-15, B-CT-03..B-CT-08). First run: 22 PASS, 2 EXPECTED_FAIL (G-095, G-096), 1 N/A. With p0.json and p1-realdata.json, 105 of the 180 scenarios are machine-checked.
 - **Changed expectations.** With no contact, Refund now asks for the email (Identify Customer) instead of escalating (B-SM-03, B-RD-03, B-RF-16). "Order 1042" is not a Pronto number any more, so Stolen & Delayed scenarios use the customer's real order number. The G-084 scenarios check the rest of the scenario as usual and keep only the risk value as the expected fail.
 
 ## What the batch does not cover
