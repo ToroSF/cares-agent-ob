@@ -114,6 +114,44 @@ private class CsatRatingSaverTest {
         System.assertEquals(0, [SELECT COUNT() FROM CSAT_Rating__c]);
     }
 
+    // The profile the real agent user has; System Administrator hid G-089
+    private static User agentUser() {
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Einstein Agent User' LIMIT 1];
+        User u = new User(
+            Alias = 'csata',
+            Email = 'csat.agent@example.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'CSAT Agent',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = p.Id,
+            TimeZoneSidKey = 'America/Los_Angeles',
+            UserName = 'csat.agent.' + System.currentTimeMillis() + '@example.com'
+        );
+        insert u;
+        PermissionSet ps = [SELECT Id FROM PermissionSet WHERE Name = 'CARES_Experience_Rating_Access' LIMIT 1];
+        insert new PermissionSetAssignment(AssigneeId = u.Id, PermissionSetId = ps.Id);
+        return u;
+    }
+
+    @IsTest
+    static void agentProfileNeverThrows() {
+        // Live on v5 the Contact query threw for the agent user (G-089), so the agent got an action error
+        // and no isSuccess. Whatever access the profile has, the result must say what happened (INV-9)
+        Contact c = makeContact();
+        CsatRatingSaver.Result r;
+        System.runAs(agentUser()) {
+            try {
+                r = save(c.Id, 5, null);
+            } catch (Exception e) {
+                System.assert(false, 'Threw instead of returning an error: ' + e.getMessage());
+            }
+        }
+        System.assertNotEquals(null, r);
+        Integer saved = [SELECT COUNT() FROM CSAT_Rating__c];
+        System.assertEquals(r.isSuccess ? 1 : 0, saved, 'isSuccess must match what was saved: ' + r.errorMessage);
+    }
+
     @IsTest
     static void unknownContactIsAnErrorNotASave() {
         Contact c = makeContact();
