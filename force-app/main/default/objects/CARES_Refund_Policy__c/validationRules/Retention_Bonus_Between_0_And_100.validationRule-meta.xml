@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Retention_Bonus_Between_0_And_100</fullName>
+    <active>true</active>
+    <description
+  >The retention bonus is a percentage between 0% and 100%, same shape as Bonus_Between_0_And_100 (D-083). Percent fields read as a fraction in formulas. Blank is allowed (no bonus).</description>
+    <errorConditionFormula
+  >OR(Retention_Bonus_Pct__c &lt; 0, Retention_Bonus_Pct__c &gt; 1)</errorConditionFormula>
+    <errorDisplayField>Retention_Bonus_Pct__c</errorDisplayField>
+    <errorMessage>Retention bonus must be between 0% and 100%.</errorMessage>
+</ValidationRule>

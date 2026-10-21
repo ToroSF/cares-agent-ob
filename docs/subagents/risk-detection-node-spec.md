@@ -130,6 +130,26 @@ Where `ContactId` really comes from: the messaging channel links the end user to
 4. Publish a draft agent version and preview with a messaging contact; read the trace: did the action run, what did it return, did Refund open only after.
 5. T-09 is expected to show a false clean. It proves G-016. T-14 shows what really happens when the action errors (G-020).
 
+## Customer context (D-095, mock data for this project)
+
+After the `PATTERN_REVIEW` check decides NOT to fire, `before_reasoning` runs one more action, `get_customer_context` → `flow://CARES_Get_Customer_Context`, before transitioning to Refund:
+
+| Field            | Value                                                                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Inputs           | `contactId`, `lookbackDays` (same window as `get_risk_result`)                                                                         |
+| Outputs          | `hasOpenContext` (boolean), `sentiment` (text)                                                                                         |
+| Reads            | `CARES_Customer_Context__c` where `Contact__c = contactId`, `Has_Open_Context__c = true`, `Last_Interaction_Date__c` inside the window |
+| Writes           | `risk_retention_eligible`, `risk_customer_sentiment`                                                                                   |
+| Failure behavior | `hasOpenContext = false`; a missing signal never grants the bonus                                                                      |
+
+`risk_retention_eligible = hasOpenContext AND risk_status != "NOT_CLEAN"`. This is the second half of "se paga por mantener a un cliente, no se paga para tener un cliente": even below the `PATTERN_REVIEW` threshold, a customer who already has a real issue case in-window does not also get the retention bonus. **This action never runs at all on the `PATTERN_REVIEW` path** — the abuse gate is checked first and wins unconditionally; `get_customer_context` is structurally unreachable once `risk_issue_count >= risk_review_threshold`, not just "usually skipped."
+
+Where the context row comes from: `CsatRatingSaver` upserts one `CARES_Customer_Context__c` row per contact from Experience Rating's own sentiment read of the conversation (`POSITIVE`/`NEUTRAL`/`NEGATIVE`/`FRUSTRATED`), in the same call that saves the CSAT rating. `Has_Open_Context__c` is only true for `NEGATIVE`/`FRUSTRATED` (schema-enforced). It "closes" by aging out of the lookback window, or by the next rating overwriting it with a positive/neutral sentiment — no explicit close action (G-109).
+
+Refund reads `risk_retention_eligible` to: (1) add one empathetic sentence before the offer, inside the existing never-mention-risk guardrail; (2) apply `CARES_Refund_Policy__c.Retention_Bonus_Pct__c` on top of the already-capped standard-path amount (never on the READY/Stolen-&-Delayed path). See D-095.
+
+Mock data: `scripts/apex/seed-customer-context.apex` seeds a `FRUSTRATED` + `Has_Open_Context__c = true` row on two of the repo's stable named fixtures — Boyce Antrag (`CLEAN`, proves the bonus path) and Alex Morgan (the `PATTERN_REVIEW` fixture, proves the context read is never reached).
+
 ## Known limits
 
 - Cases with only an account are counted only when the contact is alone on the account (D-013). One case in the shared org stays invisible (G-016).

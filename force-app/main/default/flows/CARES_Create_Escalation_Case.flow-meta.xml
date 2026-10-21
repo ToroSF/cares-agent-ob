@@ -118,7 +118,8 @@
       <label>Found</label>
     </rules>
   </decisions>
-  <description>CARES Escalate to Human. Logs a fixed summary the person needs (category, reason, how the customer was identified, order, Stolen &amp; Delayed decision, risk status, offer, customer choice, messaging session, next step) so the customer does not have to repeat the story. The summary is built only from action variables, never from chat text (R-14). Playbook rules: if the contact already has an open CARES case for the same category and order, a private comment with the summary is added to it instead of a duplicate. New cases get Type, Reason, Priority and Status from the category, the contact's account, and go to the CARES Escalations queue when it exists. URGENT (food safety, harassment, fraud) is High priority. The summary is internal: the risk status must never be shown to the customer. Any problem creating the case returns success = false and no case number.</description>
+  <description
+  >CARES Escalate to Human. Logs a fixed summary the person needs (category, reason, how the customer was identified, order, Stolen &amp; Delayed decision, risk status, offer, customer choice, messaging session, next step) so the customer does not have to repeat the story. The summary is built only from action variables, never from chat text (R-14). Playbook rules: if the contact already has an open CARES case for the same category and order, a private comment with the summary is added to it instead of a duplicate. New cases get Type, Reason, Priority and Status from the category, the contact's account, and go to the CARES Escalations queue when it exists. URGENT (food safety, harassment, fraud) is High priority. The summary is internal: the risk status must never be shown to the customer. Any problem creating the case returns success = false and no case number.</description>
   <environments>Default</environments>
   <formulas>
     <name>caseSubject</name>
@@ -147,17 +148,20 @@
   <formulas>
     <name>casePriority</name>
     <dataType>String</dataType>
-    <expression>CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;High&quot;, &quot;Medium&quot;)</expression>
+    <expression
+    >CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;High&quot;, &quot;Medium&quot;)</expression>
   </formulas>
   <formulas>
     <name>caseStatus</name>
     <dataType>String</dataType>
-    <expression>CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;Escalated&quot;, &quot;New&quot;)</expression>
+    <expression
+    >CASE({!escalationCategory}, &quot;URGENT&quot;, &quot;Escalated&quot;, &quot;New&quot;)</expression>
   </formulas>
   <formulas>
     <name>caseOwnerId</name>
     <dataType>String</dataType>
-    <expression>IF(ISBLANK({!queueRecord.Id}), {!$User.Id}, {!queueRecord.Id})</expression>
+    <expression
+    >IF(ISBLANK({!queueRecord.Id}), {!$User.Id}, {!queueRecord.Id})</expression>
   </formulas>
   <formulas>
     <name>orderRef</name>
@@ -165,15 +169,18 @@
     <expression>BLANKVALUE({!orderId}, &quot;NONE&quot;)</expression>
   </formulas>
   <formulas>
-    <description>Fixed reason code from the agent script. Blank when an older agent version calls the Flow.</description>
+    <description
+    >Fixed reason code from the agent script. Blank when an older agent version calls the Flow.</description>
     <name>reasonCode</name>
     <dataType>String</dataType>
-    <expression>BLANKVALUE({!escalationReason}, &quot;NOT_GIVEN&quot;)</expression>
+    <expression
+    >BLANKVALUE({!escalationReason}, &quot;NOT_GIVEN&quot;)</expression>
   </formulas>
   <formulas>
     <name>categoryLabel</name>
     <dataType>String</dataType>
-    <expression>BLANKVALUE({!escalationCategory}, &quot;GENERAL&quot;)</expression>
+    <expression
+    >BLANKVALUE({!escalationCategory}, &quot;GENERAL&quot;)</expression>
   </formulas>
   <formulas>
     <name>reasonText</name>
@@ -192,7 +199,8 @@
 &quot;Not given&quot;) &amp; &quot; (&quot; &amp; {!reasonCode} &amp; &quot;)&quot;</expression>
   </formulas>
   <formulas>
-    <description>The channel contact is the signed-in chat user. Any other contact came from the email lookup (D-058).</description>
+    <description
+    >The channel contact is the signed-in chat user. Any other contact came from the email lookup (D-058).</description>
     <name>customerCheck</name>
     <dataType>String</dataType>
     <expression>IF(ISBLANK({!contactId}), &quot;Unknown: no contact found&quot;,
@@ -216,20 +224,29 @@ IF({!contactId} = {!channelContactId}, &quot;Verified (signed in to the chat)&qu
     <expression>BLANKVALUE({!riskStatus}, &quot;UNKNOWN&quot;)</expression>
   </formulas>
   <formulas>
+    <name>sentimentLabel</name>
+    <dataType>String</dataType>
+    <expression
+    >BLANKVALUE({!customerSentiment}, &quot;none on file&quot;)</expression>
+  </formulas>
+  <formulas>
     <name>offerLabel</name>
     <dataType>String</dataType>
-    <expression>IF(AND(OR(ISBLANK({!offerAmount}), {!offerAmount} = 0), OR(ISBLANK({!creditAmount}), {!creditAmount} = 0)), &quot;none made&quot;,
+    <expression
+    >IF(AND(OR(ISBLANK({!offerAmount}), {!offerAmount} = 0), OR(ISBLANK({!creditAmount}), {!creditAmount} = 0)), &quot;none made&quot;,
 &quot;refund &quot; &amp; TEXT({!offerAmount}) &amp; &quot;, credit &quot; &amp; TEXT({!creditAmount}) &amp; IF(ISBLANK({!currencyCode}), &quot;&quot;, &quot; &quot; &amp; {!currencyCode}))</expression>
   </formulas>
   <formulas>
     <name>choiceLabel</name>
     <dataType>String</dataType>
-    <expression>BLANKVALUE({!chosenResolution}, &quot;nothing confirmed&quot;)</expression>
+    <expression
+    >BLANKVALUE({!chosenResolution}, &quot;nothing confirmed&quot;)</expression>
   </formulas>
   <formulas>
     <name>sessionLabel</name>
     <dataType>String</dataType>
-    <expression>IF(ISBLANK({!sessionId}), &quot;none (not a live chat, so no transfer)&quot;,
+    <expression
+    >IF(ISBLANK({!sessionId}), &quot;none (not a live chat, so no transfer)&quot;,
 &quot;messaging session &quot; &amp; {!sessionId} &amp; &quot; (live chat, transfer requested)&quot;)</expression>
   </formulas>
   <formulas>
@@ -520,10 +537,12 @@ IF({!contactId} = {!channelContactId}, &quot;Verified (signed in to the chat)&qu
   </start>
   <status>Active</status>
   <textTemplates>
-    <description>The internal summary for the person who takes over. One fact per line, only from variables.</description>
+    <description
+    >The internal summary for the person who takes over. One fact per line, only from variables.</description>
     <name>caseSummary</name>
     <isViewedAsPlainText>true</isViewedAsPlainText>
-    <text>Escalated by CARES. Internal only: never share the risk status with the customer.
+    <text
+    >Escalated by CARES. Internal only: never share the risk status with the customer.
 Category: {!categoryLabel}
 Priority: {!casePriority}
 Why: {!reasonText}
@@ -531,6 +550,7 @@ Customer: {!customerCheck}
 Order: {!orderLabel}
 Stolen &amp; Delayed check: {!stolenDelayedLabel}
 Risk status (internal): {!riskLabel}
+Customer sentiment (internal, mock data): {!sentimentLabel}
 Offer: {!offerLabel}
 Customer chose: {!choiceLabel}
 Chat: {!sessionLabel}
@@ -544,7 +564,8 @@ Next step: {!nextStep}</text>
     <isOutput>false</isOutput>
   </variables>
   <variables>
-    <description>The contact of the signed-in chat user, blank when the chat is not signed in. Only used to say how the customer was identified.</description>
+    <description
+    >The contact of the signed-in chat user, blank when the chat is not signed in. Only used to say how the customer was identified.</description>
     <name>channelContactId</name>
     <dataType>String</dataType>
     <isCollection>false</isCollection>
@@ -559,7 +580,8 @@ Next step: {!nextStep}</text>
     <isOutput>false</isOutput>
   </variables>
   <variables>
-    <description>Fixed reason code set by the agent script: SAFETY, REPEATED_ISSUES, CLAIM_REVIEW, IDENTITY_FAILED, ISSUE_FAILED, NOT_ELIGIBLE, OFFER_DISPUTED, ORDER_NOT_FOUND, CLAIM_FAILED or CUSTOMER_REQUEST.</description>
+    <description
+    >Fixed reason code set by the agent script: SAFETY, REPEATED_ISSUES, CLAIM_REVIEW, IDENTITY_FAILED, ISSUE_FAILED, NOT_ELIGIBLE, OFFER_DISPUTED, ORDER_NOT_FOUND, CLAIM_FAILED or CUSTOMER_REQUEST.</description>
     <name>escalationReason</name>
     <dataType>String</dataType>
     <isCollection>false</isCollection>
@@ -567,7 +589,8 @@ Next step: {!nextStep}</text>
     <isOutput>false</isOutput>
   </variables>
   <variables>
-    <description>MessagingSession id of a live chat, blank in preview and API sessions. The support routing Flow finds the case by it.</description>
+    <description
+    >MessagingSession id of a live chat, blank in preview and API sessions. The support routing Flow finds the case by it.</description>
     <name>sessionId</name>
     <dataType>String</dataType>
     <isCollection>false</isCollection>
@@ -597,6 +620,15 @@ Next step: {!nextStep}</text>
   </variables>
   <variables>
     <name>riskStatus</name>
+    <dataType>String</dataType>
+    <isCollection>false</isCollection>
+    <isInput>true</isInput>
+    <isOutput>false</isOutput>
+  </variables>
+  <variables>
+    <description
+    >POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED or blank, from Risk Detection's customer context check (D-083, mock data). Internal only, never shown to the customer.</description>
+    <name>customerSentiment</name>
     <dataType>String</dataType>
     <isCollection>false</isCollection>
     <isInput>true</isInput>

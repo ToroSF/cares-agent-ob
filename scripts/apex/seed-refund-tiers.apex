@@ -52,6 +52,11 @@ if (!DRY_RUN) {
 }
 System.debug('SEED tiers: ' + tierNames);
 
+// 1b. Retention bonus (D-083, mock data for this project): a modest flat 5% on every tier,
+// applied by CARES_Refund_CalculateOffer only when Risk Detection signals a genuinely frustrated
+// customer who is not already NOT_CLEAN by pattern. Same [$] disclosure as everything else here.
+Decimal RETENTION_BONUS_PCT = 5;
+
 // 2. Policy rows: one per tier and outcome
 Map<String, CARES_Refund_Policy__c> policiesByKey = new Map<String, CARES_Refund_Policy__c>();
 List<CARES_Tier__c> savedTiers = tiersByName.values();
@@ -74,6 +79,7 @@ for (String name : tierNames) {
         p.Max_Refund__c = v[0];
         p.Clean_History_Max_Refund__c = v[1];
         p.Store_Credit_Bonus_Pct__c = v[2];
+        p.Retention_Bonus_Pct__c = RETENTION_BONUS_PCT;
         p.Active__c = true;
         policiesByKey.put(key, p);
     }

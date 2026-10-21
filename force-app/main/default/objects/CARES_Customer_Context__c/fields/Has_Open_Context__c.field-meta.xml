@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Has_Open_Context__c</fullName>
+    <label>Has Open Context</label>
+    <description
+  >True only while Sentiment__c is NEGATIVE or FRUSTRATED (enforced by Open_Context_Requires_Negative_Sentiment). This is the "case == 1 / case == 0" flag Risk Detection reads: true means genuine recent frustration is on file for this contact.</description>
+    <type>Checkbox</type>
+    <defaultValue>false</defaultValue>
+</CustomField>

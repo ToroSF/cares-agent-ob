@@ -68,13 +68,17 @@ private class CARES_EscalationCaseFlowTest {
     Assert.areEqual('High', k.Priority);
     Assert.areEqual('Escalated', k.Status);
     Assert.areEqual('Agentforce', k.Origin);
-    Assert.areEqual(c.AccountId, k.AccountId, 'Account from the contact (G-082)');
+    Assert.areEqual(
+      c.AccountId,
+      k.AccountId,
+      'Account from the contact (G-082)'
+    );
     Assert.areEqual('PR-1001', k.CARES_Order_Ref__c);
     Assert.areEqual('SAFETY', k.CARES_Escalation_Reason__c);
     Assert.areEqual(SESSION_ID, k.CARES_Messaging_Session_Id__c);
 
     List<String> lines = k.Description.split('\\r?\\n');
-    Assert.areEqual(12, lines.size(), 'One fact per line: ' + k.Description);
+    Assert.areEqual(13, lines.size(), 'One fact per line: ' + k.Description);
     Assert.isTrue(lines[0].startsWith('Escalated by CARES. Internal only'));
     Assert.areEqual('Category: URGENT', lines[1]);
     Assert.areEqual('Priority: High', lines[2]);
@@ -86,10 +90,14 @@ private class CARES_EscalationCaseFlowTest {
     Assert.areEqual('Order: PR-1001', lines[5]);
     Assert.areEqual('Stolen & Delayed check: not run', lines[6]);
     Assert.areEqual('Risk status (internal): CLEAN', lines[7]);
-    Assert.areEqual('Offer: none made', lines[8]);
-    Assert.areEqual('Customer chose: nothing confirmed', lines[9]);
-    Assert.isTrue(lines[10].contains(SESSION_ID));
-    Assert.isTrue(lines[11].startsWith('Next step: Contact the customer now'));
+    Assert.areEqual(
+      'Customer sentiment (internal, mock data): none on file',
+      lines[8]
+    );
+    Assert.areEqual('Offer: none made', lines[9]);
+    Assert.areEqual('Customer chose: nothing confirmed', lines[10]);
+    Assert.isTrue(lines[11].contains(SESSION_ID));
+    Assert.isTrue(lines[12].startsWith('Next step: Contact the customer now'));
   }
 
   @IsTest
@@ -109,7 +117,10 @@ private class CARES_EscalationCaseFlowTest {
       first.getVariableValue('caseId'),
       second.getVariableValue('caseId')
     );
-    Assert.areEqual(1, [SELECT COUNT() FROM Case WHERE ContactId = :c.Id WITH SYSTEM_MODE]);
+    Assert.areEqual(
+      1,
+      [SELECT COUNT() FROM Case WHERE ContactId = :c.Id WITH SYSTEM_MODE]
+    );
     CaseComment cc = [
       SELECT CommentBody, IsPublished
       FROM CaseComment
@@ -157,19 +168,45 @@ private class CARES_EscalationCaseFlowTest {
   }
 
   @IsTest
+  static void customerSentimentIsLabelledWhenPresent() {
+    Contact c = customer();
+    Map<String, Object> inputs = urgentFor(c.Id);
+    inputs.put('customerSentiment', 'FRUSTRATED');
+    Flow.Interview f = run(inputs);
+    String d = [
+      SELECT Description
+      FROM Case
+      WHERE Id = :(Id) f.getVariableValue('caseId')
+      WITH SYSTEM_MODE
+    ]
+    .Description;
+    Assert.isTrue(
+      d.contains('Customer sentiment (internal, mock data): FRUSTRATED')
+    );
+  }
+
+  @IsTest
   static void unknownCustomerStillGetsACase() {
     Flow.Interview f = run(
       new Map<String, Object>{ 'escalationCategory' => 'URGENT' }
     );
     Assert.areEqual(true, f.getVariableValue('success'));
     Case k = [
-      SELECT Description, ContactId, CARES_Escalation_Reason__c, CARES_Order_Ref__c
+      SELECT
+        Description,
+        ContactId,
+        CARES_Escalation_Reason__c,
+        CARES_Order_Ref__c
       FROM Case
       WHERE Id = :(Id) f.getVariableValue('caseId')
       WITH SYSTEM_MODE
     ];
     Assert.isNull(k.ContactId);
-    Assert.areEqual('NOT_GIVEN', k.CARES_Escalation_Reason__c, 'Older agent versions send no reason');
+    Assert.areEqual(
+      'NOT_GIVEN',
+      k.CARES_Escalation_Reason__c,
+      'Older agent versions send no reason'
+    );
     Assert.areEqual('NONE', k.CARES_Order_Ref__c);
     Assert.isTrue(k.Description.contains('Customer: Unknown'));
   }

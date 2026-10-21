@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Source_Rating__c</fullName>
+    <label>Source Rating</label>
+    <description
+  >The CSAT_Rating__c that produced this context row, for audit and debugging only. Risk Detection never reads this field.</description>
+    <type>Lookup</type>
+    <referenceTo>CSAT_Rating__c</referenceTo>
+    <relationshipLabel>CARES Customer Contexts (from rating)</relationshipLabel>
+    <relationshipName>CARES_Customer_Contexts_From_Rating</relationshipName>
+    <required>false</required>
+    <deleteConstraint>SetNull</deleteConstraint>
+</CustomField>
