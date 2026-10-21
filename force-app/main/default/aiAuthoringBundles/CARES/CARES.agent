@@ -75,7 +75,7 @@ variables:
     refund_order_id: mutable string = ""
         description: "Refund: order being resolved. Set only by the find order action (or Stolen & Delayed Orders)."
     refund_order_summary: mutable string = ""
-        description: "Refund: order number, date, restaurant and total, from the find order action. Named back to the customer when they didn't give an order number (G-092), so they know which order is being resolved, e.g. when their latest order is canceled and the action used the most recent delivered one instead."
+        description: "Refund: order number, date, restaurant and total, from the find order action. Named back to the customer when they gave no order number (G-092), e.g. when the latest order is canceled and the most recent delivered one is used."
     refund_order_line_items: mutable string = ""
         description: "Refund: item names and prices on the order, from the find order action."
     refund_order_found: mutable boolean = False
@@ -131,13 +131,17 @@ variables:
     escalation_logged_category: mutable string = ""
         description: "Escalate to Human: category of the last case logged. Lets an URGENT case be logged even if a general case was logged earlier. Set by the script."
     escalation_reason: mutable string = ""
-        description: "Escalate to Human: fixed reason code for the case (D-085): SAFETY, REPEATED_ISSUES, CLAIM_REVIEW, IDENTITY_FAILED, ISSUE_FAILED, CLAIM_FAILED, ORDER_NOT_FOUND, NOT_ELIGIBLE, OFFER_DISPUTED or CUSTOMER_REQUEST. Set only by the script from the conversation state, never by the model."
+        description: "Escalate to Human: case reason code (D-085): SAFETY, REPEATED_ISSUES, CLAIM_REVIEW, IDENTITY_FAILED, ISSUE_FAILED, CLAIM_FAILED, ORDER_NOT_FOUND, NOT_ELIGIBLE, OFFER_DISPUTED or CUSTOMER_REQUEST. Set only by the script."
     risk_review_threshold: mutable number = 3
         description: "Risk Detection: issue count at which a person reviews before any automatic offer (Playbook: repeated failures). Team assumption [$], to be confirmed with Pronto."
     customer_id: mutable string = ""
         description: "Customer Contact Id used by Refund, Stolen & Delayed, Experience Rating and Escalate. From ContactId, or from the email lookup when the chat has no contact (D-058). Never typed by the model."
     identify_attempts: mutable number = 0
         description: "Identify Customer: email lookups tried in this conversation. Capped at 2, then a person helps."
+    refund_order_already_resolved: mutable boolean = False
+        description: "Refund: True when the order already has a refund or credit on file, from calculate_refund_offer. Set by the script (D-088)."
+    refund_settlement_status: mutable string = ""
+        description: "Refund: Not_Applicable, Recorded or Needs_Review, from issue_resolution. Needs_Review opens a review case for the team (D-092)."
 
 knowledge:
     # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-060, D-066, D-067)
@@ -202,7 +206,7 @@ start_agent agent_router:
             go_to_stolen_delayed: @utils.transition to @subagent.stolen_delayed_orders
                 description: "The whole order never arrived, was stolen, is late or has not moved. Not for one missing or wrong item in an order that arrived."
             go_to_risk_detection: @utils.transition to @subagent.risk_detection
-                description: "Route here FIRST when the customer asks for a refund or credit for their order, or their order arrived with a missing item, a wrong item or a food quality problem. Not for a general question about the refund rules. It runs a silent history check and then hands over to Refund automatically."
+                description: "Route here FIRST when the customer wants a refund or credit for an order, or it arrived with a missing or wrong item or a food quality problem. Not for general refund rule questions. Runs a silent check, then hands over to Refund."
             go_to_urgent_escalation: @utils.transition to @subagent.urgent_escalation
                 description: "Safety first: food safety, illness or allergic reaction, harassment or unsafe delivery, fraud or account takeover, or a legal threat. A person takes over before any offer."
             go_to_order_status: @utils.transition to @subagent.order_status
@@ -245,6 +249,7 @@ subagent refund:
                 set @variables.refund_offer_calculated = False
                 set @variables.refund_offer_eligible = False
                 set @variables.refund_offer_ineligible_reason = ""
+                set @variables.refund_order_already_resolved = False
                 set @variables.refund_offer_amount = 0
                 set @variables.refund_credit_amount = 0
                 set @variables.refund_chosen_resolution = "Store_Credit" if @variables.stolen_delayed_customer_choice == "WALLET_CREDIT" else "Refund"
@@ -259,6 +264,7 @@ subagent refund:
                 set @variables.refund_offer_calculated = False
                 set @variables.refund_offer_eligible = False
                 set @variables.refund_offer_ineligible_reason = ""
+                set @variables.refund_order_already_resolved = False
                 set @variables.refund_offer_amount = 0
                 set @variables.refund_credit_amount = 0
                 set @variables.refund_chosen_resolution = ""
@@ -279,7 +285,12 @@ subagent refund:
                     set @variables.refund_credit_amount = @outputs.creditAmount
                     set @variables.refund_currency = @outputs.currencyCode
                     set @variables.refund_tier_name = @outputs.tierName
+                    set @variables.refund_order_already_resolved = @outputs.alreadyResolved
                 set @variables.refund_offer_calculated = True
+
+            # A repeat claim on a resolved order is a claim review for the person (G-091); never override URGENT or PATTERN_REVIEW
+            if @variables.refund_order_already_resolved == True and @variables.escalation_category == "":
+                set @variables.escalation_category = "CLAIM_REVIEW"
 
             # A person owns the Stolen & Delayed order only; other orders can still be resolved (ids are platform ids, D-038)
             if @variables.stolen_delayed_needs_person == True and (@variables.refund_sd_path != "" or (@variables.refund_order_id != "" and @variables.refund_order_id == @variables.stolen_delayed_order_id)):
@@ -376,6 +387,10 @@ subagent refund:
                 with refundAmount = @variables.refund_offer_amount
                 with creditAmount = @variables.refund_credit_amount
                 with currencyCode = @variables.refund_currency
+                with driverCompensation = @variables.stolen_delayed_driver_compensation if @variables.refund_sd_path == "READY" else ""
+                with restaurantReimbursement = @variables.stolen_delayed_restaurant_reimbursement if @variables.refund_sd_path == "READY" else ""
+                with lossAbsorption = @variables.stolen_delayed_loss_absorption if @variables.refund_sd_path == "READY" else False
+                set @variables.refund_settlement_status = @outputs.settlementStatus
                 set @variables.refund_issue_attempted = True
                 set @variables.refund_issued = @outputs.success
 
@@ -387,12 +402,23 @@ subagent refund:
                 description: "Hand off to a human when the customer has no account, rejects the offer, wants more, disputes the outcome, or issuing fails."
 
     after_reasoning:
-        if @variables.refund_issued == True and @variables.refund_sd_path == "READY":
-            run @actions.apply_settlement
+        # The settlement is recorded with the payout (D-092). One a person must act on gets a review case;
+        # the customer is already paid, so nothing is said and the chat is not transferred (no session id)
+        if @variables.refund_issued == True and @variables.refund_settlement_status == "Needs_Review":
+            run @actions.create_settlement_review_case
+                with contactId = @variables.customer_id
+                with channelContactId = @variables.ContactId if @variables.ContactId is not None else ""
+                with escalationCategory = "CLAIM_REVIEW"
+                with escalationReason = "SETTLEMENT_REVIEW"
+                with sessionId = ""
                 with orderId = @variables.refund_order_id
-                with driverCompensation = @variables.stolen_delayed_driver_compensation
-                with restaurantReimbursement = @variables.stolen_delayed_restaurant_reimbursement
-                with lossAbsorption = @variables.stolen_delayed_loss_absorption
+                with stolenDelayedDecision = @variables.stolen_delayed_decision
+                with stolenDelayedReason = @variables.stolen_delayed_reason
+                with riskStatus = @variables.risk_status
+                with offerAmount = @variables.refund_offer_amount
+                with creditAmount = @variables.refund_credit_amount
+                with currencyCode = @variables.refund_currency
+                with chosenResolution = @variables.refund_chosen_resolution
         if @variables.refund_issued == True:
             set @variables.router_active_task = ""
             set @variables.refund_handled_order_id = @variables.refund_order_id
@@ -409,6 +435,8 @@ subagent refund:
             set @variables.refund_offer_calculated = False
             set @variables.refund_offer_eligible = False
             set @variables.refund_offer_ineligible_reason = ""
+            set @variables.refund_order_already_resolved = False
+            set @variables.refund_settlement_status = ""
             set @variables.refund_offer_amount = 0
             set @variables.refund_credit_amount = 0
             set @variables.refund_currency = ""
@@ -513,6 +541,9 @@ subagent refund:
                     filter_from_agent: False
                 tierName: string
                     filter_from_agent: True
+                alreadyResolved: boolean
+                    description: "True when the order already has a refund or credit on file; no offer is made."
+                    filter_from_agent: True
 
         issue_resolution:
             description: "Issues the confirmed refund (to the original payment method) or store credit"
@@ -532,6 +563,12 @@ subagent refund:
                     is_required: True
                 currencyCode: string
                     description: "ISO currency code of the amounts, from the offer; blank means the org default"
+                driverCompensation: string
+                    description: "Driver pay recommendation from Stolen & Delayed, approved-claim path only."
+                restaurantReimbursement: string
+                    description: "Restaurant recommendation from Stolen & Delayed, approved-claim path only."
+                lossAbsorption: boolean
+                    description: "True for a Stolen & Delayed loss absorption case."
             outputs:
                 success: boolean
                     filter_from_agent: True
@@ -541,20 +578,52 @@ subagent refund:
                 message: string
                     description: "Customer-facing confirmation of what was issued"
                     filter_from_agent: False
+                settlementStatus: string
+                    description: "Not_Applicable, Recorded or Needs_Review. Internal only."
+                    filter_from_agent: True
 
-        apply_settlement:
-            description: "Applies the driver pay and restaurant reimbursement recommendations after a customer resolution is issued"
-            target: "apex://CARES_Refund_ApplySettlement"
+        create_settlement_review_case:
+            description: "Logs a review case for the team when a payout's driver or restaurant settlement needs a person. Not a hand-off: the chat is not transferred."
+            target: "flow://CARES_Create_Escalation_Case"
             inputs:
+                contactId: string
+                    description: "The customer's contact id."
+                channelContactId: string
+                    description: "The contact of the signed-in chat user, blank when not signed in."
+                escalationCategory: string
+                    description: "CLAIM_REVIEW."
+                escalationReason: string
+                    description: "SETTLEMENT_REVIEW."
+                sessionId: string
+                    description: "Blank, so the chat is not transferred."
                 orderId: string
-                    is_required: True
-                driverCompensation: string
-                    description: "PAY_IN_FULL, WITHHOLD_DELIVERY_PAY or HOLD_FOR_REVIEW"
-                restaurantReimbursement: string
-                    description: "REIMBURSE or NO_CHANGE"
-                lossAbsorption: boolean
+                    description: "Order id of the payout."
+                stolenDelayedDecision: string
+                    description: "Stolen & Delayed decision."
+                stolenDelayedReason: string
+                    description: "Stolen & Delayed internal reason code."
+                riskStatus: string
+                    description: "CLEAN, NOT_CLEAN or UNKNOWN. Internal only."
+                offerAmount: number
+                    description: "Refund amount offered."
+                creditAmount: number
+                    description: "Store credit amount offered."
+                currencyCode: string
+                    description: "ISO currency code of the offer."
+                chosenResolution: string
+                    description: "Refund or Store_Credit."
             outputs:
                 success: boolean
+                    description: "Whether the case was created."
+                    filter_from_agent: True
+                caseNumber: string
+                    description: "Case number. Internal only here."
+                    filter_from_agent: True
+                reusedExisting: boolean
+                    description: "True when it was added to an open case."
+                    filter_from_agent: True
+                caseId: string
+                    description: "Record id of the case. Internal only."
                     filter_from_agent: True
 
 subagent stolen_delayed_orders:
@@ -597,13 +666,13 @@ subagent stolen_delayed_orders:
                     description: "The contact id from the channel, never from the chat."
                     is_required: True
                 orderId: string
-                    description: "Order number given by the customer."
+                    description: "Pronto order number given by the customer (PR-...)."
                     is_required: True
                 customerReport: string
                     description: "What the customer said happened, in their own words. Do not summarise or soften it."
             outputs:
                 decision: string
-                    description: "STANDARD_PATH, FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE or ORDER_NOT_FOUND."
+                    description: "STANDARD_PATH, FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE or ORDER_NOT_FOUND. Read from the real orders (D-089)."
                     filter_from_agent: True
                 reasonCode: string
                     description: "Internal reason code."
@@ -718,6 +787,8 @@ subagent stolen_delayed_orders:
                   If the customer reports a problem with a different order, ask for its order number and what happened, then call {!@actions.check_order}.
             if @variables.stolen_delayed_handoff_status == "READY_FOR_REFUND":
                 | This claim is approved and the customer's choice is recorded. Tell the customer you are finishing it now and use {!@actions.continue_to_refund}.
+            if @variables.stolen_delayed_decision == "STANDARD_PATH" and @variables.stolen_delayed_needs_person == False:
+                | The order goes the standard refund way. Tell the customer, in one short sentence, that you will check their refund options now, and use {!@actions.continue_to_refund} in the same reply.
             if @variables.stolen_delayed_handoff_status == "BLOCKED" or @variables.stolen_delayed_handoff_status == "FAILED":
                 | Apologise that this could not be completed here. Tell the customer a member of the team will help and call {!@actions.escalate_for_review}.
         actions:
@@ -744,8 +815,6 @@ subagent stolen_delayed_orders:
                 set @variables.stolen_delayed_redispatch_eligible = @outputs.redispatchEligible
                 set @variables.stolen_delayed_driver_compensation = @outputs.driverCompensation
                 set @variables.stolen_delayed_restaurant_reimbursement = @outputs.restaurantReimbursement
-                if @outputs.decision == "STANDARD_PATH":
-                    transition to @subagent.risk_detection
             resolve_claim: @actions.handoff_approved_claim
                 description: "Record the customer's choice for an approved claim: REFUND, WALLET_CREDIT or REDISPATCH."
                 available when @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == ""
@@ -762,13 +831,12 @@ subagent stolen_delayed_orders:
                 set @variables.stolen_delayed_driver_compensation = @outputs.driverCompensation
                 set @variables.stolen_delayed_restaurant_reimbursement = @outputs.restaurantReimbursement
                 set @variables.stolen_delayed_redispatch_reference = @outputs.redispatchReference
-                if @outputs.handoffStatus == "READY_FOR_REFUND":
-                    transition to @subagent.risk_detection
+            # The hand-off to Refund is an explicit transition: one inside an action's post-processing did not fire live (G-077)
             escalate_for_review: @utils.transition to @subagent.escalate_to_human
                 description: "Hand the conversation to a person: manual review, an escalation trigger, a failed step, or the customer asks for a person. Escalate to Human logs a case with the claim context first."
             continue_to_refund: @utils.transition to @subagent.risk_detection
-                description: "Finish an approved claim whose choice is already recorded."
-                available when @variables.stolen_delayed_handoff_status == "READY_FOR_REFUND" and @variables.stolen_delayed_needs_person == False
+                description: "Continue to the refund options: an approved claim whose choice is recorded, or an order that goes the standard refund way."
+                available when @variables.stolen_delayed_needs_person == False and (@variables.stolen_delayed_handoff_status == "READY_FOR_REFUND" or @variables.stolen_delayed_decision == "STANDARD_PATH")
             go_to_experience_rating: @utils.transition to @subagent.experience_rating
                 description: "Ask for feedback once the order has been re-dispatched."
                 available when @variables.stolen_delayed_handoff_status == "REDISPATCHED"

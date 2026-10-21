@@ -341,9 +341,9 @@
     "amounts": [
      "{offer_one}"
     ],
-    "no_actions": [
-     "apply_settlement"
-    ],
+    "inputs_none": {
+     "issue_resolution.driverCompensation": "\\S"
+    },
     "reply_any": [
      "[A-Z0-9]{2,}-?\\d{3,}|reference"
     ]
@@ -531,14 +531,14 @@
     "Yes, confirm."
    ],
    "expect": {
-    "no_actions": [
-     "apply_settlement"
-    ],
+    "inputs_none": {
+     "issue_resolution.driverCompensation": "\\S"
+    },
     "max_calls": {
      "issue_resolution": 1
     }
    },
-   "judge": "Direct path: apply_settlement never runs, even after an issue (D-031). Simulated, writes nothing. Simulated outputs make up the items, so turn 2 names the first listed item, not a real one."
+   "judge": "Direct path: no settlement is recorded; issue_resolution gets no driver or restaurant recommendation (D-092). Simulated, writes nothing. Simulated outputs make up the items, so turn 2 names the first listed item, not a real one."
   },
   {
    "id": "B-RF-19",
@@ -666,13 +666,19 @@
    "fixture": "pool:ESC",
    "expect": {
     "max_calls": {
-     "issue_resolution": 2
+     "issue_resolution": 1
     },
     "outputs": {
      "issue_resolution.success": [
-      true,
-      false
+      true
+     ],
+     "calculate_refund_offer.alreadyResolved": [
+      false,
+      true
      ]
+    },
+    "inputs_none": {
+     "create_escalation_case.escalationCategory": "^$"
     }
    },
    "sessions": [
@@ -692,19 +698,19 @@
    "burns": true,
    "soft": {
     "max_calls": {
-     "calculate_refund_offer": 1
+     "calculate_refund_offer": 2
     },
     "inputs": {
-     "create_escalation_case.escalationCategory": "\\S"
+     "create_escalation_case.escalationCategory": "CLAIM_REVIEW"
     }
    },
-   "judge": "Session 2 must not claim a payout; apology and a person. An offer shown again in session 2 is a FINDING (the duplicate is only caught at issue time). Session 2 escalation with a blank category is G-091."
+   "judge": "Session 2: the offer is refused before any amount (\"already has a refund or credit on file\", D-088). No amount is said in session 2, nothing is claimed as issued (INV-3), and a person is offered. If it escalates, the category is CLAIM_REVIEW (G-091)."
   },
   {
    "id": "B-SD-01",
    "priority": "P0",
    "mode": "live",
-   "fixture": "pool:ESC",
+   "fixture": "pool:ESC-LOW",
    "turns": [
     "The app says delivered but I never got it. Order {order}."
    ],
@@ -800,7 +806,7 @@
    "id": "B-SD-14",
    "priority": "P0",
    "mode": "live",
-   "fixture": "pool:ESC",
+   "fixture": "pool:ESC-LOW",
    "turns": [
     "The app says delivered but I never got it. Order {order}, nothing was at my door."
    ],
@@ -817,12 +823,19 @@
      "create_escalation_case": 1
     },
     "outputs": {
-     "check_order.decision": "ESCALATE"
+     "check_order.decision": "MANUAL_REVIEW"
     },
     "inputs": {
-     "create_escalation_case.stolenDelayedDecision": "ESCALATE",
-     "create_escalation_case.stolenDelayedReason": "DATA_UNAVAILABLE"
-    }
+     "create_escalation_case.stolenDelayedDecision": "MANUAL_REVIEW",
+     "create_escalation_case.stolenDelayedReason": "TRUST_NOT_ESTABLISHED|LOW_TRUST_CUSTOMER",
+     "create_escalation_case.orderId": "{order}"
+    },
+    "reply_any": [
+     "\\b0\\d{7}\\b"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation"
+    ]
    },
    "burns": true
   },
@@ -871,7 +884,7 @@
      "issue_resolution": 1
     }
    },
-   "judge": "Plausibility only: READY path depends on simulated outputs. apply_settlement only after an issue on READY."
+   "judge": "Plausibility only: READY path depends on simulated outputs. The driver and restaurant recommendations are recorded with the issue on READY (D-092)."
   },
   {
    "id": "B-IN-03",

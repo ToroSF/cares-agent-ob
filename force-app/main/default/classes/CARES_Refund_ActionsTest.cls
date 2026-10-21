@@ -116,6 +116,17 @@ private class CARES_Refund_ActionsTest {
         return CARES_Refund_LogOrderIssue.execute(new List<CARES_Refund_LogOrderIssue.Request>{ req })[0];
     }
 
+    // Order id the offer() helper uses; tests about another order set it first
+    private static String offerOrderId = ORDER_ID;
+
+    // Inserts a resolution row for an order, as the payout would (SYSTEM_MODE: test setup only)
+    private static void resolve(Id contactId, String orderId, String status) {
+        Database.insert(new CARES_Resolution__c(
+            Contact__c = contactId, Order_Id__c = orderId, Resolution_Type__c = 'Refund',
+            Amount__c = 10.00, Status__c = status
+        ), AccessLevel.SYSTEM_MODE);
+    }
+
     private static CARES_Refund_CalculateOffer.Result offer(
         String contactId,
         String orderOutcome,
@@ -127,7 +138,7 @@ private class CARES_Refund_ActionsTest {
     ) {
         CARES_Refund_CalculateOffer.Request req = new CARES_Refund_CalculateOffer.Request();
         req.contactId = contactId;
-        req.orderId = ORDER_ID;
+        req.orderId = offerOrderId;
         req.orderOutcome = orderOutcome;
         req.riskStatus = riskStatus;
         req.affectedValue = affectedValue;
@@ -408,6 +419,87 @@ private class CARES_Refund_ActionsTest {
         System.assertEquals('EUR', r.currencyCode, 'Order currency is echoed (D-036)');
     }
 
+    // G-091 (D-088): no offer on an order that already has a resolution, on any path
+
+    @IsTest
+    static void offerOnAnOrderWithAResolutionIsIneligible() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
+        Contact c = makeContact();
+        resolve(c.Id, ORDER_ID, 'Issued');
+
+        CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'CLEAN', 20.00, 0, 0, '');
+        System.assertEquals(false, r.eligible);
+        System.assertEquals(true, r.alreadyResolved);
+        System.assertEquals(0, r.refundAmount);
+        System.assertEquals(0, r.creditAmount);
+        System.assert(r.ineligibleReason.contains('already has a refund or credit on file'), r.ineligibleReason);
+    }
+
+    @IsTest
+    static void readyPathOnAResolvedOrderIsIneligible() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Stolen', 5.00, 5.00, 10, true);
+        Contact c = makeContact();
+        resolve(c.Id, ORDER_ID, 'Issued');
+
+        CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Stolen', 'UNKNOWN', 0, 25.00, 25.00, 'EUR');
+        System.assertEquals(false, r.eligible, 'An approved Stolen & Delayed claim is refused too when the order is paid');
+        System.assertEquals(true, r.alreadyResolved);
+        System.assertEquals(0, r.refundAmount);
+    }
+
+    @IsTest
+    static void aDifferentOrderIsStillEligible() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
+        Contact c = makeContact();
+        resolve(c.Id, 'PR-241019-TEST002', 'Issued');
+
+        CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'NOT_CLEAN', 20.00, 0, 0, '');
+        System.assertEquals(true, r.eligible, 'A resolution on another order does not block this one');
+        System.assertEquals(false, r.alreadyResolved);
+        System.assertEquals(20.00, r.refundAmount);
+    }
+
+    @IsTest
+    static void aFailedResolutionAlsoBlocks() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
+        Contact c = makeContact();
+        resolve(c.Id, ORDER_ID, 'Failed');
+
+        CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'CLEAN', 20.00, 0, 0, '');
+        System.assertEquals(false, r.eligible, 'Any row blocks, so a person reviews instead of a second payout');
+        System.assertEquals(true, r.alreadyResolved);
+    }
+
+    @IsTest
+    static void mixedBatchKeepsRequestOrder() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
+        Contact c = makeContact();
+        resolve(c.Id, ORDER_ID, 'Issued');
+
+        List<CARES_Refund_CalculateOffer.Request> reqs = new List<CARES_Refund_CalculateOffer.Request>();
+        for (String orderId : new List<String>{ ORDER_ID, 'PR-241019-TEST002' }) {
+            CARES_Refund_CalculateOffer.Request req = new CARES_Refund_CalculateOffer.Request();
+            req.contactId = c.Id;
+            req.orderId = orderId;
+            req.orderOutcome = 'Wrong_Missing_Items';
+            req.riskStatus = 'NOT_CLEAN';
+            req.affectedValue = 20.00;
+            reqs.add(req);
+        }
+        List<CARES_Refund_CalculateOffer.Result> rs;
+        System.runAs(refundUser()) {
+            rs = CARES_Refund_CalculateOffer.execute(reqs);
+        }
+        System.assertEquals(false, rs[0].eligible, 'Resolved order first');
+        System.assertEquals(true, rs[1].eligible, 'New order second');
+        System.assertEquals(false, rs[1].alreadyResolved);
+    }
+
     @IsTest
     static void readyPathWithoutAPolicyRowGivesNoBonus() {
         CARES_Tier__c tier = makeTier('Bronze', 1, true);
@@ -632,13 +724,82 @@ private class CARES_Refund_ActionsTest {
 
     // apply_settlement (still a stub; out of scope for this build)
 
+    // Settlement recorded with the payout (D-092)
+
+    private static CARES_Refund_IssueResolution.Result issueWithSettlement(Id contactId, String orderId, String driver, String restaurant, Boolean lossAbsorption) {
+        CARES_Refund_IssueResolution.Request req = new CARES_Refund_IssueResolution.Request();
+        req.contactId = contactId;
+        req.orderId = orderId;
+        req.resolutionType = 'Refund';
+        req.refundAmount = 25.00;
+        req.creditAmount = 27.50;
+        req.driverCompensation = driver;
+        req.restaurantReimbursement = restaurant;
+        req.lossAbsorption = lossAbsorption;
+        CARES_Refund_IssueResolution.Result r;
+        System.runAs(refundUser()) {
+            r = CARES_Refund_IssueResolution.execute(new List<CARES_Refund_IssueResolution.Request>{ req })[0];
+        }
+        return r;
+    }
+
+    // Read as the Refund user: the settlement fields are visible through CARES_Refund_Access
+    private static CARES_Resolution__c saved(String orderId) {
+        CARES_Resolution__c row;
+        System.runAs(refundUser()) {
+            row = [
+                SELECT Driver_Compensation__c, Restaurant_Reimbursement__c, Loss_Absorption__c, Settlement_Status__c
+                FROM CARES_Resolution__c
+                WHERE Order_Id__c = :orderId
+            ];
+        }
+        return row;
+    }
+
     @IsTest
-    static void settlementStubReportsSuccess() {
-        CARES_Refund_ApplySettlement.Request req = new CARES_Refund_ApplySettlement.Request();
-        req.orderId = ORDER_ID;
-        req.driverCompensation = 'PAY_IN_FULL';
-        req.restaurantReimbursement = 'REIMBURSE';
-        req.lossAbsorption = true;
-        System.assertEquals(true, CARES_Refund_ApplySettlement.execute(new List<CARES_Refund_ApplySettlement.Request>{ req })[0].success);
+    static void lossAbsorptionIsRecordedAndNeedsReview() {
+        Contact c = makeContact();
+        CARES_Refund_IssueResolution.Result r = issueWithSettlement(c.Id, ORDER_ID, 'PAY_IN_FULL', 'REIMBURSE', true);
+        System.assertEquals(true, r.success, 'Issue failed: ' + r.message);
+        System.assertEquals('Needs_Review', r.settlementStatus, 'The restaurant reimbursement needs a person');
+        CARES_Resolution__c row = saved(ORDER_ID);
+        System.assertEquals('PAY_IN_FULL', row.Driver_Compensation__c);
+        System.assertEquals('REIMBURSE', row.Restaurant_Reimbursement__c);
+        System.assertEquals(true, row.Loss_Absorption__c);
+        System.assertEquals('Needs_Review', row.Settlement_Status__c);
+    }
+
+    @IsTest
+    static void driverPaidAndNoRestaurantChangeIsJustRecorded() {
+        Contact c = makeContact();
+        CARES_Refund_IssueResolution.Result r = issueWithSettlement(c.Id, ORDER_ID, 'PAY_IN_FULL', 'NO_CHANGE', false);
+        System.assertEquals('Recorded', r.settlementStatus);
+        System.assertEquals('Recorded', saved(ORDER_ID).Settlement_Status__c);
+    }
+
+    @IsTest
+    static void heldOrWithheldDriverPayNeedsReview() {
+        Contact c = makeContact();
+        System.assertEquals('Needs_Review', issueWithSettlement(c.Id, ORDER_ID, 'HOLD_FOR_REVIEW', 'NO_CHANGE', false).settlementStatus);
+        System.assertEquals('Needs_Review', issueWithSettlement(c.Id, 'PR-241019-TEST002', 'WITHHOLD_DELIVERY_PAY', 'NO_CHANGE', false).settlementStatus);
+    }
+
+    @IsTest
+    static void directPathHasNoSettlement() {
+        Contact c = makeContact();
+        CARES_Refund_IssueResolution.Result r = issueWithSettlement(c.Id, ORDER_ID, '', '', false);
+        System.assertEquals('Not_Applicable', r.settlementStatus);
+        CARES_Resolution__c row = saved(ORDER_ID);
+        System.assertEquals(null, row.Driver_Compensation__c);
+        System.assertEquals('Not_Applicable', row.Settlement_Status__c);
+    }
+
+    @IsTest
+    static void unknownRecommendationIsLeftOffAndReviewed() {
+        Contact c = makeContact();
+        CARES_Refund_IssueResolution.Result r = issueWithSettlement(c.Id, ORDER_ID, 'BONUS_PAY', 'NO_CHANGE', false);
+        System.assertEquals(true, r.success, 'An unknown value must not fail the payout: ' + r.message);
+        System.assertEquals('Needs_Review', r.settlementStatus);
+        System.assertEquals(null, saved(ORDER_ID).Driver_Compensation__c, 'Never written to the restricted picklist');
     }
 }

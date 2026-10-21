@@ -2,6 +2,10 @@
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <label>CARES Refund Policy Admin</label>
     <description>For the CRM users who maintain Refund tiers and policy rows (D-046), audit issued resolutions, or run scripts/apex/seed-refund-tiers.apex (D-073). Not for the agent user.</description>
+    <applicationVisibilities>
+        <application>CARES_Admin</application>
+        <visible>true</visible>
+    </applicationVisibilities>
     <hasActivationRequired>false</hasActivationRequired>
     <objectPermissions>
         <object>CARES_Tier__c</object>
@@ -65,4 +69,36 @@
         <readable>true</readable>
         <editable>false</editable>
     </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Resolution__c.Driver_Compensation__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Resolution__c.Restaurant_Reimbursement__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Resolution__c.Loss_Absorption__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Resolution__c.Settlement_Status__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <tabSettings>
+        <tab>CARES_Refund_Policy__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>CARES_Tier__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>CARES_Resolution__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>

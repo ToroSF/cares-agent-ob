@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Loss_Absorption__c</fullName>
+    <label>Loss Absorption</label>
+    <defaultValue>false</defaultValue>
+    <description
+  >True for a Stolen &amp; Delayed loss absorption case: Pronto pays the customer, the driver and the restaurant (D-092).</description>
+    <type>Checkbox</type>
+</CustomField>

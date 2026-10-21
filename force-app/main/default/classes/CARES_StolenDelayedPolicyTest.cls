@@ -279,6 +279,60 @@ private class CARES_StolenDelayedPolicyTest {
   }
 
   @IsTest
+  static void canceledOrderEscalatesBeforeTheValueAndTrustRules() {
+    CARES_StolenDelayedTelemetry t = good();
+    t.orderStatus = CARES_StolenDelayedOrderSource.CANCELED;
+    t.orderTotal = 500;
+    CARES_StolenDelayedPolicy.Outcome d = decide(t);
+    Assert.areEqual(CARES_StolenDelayedPolicy.ESCALATE, d.decision);
+    Assert.areEqual('ORDER_CANCELED', d.reasonCode, 'D-091, ahead of HIGH_VALUE');
+  }
+
+  @IsTest
+  static void orderDataStatusWordsMapToTheDeliveryStatus() {
+    Assert.areEqual('DELIVERED', CARES_StolenDelayedOrderSource.deliveryStatus('Delivered'));
+    Assert.areEqual('CANCELED', CARES_StolenDelayedOrderSource.deliveryStatus('Canceled'));
+    for (String onTheWay : new List<String>{ 'Preparing', 'PickedUp', 'Out for Delivery', '' }) {
+      Assert.areEqual('IN_TRANSIT', CARES_StolenDelayedOrderSource.deliveryStatus(onTheWay), onTheWay);
+    }
+  }
+
+  @IsTest
+  static void platformAddsOnlyWhatTheOrderDataLacks() {
+    CARES_StolenDelayedTelemetry t = new CARES_StolenDelayedTelemetry();
+    t.orderFound = true;
+    t.customerMatches = true;
+    t.orderStatus = 'DELIVERED';
+    t.orderTotal = 38.50;
+    t.customerClaimRate = 0.0;
+    t.customerOrderCount = 6;
+    CARES_StolenDelayedTelemetry platform = good();
+    platform.orderTotal = 999;
+    platform.customerClaimRate = 0.9;
+    CARES_StolenDelayedPolicy.enrich(t, platform);
+    Assert.isTrue(t.orderTotal == 38.50, 'Order facts stay from the real order');
+    Assert.isTrue(t.customerClaimRate == 0.0, 'Trust stays from CARES counts (D-090)');
+    Assert.isTrue(t.driverDistanceMeters == 20, 'GPS comes from the platform');
+    Assert.isTrue(t.redispatchEligible);
+  }
+
+  @IsTest
+  static void aPlatformAnswerForAnotherCustomerAddsNothing() {
+    CARES_StolenDelayedTelemetry t = new CARES_StolenDelayedTelemetry();
+    CARES_StolenDelayedTelemetry platform = good();
+    platform.customerMatches = false;
+    CARES_StolenDelayedPolicy.enrich(t, platform);
+    Assert.isNull(t.driverDistanceMeters);
+    CARES_StolenDelayedPolicy.enrich(t, null);
+    Assert.isNull(t.redispatchEligible);
+  }
+
+  @IsTest
+  static void thePlatformIsOffByDefault() {
+    Assert.isFalse(CARES_StolenDelayedPolicy.loadSettings().platformEnabled, 'Off until the Named Credential exists (D-089)');
+  }
+
+  @IsTest
   static void missingTelemetryEscalates() {
     Assert.areEqual('DATA_UNAVAILABLE', decide(null).reasonCode);
   }

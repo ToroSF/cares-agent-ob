@@ -35,6 +35,21 @@ public with sharing class CARES_Refund_IssueResolution {
             description='ISO currency code of the amounts; blank means the org default currency'
         )
         public String currencyCode;
+        @InvocableVariable(
+            label='Driver Compensation'
+            description='Stolen & Delayed driver pay recommendation: PAY_IN_FULL, WITHHOLD_DELIVERY_PAY or HOLD_FOR_REVIEW; blank off the approved-claim path'
+        )
+        public String driverCompensation;
+        @InvocableVariable(
+            label='Restaurant Reimbursement'
+            description='Stolen & Delayed restaurant recommendation: REIMBURSE or NO_CHANGE; blank off the approved-claim path'
+        )
+        public String restaurantReimbursement;
+        @InvocableVariable(
+            label='Loss Absorption'
+            description='True for a Stolen & Delayed loss absorption case'
+        )
+        public Boolean lossAbsorption;
     }
     public class Result {
         @InvocableVariable(
@@ -52,7 +67,16 @@ public with sharing class CARES_Refund_IssueResolution {
             description='Customer-facing confirmation of what was issued'
         )
         public String message;
+        @InvocableVariable(
+            label='Settlement Status'
+            description='Not_Applicable, Recorded or Needs_Review (a person must act on the driver or restaurant)'
+        )
+        public String settlementStatus;
     }
+
+    private static final Set<String> DRIVER_VALUES = new Set<String>{ 'PAY_IN_FULL', 'WITHHOLD_DELIVERY_PAY', 'HOLD_FOR_REVIEW' };
+    private static final Set<String> RESTAURANT_VALUES = new Set<String>{ 'REIMBURSE', 'NO_CHANGE' };
+
     @InvocableMethod(
         label='CARES Refund Issue Resolution'
         description='Issues the confirmed refund (to the original payment method) or store credit for an order'
@@ -138,6 +162,11 @@ public with sharing class CARES_Refund_IssueResolution {
             resolution.Resolution_Type__c = req.resolutionType;
             resolution.Amount__c = amount;
             resolution.Status__c = 'Issued';
+            // The settlement is recorded with the payout, in the same insert (D-092): nothing to fail after the customer is paid
+            resolution.Driver_Compensation__c = DRIVER_VALUES.contains(req.driverCompensation) ? req.driverCompensation : null;
+            resolution.Restaurant_Reimbursement__c = RESTAURANT_VALUES.contains(req.restaurantReimbursement) ? req.restaurantReimbursement : null;
+            resolution.Loss_Absorption__c = req.lossAbsorption == true;
+            resolution.Settlement_Status__c = settlementStatus(req);
 
             resolutionsToInsert.add(resolution);
             insertPositions.add(i);
@@ -154,6 +183,7 @@ public with sharing class CARES_Refund_IssueResolution {
                     Result r = new Result();
                     r.success = true;
                     r.referenceNumber = resolutionsToInsert[j].Id;
+                    r.settlementStatus = resolutionsToInsert[j].Settlement_Status__c;
                     // No timing promise: no Pronto source gives a refund window (D-065)
                     String currencyLabel = String.isBlank(req.currencyCode) ? UserInfo.getDefaultCurrency() : req.currencyCode;
                     r.message = req.resolutionType == 'Store_Credit'
@@ -173,9 +203,28 @@ public with sharing class CARES_Refund_IssueResolution {
         return results;
     }
 
+    // Not_Applicable off the approved-claim path; Needs_Review when a person must act; Recorded otherwise (D-092)
+    @TestVisible
+    private static String settlementStatus(Request req) {
+        Boolean hasDriver = String.isNotBlank(req.driverCompensation);
+        Boolean hasRestaurant = String.isNotBlank(req.restaurantReimbursement);
+        if (!hasDriver && !hasRestaurant && req.lossAbsorption != true) {
+            return 'Not_Applicable';
+        }
+        // An unknown recommendation is left off the record and goes to a person
+        if ((hasDriver && !DRIVER_VALUES.contains(req.driverCompensation)) || (hasRestaurant && !RESTAURANT_VALUES.contains(req.restaurantReimbursement))) {
+            return 'Needs_Review';
+        }
+        if (req.driverCompensation == 'HOLD_FOR_REVIEW' || req.driverCompensation == 'WITHHOLD_DELIVERY_PAY' || req.restaurantReimbursement == 'REIMBURSE' || req.lossAbsorption == true) {
+            return 'Needs_Review';
+        }
+        return 'Recorded';
+    }
+
     private static Result failureResult(String message) {
         Result r = new Result();
         r.success = false;
+        r.settlementStatus = '';
         r.referenceNumber = '';
         r.message = message;
         return r;

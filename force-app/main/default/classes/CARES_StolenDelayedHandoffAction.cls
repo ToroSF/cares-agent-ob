@@ -135,6 +135,9 @@ public with sharing class CARES_StolenDelayedHandoffAction {
     res.driverCompensation = d.driverCompensation;
     res.restaurantReimbursement = d.restaurantReimbursement;
 
+    // Trust events go to the delivery platform, so they are only queued when it is switched on (D-089, SD-G4)
+    Boolean platform = CARES_StolenDelayedPolicy.loadSettings().platformEnabled;
+
     if (res.customerChoice == CHOICE_REDISPATCH) {
       if (!d.redispatchEligible) {
         return status(res, BLOCKED, 'REDISPATCH_NOT_ELIGIBLE');
@@ -145,11 +148,15 @@ public with sharing class CARES_StolenDelayedHandoffAction {
       } catch (CARES_StolenDelayedPlatformClient.PlatformException e) {
         return status(res, FAILED, 'REDISPATCH_FAILED');
       }
-      jobs.add(new CARES_StolenDelayedTrustScoreJob(d.orderId, r.contactId, d));
+      if (platform) {
+        jobs.add(new CARES_StolenDelayedTrustScoreJob(d.orderId, r.contactId, d));
+      }
       return status(res, REDISPATCHED, d.reasonCode);
     }
 
-    jobs.add(new CARES_StolenDelayedTrustScoreJob(d.orderId, r.contactId, d));
+    if (platform) {
+      jobs.add(new CARES_StolenDelayedTrustScoreJob(d.orderId, r.contactId, d));
+    }
     return status(res, READY_FOR_REFUND, d.reasonCode);
   }
 

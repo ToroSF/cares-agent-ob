@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Settlement_Status__c</fullName>
+    <label>Settlement Status</label>
+    <description
+  >Not_Applicable off the approved-claim path; Needs_Review when a person must act on the driver or restaurant (a review Case is opened); Recorded otherwise (D-092).</description>
+    <type>Picklist</type>
+    <required>false</required>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Not_Applicable</fullName>
+                <default>false</default>
+            </value>
+            <value>
+                <fullName>Recorded</fullName>
+                <default>false</default>
+            </value>
+            <value>
+                <fullName>Needs_Review</fullName>
+                <default>false</default>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

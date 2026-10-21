@@ -91,6 +91,28 @@ public with sharing class CARES_OrderData {
         return result;
     }
 
+    // How many of the customer's orders were not canceled (up to the query limit of 50); null when unknown.
+    // Stolen & Delayed uses it for the customer's claim rate (D-090)
+    public static Integer nonCanceledOrderCount(String contactId) {
+        String appId = appAccountId(contactId);
+        if (appId == null) {
+            return null;
+        }
+        List<List<Object>> rows;
+        try {
+            rows = queryRows(appId, '');
+        } catch (Exception e) {
+            return null;
+        }
+        Integer count = 0;
+        for (List<Object> row : rows) {
+            if (text(row, 0) == appId && text(row, 3) != 'Canceled') {
+                count++;
+            }
+        }
+        return count;
+    }
+
     // "Order PR-240828-PQYEQ89, ordered Aug 28, 2024, from Basil & Thyme Cafe, $65.60"
     public static String summary(OrderRow o) {
         String text = 'Order ' + o.orderId;

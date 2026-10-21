@@ -94,6 +94,8 @@ public with sharing class CARES_StolenDelayedPolicy {
     public Decimal excellentDriverMaxNonDeliveryRate = 0.01;
     public Decimal excellentDriverMinDeliveries = 50;
     public Decimal escalationAmountUsd = 100;
+    // The delivery platform only enriches the real order data when it is switched on (D-089)
+    public Boolean platformEnabled = false;
     public List<String> sensitiveKeywords = new List<String>{
       'assault',
       'assaulted',
@@ -178,6 +180,7 @@ public with sharing class CARES_StolenDelayedPolicy {
       r.Escalation_Amount_USD__c,
       s.escalationAmountUsd
     );
+    s.platformEnabled = r.Platform_Enabled__c == true;
     if (String.isNotBlank(r.Sensitive_Keywords__c)) {
       s.sensitiveKeywords = new List<String>();
       for (String k : r.Sensitive_Keywords__c.split('[,\\n]')) {
@@ -190,8 +193,9 @@ public with sharing class CARES_StolenDelayedPolicy {
   }
 
   /**
-   * Full evaluation: local checks first (no callout), then one read from the
-   * delivery platform, then the matrix.
+   * Full evaluation: local checks first (no query), then the real order and the
+   * customer's claims (D-089, D-090), then, when it is switched on, the delivery
+   * platform for what the order data lacks, then the matrix.
    */
   public static Outcome evaluate(
     String contactId,
@@ -211,15 +215,27 @@ public with sharing class CARES_StolenDelayedPolicy {
     if (namedOrder == null) {
       return new Outcome(ORDER_NOT_FOUND, 'INVALID_ORDER_ID');
     }
-    CARES_StolenDelayedTelemetry t;
-    try {
-      t = new CARES_StolenDelayedPlatformClient()
-        .getDeliveryContext(cleanOrderId, contactId);
-    } catch (CARES_StolenDelayedPlatformClient.PlatformException e) {
-      return withOrderId(new Outcome(ESCALATE, 'DATA_UNAVAILABLE'), cleanOrderId);
+    CARES_StolenDelayedOrderSource.Result src = CARES_StolenDelayedOrderSource.load(
+      contactId,
+      cleanOrderId
+    );
+    if (src.telemetry == null) {
+      return withOrderId(new Outcome(src.decision, src.reasonCode), namedOrder);
+    }
+    CARES_StolenDelayedTelemetry t = src.telemetry;
+    if (s.platformEnabled) {
+      try {
+        enrich(
+          t,
+          new CARES_StolenDelayedPlatformClient()
+            .getDeliveryContext(src.orderId, contactId)
+        );
+      } catch (CARES_StolenDelayedPlatformClient.PlatformException e) {
+        // The real order still decides; what the platform would add stays unknown
+      }
     }
     Outcome d = decide(t, s);
-    d.orderId = cleanOrderId;
+    d.orderId = src.orderId;
     return d;
   }
 
@@ -230,6 +246,10 @@ public with sharing class CARES_StolenDelayedPolicy {
     }
     if (t.orderFound != true || t.customerMatches != true) {
       return new Outcome(ORDER_NOT_FOUND, 'ORDER_NOT_FOUND');
+    }
+    // No rule in the matrix fits a canceled order: a person decides (D-091)
+    if (t.orderStatus == CARES_StolenDelayedOrderSource.CANCELED) {
+      return withOrder(new Outcome(ESCALATE, 'ORDER_CANCELED'), t);
     }
     if (
       t.fraudPatternDetected == true ||
@@ -416,6 +436,33 @@ public with sharing class CARES_StolenDelayedPolicy {
     d.currencyIsoCode = t.currencyIsoCode;
     d.redispatchEligible = t.redispatchEligible == true;
     return d;
+  }
+
+  // Copies only what the order data lacks; the order facts and the customer's trust stay from CARES's data
+  @TestVisible
+  private static void enrich(
+    CARES_StolenDelayedTelemetry t,
+    CARES_StolenDelayedTelemetry platform
+  ) {
+    if (
+      platform == null ||
+      platform.orderFound != true ||
+      platform.customerMatches != true
+    ) {
+      return;
+    }
+    t.redispatchEligible = platform.redispatchEligible;
+    t.customerPhotoProvided = platform.customerPhotoProvided;
+    t.driverPhotoProvided = platform.driverPhotoProvided;
+    t.driverDistanceMeters = platform.driverDistanceMeters;
+    t.driverWaitSeconds = platform.driverWaitSeconds;
+    t.driverCallsToCustomer = platform.driverCallsToCustomer;
+    t.driverChatsToCustomer = platform.driverChatsToCustomer;
+    t.driverNonDeliveryRate = platform.driverNonDeliveryRate;
+    t.driverDeliveryCount = platform.driverDeliveryCount;
+    t.fraudPatternDetected = platform.fraudPatternDetected;
+    t.deviceDuplicationDetected = platform.deviceDuplicationDetected;
+    t.addressDuplicationDetected = platform.addressDuplicationDetected;
   }
 
   private static Outcome withOrderId(Outcome d, String orderId) {

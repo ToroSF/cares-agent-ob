@@ -36,7 +36,13 @@ POOLS = {
     "R-CANC": ["Rubia A'Barrow", "Karena Cowburn", "Evanne Fosberry", "Candace Pigford"],
 }
 REVIEW_AT = 3  # risk_review_threshold: this many issue cases go to PATTERN_REVIEW (D-062)
-ESC_SIZE = 41  # Insiders with no cases: FX-CLEAN, then one each for scenarios that issue or create Cases
+ESC_SIZE = 41  # contacts with no cases: FX-CLEAN (an Insider), then one each for scenarios that issue or create Cases
+ESC_LOW_SIZE = 8  # contacts Stolen & Delayed does not trust, for the "never arrived" scenarios that escalate
+# Stolen & Delayed trusts a customer only with this many non-canceled orders and a claim rate at most this
+# (High_Trust_Min_Orders__c and High_Trust_Max_Claim_Rate__c on CARES_Stolen_Delayed_Policy.Default, D-090).
+# Anyone else gets MANUAL_REVIEW. Tier does not count
+HIGH_TRUST_MIN_ORDERS = 5
+HIGH_TRUST_MAX_CLAIM_RATE = Decimal("0.05")
 
 
 def dump(org):
@@ -46,10 +52,15 @@ def dump(org):
 
 
 def resolved(org):
-    """Order ids that already have a CARES_Resolution__c: a second payout on them is refused (D-048)."""
-    p = subprocess.run(["sf", "data", "query", "-q", "SELECT Order_Id__c FROM CARES_Resolution__c", "-o", org, "--json"],
-                       capture_output=True, text=True, cwd=REPO)
-    return {r["Order_Id__c"] for r in json.loads(p.stdout)["result"]["records"]}
+    """Order ids that already have a CARES_Resolution__c: a second payout on them is refused (D-048).
+    Also the resolutions per contact, which Stolen & Delayed counts as claims (D-090)."""
+    p = subprocess.run(["sf", "data", "query", "-q", "SELECT Order_Id__c, Contact__c FROM CARES_Resolution__c",
+                        "-o", org, "--json"], capture_output=True, text=True, cwd=REPO)
+    rows = json.loads(p.stdout)["result"]["records"]
+    claims = {}
+    for r in rows:
+        claims[r["Contact__c"]] = claims.get(r["Contact__c"], 0) + 1
+    return {r["Order_Id__c"] for r in rows}, claims
 
 
 def load(path):
@@ -107,6 +118,7 @@ def fixture(c, orders):
     fx = {"cid": c["cid"], "name": c["name"], "email": c["email"], "tier": c["tier"], "cases": c["cases"],
           "issues": c["issues"], "risk": risk(c["issues"]),
           "latest": latest["id"], "latest_status": latest["st"], "order": dl["id"], "total": str(total),
+          "orders_ok": sum(1 for o in orders if o["st"] != "Canceled"),
           "item_count": len(it), "items_all": ", ".join(names[:-1]) + (" and " if len(names) > 1 else "") + names[-1]}
     for i, (n, p) in enumerate(it[:3], 1):
         fx[f"item{i}"], fx[f"price{i}"] = n, str(p)
@@ -146,9 +158,21 @@ def main():
             out["pools"][pool].append(key)
     used = set(NAMED.values()) | {n for ns in POOLS.values() for n in ns}
     # FX-CLEAN and the ESC pool need no cases and no payout yet, so earlier live runs never leak into them
-    paid = set() if args.from_log else resolved(args.org)
-    esc = [n for n, (app, c) in sorted(by_name.items()) if c["tier"] == "Insider" and c["cases"] == 0
-           and n not in used and app in orders and fixture(c, orders[app])["order"] not in paid][:ESC_SIZE]
+    paid, claims = (set(), {}) if args.from_log else resolved(args.org)
+    def low_trust(app, c):
+        ok = fixture(c, orders[app])["orders_ok"]
+        return ok < HIGH_TRUST_MIN_ORDERS or Decimal(claims.get(c["cid"], 0)) / ok > HIGH_TRUST_MAX_CLAIM_RATE
+
+    fresh = [(n, app, c) for n, (app, c) in sorted(by_name.items()) if c["cases"] == 0 and n not in used
+             and app in orders and fixture(c, orders[app])["order"] not in paid]
+    # ESC: trusted contacts, so a "never arrived" claim is not sent to a person for lack of trust. Any tier:
+    # the offers are computed per tier. FX-CLEAN stays an Insider
+    trusted = [n for n, app, c in fresh if not low_trust(app, c)]
+    clean = next(n for n in trusted if by_name[n][1]["tier"] == "Insider")
+    esc = [clean] + [n for n in trusted if n != clean][:ESC_SIZE - 1]
+    # ESC-LOW: any tier, but Stolen & Delayed does not trust them (too few orders or too many claims),
+    # so a "never arrived" claim always goes to a person. The pools never share a contact
+    esc_low = [n for n, app, c in fresh if low_trust(app, c)][:ESC_LOW_SIZE]
     add("FX-CLEAN", esc[0])  # generic clean contact for scenarios that never issue or escalate
     # NOT_CLEAN but under the review threshold, with an order above the clean cap: shows the standard cap
     low = [n for n, (app, c) in sorted(by_name.items(), key=lambda kv: (kv[1][1]["issues"], kv[0]))
@@ -157,11 +181,11 @@ def main():
            and Decimal(fixture(c, orders[app])["total"]) > POLICY[c["tier"]][1]]
     add("FX-NOTCLEAN", low[0])
     esc = esc[1:]
-    out["pools"]["ESC"] = []
-    for n in esc:
-        key = key_for("E", n)
-        add(key, n)
-        out["pools"]["ESC"].append(key)
+    for pool, names in (("ESC", esc), ("ESC-LOW", esc_low)):
+        out["pools"][pool] = []
+        for n in names:
+            add(key_for("E", n), n)
+            out["pools"][pool].append(key_for("E", n))
     other = out["fixtures"]["FX-OTHER"]
     out["globals"] = {"other_order": other["latest"], "other_email": other["email"], "other_name": other["name"]}
     path = os.path.join(REPO, "scripts", "testing", "fixtures.json")

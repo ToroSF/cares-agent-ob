@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Active_Policies_By_Tier</fullName>
+    <columns>NAME</columns>
+    <columns>Tier__c</columns>
+    <columns>Order_Outcome__c</columns>
+    <columns>Max_Refund__c</columns>
+    <columns>Clean_History_Max_Refund__c</columns>
+    <columns>Store_Credit_Bonus_Pct__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Active__c</field>
+        <operation>equals</operation>
+        <value>1</value>
+    </filters>
+    <label>Active policies by tier</label>
+</ListView>

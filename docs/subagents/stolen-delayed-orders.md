@@ -97,7 +97,19 @@ Refund owner: when `stolen_delayed_handoff_status == "READY_FOR_REFUND"`, refund
 | `classes/CARES_StolenDelayedPolicyTest.cls`, `CARES_StolenDelayedActionsTest.cls`, `CARES_StolenDelayedPlatformMock.cls` | Unit tests and callout mock                                                              |
 | `objects/CARES_Stolen_Delayed_Policy__mdt/**`, `customMetadata/CARES_Stolen_Delayed_Policy.Default.md-meta.xml`          | Thresholds and keyword list                                                              |
 
-## Delivery platform API expected (Named Credential `CARES_Delivery_Platform`)
+## Data sources (D-089)
+
+| Field | Source |
+|---|---|
+| Order found, status, total | `Order__dlm` via `CARES_OrderData` (`Delivered` → DELIVERED, `Canceled` → CANCELED, anything else → IN_TRANSIT) |
+| Currency | The org default currency (`Order__dlm` has no currency column) |
+| Duplicate claim | A `CARES_Resolution__c` row for the order |
+| Customer trust | Claim rate = the customer's `CARES_Resolution__c` rows ÷ their non-canceled orders (D-090) |
+| Photos, GPS, driver, fraud, re-dispatch | The delivery platform, only when `CARES_Stolen_Delayed_Policy__mdt.Platform_Enabled__c` is on; otherwise unknown |
+
+A canceled order goes to a person (`ORDER_CANCELED`, D-091). A customer with no app account link escalates as `NO_ACCOUNT_LINK`.
+
+## Delivery platform API expected (Named Credential `CARES_Delivery_Platform`, optional since D-089)
 
 | Call                                                                | Use                                                                                                          |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -141,9 +153,9 @@ Conversation tests to run after deploy (`sf agent preview`):
 
 | ID    | Gap                                                                                                            | Impact                                                                                           |
 | ----- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| SD-G1 | The delivery platform API, its fields and the Named Credential `CARES_Delivery_Platform` do not exist yet      | Every check escalates (`DATA_UNAVAILABLE`) until built                                           |
+| SD-G1 | The delivery platform API, its fields and the Named Credential `CARES_Delivery_Platform` do not exist yet      | Since D-089 the check reads the real orders; only photos, GPS, driver, fraud, re-dispatch and trust events wait for the platform (`Platform_Enabled__c`) |
 | SD-G2 | No mapping from Salesforce Contact to the platform customer; `ContactId` is sent as `customerRef`              | Platform must accept it or a mapping field is needed                                             |
-| SD-G3 | Refund is still a placeholder and does not read the `stolen_delayed_*` context                                 | Approved claims are not paid yet                                                                 |
+| SD-G3 | ~~Refund is still a placeholder and does not read the `stolen_delayed_*` context~~ Stale: Refund reads it since PR #5 | — |
 | SD-G4 | Trust events are queued when the claim is handed over, before Refund pays. No retry if the platform call fails | A refund that later fails still leaves the claim flagged; a failed flag is only in the debug log |
 | SD-G5 | Re-dispatched orders carry no driver pay recommendation to anyone                                              | Driver pay for re-dispatch cases is not adjusted                                                 |
 | SD-G6 | Keyword list is English only and whole-word; the model may paraphrase the report                               | Misses other languages and euphemisms. Instruction text also tells the model to escalate         |
