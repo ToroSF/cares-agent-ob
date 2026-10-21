@@ -66,3 +66,7 @@ Where the suite lives: the baseline batch (142 scenarios) is in `.claude/skills/
 | | Policy alignment branch | Golden set (25 questions, [grounding/golden-set.md](grounding/golden-set.md)) | `OPEN`: the library is ready; needs the branch deployed |
 | | Policy alignment branch | P12 Pronto policy, B-PO-01 to B-PO-16 | `OPEN`: Tier S can run after a deploy of the branch; nothing deployed |
 | | Policy alignment branch | Escalation Flow: create, then reuse the open case; Type, Priority, queue set | `OPEN`: needs deploy (B-PO-14) |
+| 2026-10-21 | Risk Detection, Escalate to Human (D-077) | Dry-run deploy of `Case.CARES_Escalation__c`, both Flows and `CARES_Escalation_Access`, `--test-level NoTestRun`. Backfill selector checked read-only (profile rule and Subject rule) | Pass. Both rules match the same 143 cases. Nothing deployed |
+| | Risk Detection (D-077) | Happy path: contact with only CARES escalation cases in the window | `OPEN`: expect `CLEAN` / 0 after deploy and backfill (today `NOT_CLEAN`, 3 or more) |
+| | Risk Detection (D-077) | Edge case: contact with 3 real issue cases | `OPEN`: expect still `NOT_CLEAN` / 3 and `PATTERN_REVIEW` |
+| | Risk Detection (D-077) | Adversarial: escalate the same contact 3 times, then ask for a refund | `OPEN`: expect an offer, not `PATTERN_REVIEW`. Then re-run B-RD-* |
