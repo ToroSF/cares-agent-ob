@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description
+  >One evolving row per customer, written by CsatRatingSaver from Experience Rating's own sentiment read of the conversation, read by Risk Detection before it hands off to Refund. Has_Open_Context__c is the "case == 1 / case == 0" signal: true only while there is a recent, genuine negative sentiment on file. Mock data for this project; there is no real Pronto sentiment feed (D-083).</description>
+    <label>CARES Customer Context</label>
+    <pluralLabel>CARES Customer Contexts</pluralLabel>
+    <nameField>
+        <label>CARES Customer Context Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>CTX-{00000}</displayFormat>
+    </nameField>
+    <sharingModel>Private</sharingModel>
+</CustomObject>

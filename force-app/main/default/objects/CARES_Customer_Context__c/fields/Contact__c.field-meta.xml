@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Contact__c</fullName>
+    <label>Contact</label>
+    <description
+  >The customer this context row is about. One row per contact: CsatRatingSaver upserts by this field, it never inserts a second row for the same contact.</description>
+    <type>Lookup</type>
+    <referenceTo>Contact</referenceTo>
+    <relationshipLabel>CARES Customer Contexts</relationshipLabel>
+    <relationshipName>CARES_Customer_Contexts</relationshipName>
+    <required>true</required>
+    <deleteConstraint>Cascade</deleteConstraint>
+</CustomField>

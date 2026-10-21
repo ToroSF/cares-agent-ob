@@ -5,6 +5,16 @@ changed and why, so collaborators working this sub-agent on its own branch
 can see what shifted without re-reading the whole `.agent` file. The full
 baseline this diffs against is [`experience-rating-v1.md`](experience-rating-v1.md).
 
+## v1.5 — Sentiment context for Risk Detection, mock data (2026-10-21, `feature/experience-rating-learning`)
+
+See D-095 (also touches Risk Detection, Refund money, and Escalate to Human's case summary, all flagged for sign-off per `CONTRIBUTING.md`). Local edit only; not validated against an org, not deployed.
+
+- **A new sentiment slot, filled by the same model turn as the summary.** `save_csat_rating`'s two reasoning actions (`thumbs_up`/`thumbs_down`) now also pass `sentiment` (POSITIVE/NEUTRAL/NEGATIVE/FRUSTRATED), the model's own read of the _whole conversation_, not just the thumbs choice — a thumbs-up customer who was clearly irritated earlier is not POSITIVE just because they ended on good terms. No second question to the customer. Same anti-dictation guardrail as `comment`: never let the customer pick their own label.
+- **`CsatRatingSaver` now upserts a per-contact `CARES_Customer_Context__c` row** in the same call that saves the `CSAT_Rating__c`, after that insert succeeds. `Has_Open_Context__c` (the "case == 1 / case == 0" signal Risk Detection reads) is true only for NEGATIVE/FRUSTRATED — schema-enforced, not just Apex-validated. If the context upsert fails, the rating save itself is unaffected (enrichment, not the record of truth).
+- **This finally closes the gap from `experience-rating-v1.md`'s original design note**: "Risk Detection is expected to consume this history later." It never did, until now — see `risk-detection-node-spec.md`'s new "Customer context" section for how Risk Detection reads it, and why `PATTERN_REVIEW` always wins first.
+- **Mock data, explicitly.** There is no real Pronto sentiment feed; `scripts/apex/seed-customer-context.apex` seeds the two scenarios Testing Center needs (a `CLEAN` contact with genuine frustration, and the `PATTERN_REVIEW` contact, to prove the abuse gate is never even reached).
+- **Not re-run against Testing Center or deployed.** New scenarios B-ER-14, B-ER-15 (this subagent), B-RD-15/16/17 (Risk Detection) — see `personas.md`.
+
 ## v1.4 — Typed-reply mapping, no mid-task jump (2026-10-21, `fix/v6-rating-polish`)
 
 See D-078 and D-079 (the latter on the router, not this subagent's own block). Local edit only; not validated against an org, not deployed.

@@ -1,10 +1,22 @@
 /**
  * Invocable action backing the Experience Rating sub-agent's "save_csat_rating"
- * action. Persists one CSAT_Rating__c record per resolved CARES interaction.
+ * action. Persists one CSAT_Rating__c record per resolved CARES interaction, and
+ * upserts the customer's CARES_Customer_Context__c row from the same sentiment
+ * read (D-083): Risk Detection consumes that row before handing off to Refund.
  *
  * target: "apex://CsatRatingSaver"
  */
 public with sharing class CsatRatingSaver {
+  private static final Set<String> VALID_SENTIMENTS = new Set<String>{
+    'POSITIVE',
+    'NEUTRAL',
+    'NEGATIVE',
+    'FRUSTRATED'
+  };
+  private static final Set<String> OPEN_CONTEXT_SENTIMENTS = new Set<String>{
+    'NEGATIVE',
+    'FRUSTRATED'
+  };
   @InvocableMethod(
     label='Save CSAT Rating'
     description='Saves a customer satisfaction rating (1-5, mapped from a thumbs up/down choice) and the agent\'s own written summary for a resolved CARES interaction, linked to the customer Contact.'
@@ -38,7 +50,9 @@ public with sharing class CsatRatingSaver {
         );
       } catch (Exception e) {
         for (Integer i = 0; i < requests.size(); i++) {
-          results[i] = errorResult('Failed to read the customer: ' + e.getMessage());
+          results[i] = errorResult(
+            'Failed to read the customer: ' + e.getMessage()
+          );
         }
         return results;
       }
@@ -46,6 +60,8 @@ public with sharing class CsatRatingSaver {
 
     List<CSAT_Rating__c> ratingsToInsert = new List<CSAT_Rating__c>();
     List<Integer> insertPositions = new List<Integer>();
+    List<Id> insertContactIds = new List<Id>();
+    List<String> insertSentiments = new List<String>();
 
     for (Integer i = 0; i < requests.size(); i++) {
       Request req = requests[i];
@@ -60,6 +76,15 @@ public with sharing class CsatRatingSaver {
         results[i] = errorResult('Score must be between 1 and 5.');
         continue;
       }
+      if (
+        String.isBlank(req.sentiment) ||
+        !VALID_SENTIMENTS.contains(req.sentiment)
+      ) {
+        results[i] = errorResult(
+          'Sentiment must be POSITIVE, NEUTRAL, NEGATIVE or FRUSTRATED.'
+        );
+        continue;
+      }
 
       CSAT_Rating__c rating = new CSAT_Rating__c();
       rating.Contact__c = relatedContact.Id;
@@ -70,6 +95,8 @@ public with sharing class CsatRatingSaver {
 
       ratingsToInsert.add(rating);
       insertPositions.add(i);
+      insertContactIds.add(relatedContact.Id);
+      insertSentiments.add(req.sentiment);
     }
 
     if (!ratingsToInsert.isEmpty()) {
@@ -81,6 +108,11 @@ public with sharing class CsatRatingSaver {
           r.ratingId = ratingsToInsert[j].Id;
           results[insertPositions[j]] = r;
         }
+        upsertCustomerContext(
+          insertContactIds,
+          insertSentiments,
+          ratingsToInsert
+        );
       } catch (Exception e) {
         for (Integer j = 0; j < ratingsToInsert.size(); j++) {
           results[insertPositions[j]] = errorResult(
@@ -91,6 +123,47 @@ public with sharing class CsatRatingSaver {
     }
 
     return results;
+  }
+
+  // The context row is an enrichment, not the record of truth (the CSAT_Rating__c
+  // insert above already succeeded). A failure here never fails the rating save.
+  private static void upsertCustomerContext(
+    List<Id> contactIds,
+    List<String> sentiments,
+    List<CSAT_Rating__c> insertedRatings
+  ) {
+    try {
+      Map<Id, CARES_Customer_Context__c> existingByContact = new Map<Id, CARES_Customer_Context__c>();
+      for (CARES_Customer_Context__c ctx : [
+        SELECT Id, Contact__c
+        FROM CARES_Customer_Context__c
+        WHERE Contact__c IN :contactIds
+        WITH USER_MODE
+      ]) {
+        existingByContact.put(ctx.Contact__c, ctx);
+      }
+
+      List<CARES_Customer_Context__c> toUpsert = new List<CARES_Customer_Context__c>();
+      for (Integer i = 0; i < contactIds.size(); i++) {
+        CARES_Customer_Context__c ctx = existingByContact.get(contactIds[i]);
+        if (ctx == null) {
+          ctx = new CARES_Customer_Context__c(Contact__c = contactIds[i]);
+        }
+        ctx.Sentiment__c = sentiments[i];
+        ctx.Has_Open_Context__c = OPEN_CONTEXT_SENTIMENTS.contains(
+          sentiments[i]
+        );
+        ctx.Last_Interaction_Date__c = Datetime.now();
+        ctx.Source_Rating__c = insertedRatings[i].Id;
+        toUpsert.add(ctx);
+      }
+      upsert as user toUpsert;
+    } catch (Exception e) {
+      System.debug(
+        LoggingLevel.WARN,
+        'Failed to upsert CARES_Customer_Context__c: ' + e.getMessage()
+      );
+    }
   }
 
   // Blank or malformed ids become null instead of throwing
@@ -126,6 +199,13 @@ public with sharing class CsatRatingSaver {
       required=false
     )
     public String comment;
+
+    @InvocableVariable(
+      label='Sentiment'
+      description='The agent\'s own assessment of the customer\'s sentiment across the whole conversation: POSITIVE, NEUTRAL, NEGATIVE or FRUSTRATED. Never dictated by the customer.'
+      required=true
+    )
+    public String sentiment;
   }
 
   public class Result {

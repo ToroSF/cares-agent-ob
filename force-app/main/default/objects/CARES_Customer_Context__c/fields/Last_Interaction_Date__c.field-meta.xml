@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Last_Interaction_Date__c</fullName>
+    <label>Last Interaction Date</label>
+    <description
+  >Server-set when this row was last written. CARES_Get_Customer_Context only returns Has_Open_Context__c = true when this date is inside the lookback window, so an old context ages out without any batch job.</description>
+    <type>DateTime</type>
+    <required>true</required>
+</CustomField>

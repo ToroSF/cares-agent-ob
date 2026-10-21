@@ -36,6 +36,11 @@ POOLS = {
     "R-CANC": ["Rubia A'Barrow", "Karena Cowburn", "Evanne Fosberry", "Candace Pigford"],
 }
 REVIEW_AT = 3  # risk_review_threshold: this many issue cases go to PATTERN_REVIEW (D-062)
+RETENTION_BONUS_PCT = 5  # Retention_Bonus_Pct__c seeded by seed-refund-tiers.apex (D-083, mock data, [$])
+# Mock sentiment context (D-083): contact name => Has_Open_Context__c is true. These are the two
+# contacts scripts/apex/seed-customer-context.apex seeds. Risk status still decides eligibility:
+# a PATTERN_REVIEW contact here (Alex Morgan) never reaches the context read at all.
+CONTEXT_CONTACTS = {"Boyce Antrag", "Alex Morgan"}
 ESC_SIZE = 41  # contacts with no cases: FX-CLEAN (an Insider), then one each for scenarios that issue or create Cases
 ESC_LOW_SIZE = 8  # contacts Stolen & Delayed does not trust, for the "never arrived" scenarios that escalate
 # Stolen & Delayed trusts a customer only with this many non-canceled orders and a claim rate at most this
@@ -94,9 +99,14 @@ def items(order):
     return list(zip(names, prices)), total
 
 
-def offer(tier, affected, total, clean=False):
+def offer(tier, affected, total, clean=False, retention_eligible=False):
     mx, cmx, bonus = POLICY[tier]
     refund = min(affected, Decimal(cmx if clean else mx), total).quantize(Decimal("0.01"))
+    # Retention bonus (D-083, mock data): a modest extra on the already-capped standard refund,
+    # applied only when Risk Detection signals genuine recent frustration for a customer not
+    # already NOT_CLEAN by pattern. Mirrors CARES_Refund_CalculateOffer.cls exactly.
+    if retention_eligible:
+        refund = (refund * (1 + Decimal(RETENTION_BONUS_PCT) / 100)).quantize(Decimal("0.01"))
     credit = (refund * (1 + Decimal(bonus) / 100)).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
     return str(refund), str(credit)
 
@@ -124,12 +134,17 @@ def fixture(c, orders):
         fx[f"item{i}"], fx[f"price{i}"] = n, str(p)
     # Since G-084 was fixed the Risk Flow works, so a contact with no issue cases gets the clean-history cap
     clean = c["issues"] == 0
-    fx["offer_one"], fx["credit_one"] = offer(c["tier"], it[0][1], total, clean)
+    # Retention bonus (D-083): only when the contact has a seeded context row AND is not NOT_CLEAN
+    # by pattern - "pay to keep a customer, not to have one". Mirrors Risk Detection's gate exactly.
+    fx["has_context"] = c["name"] in CONTEXT_CONTACTS
+    retention_eligible = fx["has_context"] and fx["risk"] != "NOT_CLEAN" and fx["risk"] != "PATTERN_REVIEW"
+    fx["retention_eligible"] = retention_eligible
+    fx["offer_one"], fx["credit_one"] = offer(c["tier"], it[0][1], total, clean, retention_eligible)
     if len(it) > 1:
-        fx["offer_two"], fx["credit_two"] = offer(c["tier"], it[0][1] + it[1][1], total, clean)
-    fx["offer_all"], fx["credit_all"] = offer(c["tier"], total, total, clean)
-    fx["offer_all_clean"], fx["credit_all_clean"] = offer(c["tier"], total, total, clean=True)
-    fx["offer_all_std"], fx["credit_all_std"] = offer(c["tier"], total, total)
+        fx["offer_two"], fx["credit_two"] = offer(c["tier"], it[0][1] + it[1][1], total, clean, retention_eligible)
+    fx["offer_all"], fx["credit_all"] = offer(c["tier"], total, total, clean, retention_eligible)
+    fx["offer_all_clean"], fx["credit_all_clean"] = offer(c["tier"], total, total, clean=True, retention_eligible=retention_eligible)
+    fx["offer_all_std"], fx["credit_all_std"] = offer(c["tier"], total, total, retention_eligible=retention_eligible)
     return fx
 
 

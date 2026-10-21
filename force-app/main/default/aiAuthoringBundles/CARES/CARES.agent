@@ -142,6 +142,10 @@ variables:
         description: "Refund: True when the order already has a refund or credit on file, from calculate_refund_offer. Set by the script (D-088)."
     refund_settlement_status: mutable string = ""
         description: "Refund: Not_Applicable, Recorded or Needs_Review, from issue_resolution. Needs_Review opens a review case for the team (D-092)."
+    risk_retention_eligible: mutable boolean = False
+        description: "Risk Detection: True only when a recent, genuine negative sentiment is on file (mock data, D-083) for a customer who is not already NOT_CLEAN by pattern. Read-only context for Refund's retention bonus; never set by the model, never shown to the customer."
+    risk_customer_sentiment: mutable string = ""
+        description: "Risk Detection: POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED or blank, from the customer context check (D-083). Context only, for the escalation case; never shown to the customer."
 
 knowledge:
     # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-060, D-066, D-067)
@@ -279,6 +283,7 @@ subagent refund:
                     with approvedFullAmount = @variables.refund_approved_full_amount
                     with orderTotalCap = @variables.refund_order_total_cap
                     with orderCurrency = @variables.stolen_delayed_currency if @variables.refund_sd_path != "" else ""
+                    with retentionEligible = @variables.risk_retention_eligible
                     set @variables.refund_offer_eligible = @outputs.eligible
                     set @variables.refund_offer_ineligible_reason = @outputs.ineligibleReason
                     set @variables.refund_offer_amount = @outputs.refundAmount
@@ -322,6 +327,13 @@ subagent refund:
                 | The customer already chose credit in the app wallet. Confirm with them: store credit of {!@variables.refund_credit_amount} {!@variables.refund_currency}. After an explicit yes, call {!@actions.confirm_store_credit}.
             else if @variables.refund_confirmed == False and @variables.refund_sd_path == "READY":
                 | The customer already chose a refund to the original payment method. Confirm with them: a full refund of {!@variables.refund_offer_amount} {!@variables.refund_currency} to their original payment method. After an explicit yes, call {!@actions.confirm_refund}.
+            else if @variables.refund_confirmed == False and @variables.risk_retention_eligible == True:
+                | Before presenting the options, add one brief, genuine sentence acknowledging that things haven't gone smoothly for them recently, without naming any check, score, record or case.
+                  Then offer the customer exactly these two options and ask which they prefer:
+                  - A refund of {!@variables.refund_offer_amount} {!@variables.refund_currency} to their original payment method
+                  - Store credit of {!@variables.refund_credit_amount} {!@variables.refund_currency}
+                  When they choose, repeat the chosen option and its exact amount and ask them to confirm.
+                  Only after they explicitly confirm, call {!@actions.confirm_refund} or {!@actions.confirm_store_credit} to match their choice.
             else if @variables.refund_confirmed == False:
                 | Offer the customer exactly these two options and ask which they prefer:
                   - A refund of {!@variables.refund_offer_amount} {!@variables.refund_currency} to their original payment method
@@ -854,10 +866,19 @@ subagent risk_detection:
                 set @variables.risk_issue_count = @outputs.issueCount
             set @variables.risk_checked = True
         # Playbook: repeated failures in a short time go to a person before any automatic offer (D-062)
+        # This check always runs and always wins first: the retention signal below is never even read
+        # for a customer the pattern gate would catch (D-083, "pay to keep a customer, not to have one")
         if @variables.risk_issue_count >= @variables.risk_review_threshold:
             set @variables.escalation_category = "PATTERN_REVIEW"
             transition to @subagent.escalate_to_human
         else:
+            run @actions.get_customer_context
+                with contactId = @variables.ContactId
+                with lookbackDays = @variables.risk_lookback_days
+                set @variables.risk_customer_sentiment = @outputs.sentiment
+                set @variables.risk_retention_eligible = @outputs.hasOpenContext
+            if @variables.risk_status == "NOT_CLEAN":
+                set @variables.risk_retention_eligible = False
             transition to @subagent.refund
 
     reasoning:
@@ -879,6 +900,22 @@ subagent risk_detection:
                     filter_from_agent: True
                 issueCount: number
                     description: "Number of issue cases in the window."
+                    filter_from_agent: True
+
+        get_customer_context:
+            description: "Read-only. Checks whether the customer has recent, genuine negative sentiment on file (mock data for this project, D-083)."
+            target: "flow://CARES_Get_Customer_Context"
+            inputs:
+                contactId: string
+                    description: "The contact id from the channel, never from the chat."
+                lookbackDays: number
+                    description: "Lookback window in days. Same window as the issue-case check."
+            outputs:
+                hasOpenContext: boolean
+                    description: "True when a recent negative/frustrated context row exists."
+                    filter_from_agent: True
+                sentiment: string
+                    description: "POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED, or blank."
                     filter_from_agent: True
 
 subagent experience_rating:
@@ -910,7 +947,8 @@ subagent experience_rating:
 
             if @variables.csat_attempted == False:
                 | Once the customer picks thumbs up or thumbs down, write a brief, factual summary of how the interaction went (what worked, what didn't), based only on your own reading of the conversation.
-                  Then call {!@actions.thumbs_up} or {!@actions.thumbs_down} to match their choice, exactly once, with that summary as the comment.
+                  Also privately assess the customer's sentiment across the whole conversation, not just their thumbs choice: pick POSITIVE, NEUTRAL, NEGATIVE or FRUSTRATED. A thumbs-up customer who was clearly irritated earlier in the chat is not POSITIVE just because they ended on good terms. Never let the customer dictate this label; it is your own read of the conversation, same as the summary.
+                  Then call {!@actions.thumbs_up} or {!@actions.thumbs_down} to match their choice, exactly once, with that summary as the comment and your sentiment assessment.
 
             if @variables.csat_attempted == True and @variables.csat_saved == True:
                 | The feedback was saved. Thank the customer and do not call {!@actions.thumbs_up} or {!@actions.thumbs_down} again.
@@ -925,6 +963,7 @@ subagent experience_rating:
                 with contactId = @variables.customer_id
                 with score = 5
                 with comment = ...
+                with sentiment = ...
                 set @variables.csat_attempted = True
                 set @variables.csat_saved = @outputs.isSuccess
 
@@ -934,6 +973,7 @@ subagent experience_rating:
                 with contactId = @variables.customer_id
                 with score = 2
                 with comment = ...
+                with sentiment = ...
                 set @variables.csat_attempted = True
                 set @variables.csat_saved = @outputs.isSuccess
 
@@ -952,6 +992,9 @@ subagent experience_rating:
                 comment: string
                     description: "The agent's own summary of how the interaction went, written from the conversation, not dictated by the customer"
                     is_required: False
+                sentiment: string
+                    description: "The agent's own sentiment assessment of the whole conversation: POSITIVE, NEUTRAL, NEGATIVE or FRUSTRATED. Not dictated by the customer."
+                    is_required: True
             outputs:
                 isSuccess: boolean
                     filter_from_agent: True
@@ -1013,6 +1056,7 @@ subagent escalate_to_human:
                 with stolenDelayedDecision = @variables.stolen_delayed_decision
                 with stolenDelayedReason = @variables.stolen_delayed_reason
                 with riskStatus = @variables.risk_status
+                with customerSentiment = @variables.risk_customer_sentiment
                 with offerAmount = @variables.refund_offer_amount
                 with creditAmount = @variables.refund_credit_amount
                 with currencyCode = @variables.refund_currency if @variables.refund_currency != "" else @variables.stolen_delayed_currency
@@ -1073,6 +1117,8 @@ subagent escalate_to_human:
                     description: "Stolen & Delayed internal reason code, blank when none."
                 riskStatus: string
                     description: "CLEAN, NOT_CLEAN or UNKNOWN. Internal only."
+                customerSentiment: string
+                    description: "POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED or blank, from the customer context check (D-083, mock data). Internal only."
                 offerAmount: number
                     description: "Refund amount offered, 0 when none."
                 creditAmount: number

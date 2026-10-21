@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Open_Context_Requires_Negative_Sentiment</fullName>
+    <active>true</active>
+    <description
+  >"case == 1" can never be set alongside a positive or neutral sentiment (D-083). Enforced at the schema level, not just in CsatRatingSaver.</description>
+    <errorConditionFormula
+  >AND(Has_Open_Context__c = true, NOT(ISPICKVAL(Sentiment__c, &quot;NEGATIVE&quot;)), NOT(ISPICKVAL(Sentiment__c, &quot;FRUSTRATED&quot;)))</errorConditionFormula>
+    <errorDisplayField>Has_Open_Context__c</errorDisplayField>
+    <errorMessage
+  >Has Open Context can only be true when Sentiment is NEGATIVE or FRUSTRATED.</errorMessage>
+</ValidationRule>
