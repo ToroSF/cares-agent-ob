@@ -130,6 +130,13 @@ Decisions D-083 to D-087, gaps G-086, G-082, G-068. Design: [subagents/escalate-
   - B-SM-01 (2): the greeting said "How can I assist you" instead of "help"; the regex wants the word "help". Wording only.
   - All 12 ERRORs are in run 2 from 17:36 UTC: "something has gone wrong" for every agent in the org, CARES v5 included (G-090, third time today). The 2 BLOCKED ran out of fresh escalation contacts (pool `ESC`).
 
+**Done 2026-10-21 (Slack alert on, G-103):**
+- Slack Workflow Builder workflow "CARES Escalation Alert": starts from a webhook with the 8 text variables, posts to the private channel `#cares-escalation`. Only workflow managers can find or copy it.
+- Named Credential `CARES_Slack` (legacy, Anonymous, no authentication) created by hand with the webhook URL. The URL is not in the repo (D-087).
+- `CARES_Alert_Setting.Default` Mode set to `WORKFLOW` (deploy `0AfjV000004b7ZlSAI`, only this record).
+- Test: B-ES-01 once on the draft with live actions, PASS. Case 00001271 has `Bell: Sent | Slack: Sent`.
+- To stop Slack alerts: set Mode `OFF` on `Default`. The bell keeps working.
+
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).

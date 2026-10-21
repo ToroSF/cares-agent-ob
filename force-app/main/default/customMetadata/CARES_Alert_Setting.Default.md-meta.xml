@@ -16,6 +16,6 @@
     </values>
     <values>
         <field>Slack_Mode__c</field>
-        <value xsi:type="xsd:string">OFF</value>
+        <value xsi:type="xsd:string">WORKFLOW</value>
     </values>
 </CustomMetadata>
