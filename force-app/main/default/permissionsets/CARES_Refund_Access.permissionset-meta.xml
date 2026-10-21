@@ -56,37 +56,7 @@
         <editable>false</editable>
     </fieldPermissions>
     <fieldPermissions>
-        <field>CARES_Tier__c.Rank__c</field>
-        <readable>true</readable>
-        <editable>false</editable>
-    </fieldPermissions>
-    <fieldPermissions>
         <field>CARES_Tier__c.Active__c</field>
-        <readable>true</readable>
-        <editable>false</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Refund_Policy__c.Tier__c</field>
-        <readable>true</readable>
-        <editable>false</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Refund_Policy__c.Order_Outcome__c</field>
-        <readable>true</readable>
-        <editable>false</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Refund_Policy__c.Max_Refund__c</field>
-        <readable>true</readable>
-        <editable>false</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Refund_Policy__c.Clean_History_Max_Refund__c</field>
-        <readable>true</readable>
-        <editable>false</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Refund_Policy__c.Store_Credit_Bonus_Pct__c</field>
         <readable>true</readable>
         <editable>false</editable>
     </fieldPermissions>
@@ -96,27 +66,7 @@
         <editable>false</editable>
     </fieldPermissions>
     <fieldPermissions>
-        <field>CARES_Resolution__c.Contact__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Resolution__c.Order_Id__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
         <field>CARES_Resolution__c.Order_Outcome__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Resolution__c.Resolution_Type__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Resolution__c.Amount__c</field>
         <readable>true</readable>
         <editable>true</editable>
     </fieldPermissions>
@@ -127,11 +77,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <field>CARES_Resolution__c.Risk_Status__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Resolution__c.Status__c</field>
         <readable>true</readable>
         <editable>true</editable>
     </fieldPermissions>

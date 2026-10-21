@@ -7,9 +7,9 @@
  * stub line-item list the baseline batch assumes in Tier L (personas.md). When a
  * stub is replaced by real logic, update the stub-value tests in the same PR.
  *
- * STATIC REVIEW ONLY IN THIS PASS: these tests have not been run against an org
- * (no org available in this worktree). They are reviewed by eye for @IsTest
- * correctness, assertion shape and DML paths, not executed.
+ * First run in an org: check-only validation on 2026-10-21. Test data is written
+ * in SYSTEM_MODE because the user running the tests has no access to the new
+ * fields; the actions run as refundUser(), like the agent user does.
  */
 @IsTest
 private class CARES_Refund_ActionsTest {
@@ -33,7 +33,7 @@ private class CARES_Refund_ActionsTest {
 
     private static CARES_Tier__c makeTier(String name, Decimal rank, Boolean active) {
         CARES_Tier__c t = new CARES_Tier__c(Name = name, Rank__c = rank, Active__c = active);
-        insert t;
+        Database.insert(t, AccessLevel.SYSTEM_MODE);
         return t;
     }
 
@@ -53,11 +53,17 @@ private class CARES_Refund_ActionsTest {
             Store_Credit_Bonus_Pct__c = bonusPct,
             Active__c = active
         );
-        insert p;
+        Database.insert(p, AccessLevel.SYSTEM_MODE);
         return p;
     }
 
+    private static User cachedRefundUser;
+
+    // One user per test: offer() can be called more than once, and usernames must be unique
     private static User refundUser() {
+        if (cachedRefundUser != null) {
+            return cachedRefundUser;
+        }
         Profile p = [SELECT Id FROM Profile WHERE Name = 'System Administrator' LIMIT 1];
         User u = new User(
             Alias = 'refndt',
@@ -73,6 +79,7 @@ private class CARES_Refund_ActionsTest {
         insert u;
         PermissionSet ps = [SELECT Id FROM PermissionSet WHERE Name = 'CARES_Refund_Access' LIMIT 1];
         insert new PermissionSetAssignment(AssigneeId = u.Id, PermissionSetId = ps.Id);
+        cachedRefundUser = u;
         return u;
     }
 
@@ -104,7 +111,11 @@ private class CARES_Refund_ActionsTest {
         req.approvedFullAmount = approvedFullAmount;
         req.orderTotalCap = orderTotalCap;
         req.orderCurrency = orderCurrency;
-        return CARES_Refund_CalculateOffer.execute(new List<CARES_Refund_CalculateOffer.Request>{ req })[0];
+        CARES_Refund_CalculateOffer.Result r;
+        System.runAs(refundUser()) {
+            r = CARES_Refund_CalculateOffer.execute(new List<CARES_Refund_CalculateOffer.Request>{ req })[0];
+        }
+        return r;
     }
 
     private static CARES_Refund_IssueResolution.Result issue(
@@ -222,7 +233,7 @@ private class CARES_Refund_ActionsTest {
         makePolicy(gold, 'Wrong_Missing_Items', 50.00, 75.00, 25, true);
         Contact c = makeContact();
         c.CARES_Tier__c = gold.Id;
-        update c;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
 
         CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'NOT_CLEAN', 14.00, 0, 0, '');
         System.assertEquals(true, r.eligible);
@@ -238,7 +249,7 @@ private class CARES_Refund_ActionsTest {
         makePolicy(tier, 'Quality_Issue', 10.00, 20.00, 15, true);
         Contact c = makeContact();
         c.CARES_Tier__c = tier.Id;
-        update c;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
 
         CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Quality_Issue', 'NOT_CLEAN', 35.00, 0, 0, '');
         System.assertEquals(10.00, r.refundAmount, 'Standard ceiling caps a high affected value');
@@ -250,7 +261,7 @@ private class CARES_Refund_ActionsTest {
         makePolicy(tier, 'Quality_Issue', 10.00, 20.00, 15, true);
         Contact c = makeContact();
         c.CARES_Tier__c = tier.Id;
-        update c;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
 
         CARES_Refund_CalculateOffer.Result clean = offer(c.Id, 'Quality_Issue', 'CLEAN', 35.00, 0, 0, '');
         System.assertEquals(20.00, clean.refundAmount, 'CLEAN unlocks the clean-history ceiling (D-025)');
@@ -280,7 +291,7 @@ private class CARES_Refund_ActionsTest {
         makePolicy(bronze, 'Wrong_Missing_Items', 9.00, 11.00, 10, true);
         Contact c = makeContact();
         c.CARES_Tier__c = oldTier.Id;
-        update c;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
 
         CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'NOT_CLEAN', 5.00, 0, 0, '');
         System.assertEquals('Bronze', r.tierName, 'An inactive tier on the Contact is ignored');
@@ -303,7 +314,7 @@ private class CARES_Refund_ActionsTest {
         // No policy row for Wrong_Missing_Items on this tier
         Contact c = makeContact();
         c.CARES_Tier__c = tier.Id;
-        update c;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
 
         CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'NOT_CLEAN', 5.00, 0, 0, '');
         System.assertEquals(false, r.eligible);
@@ -316,7 +327,7 @@ private class CARES_Refund_ActionsTest {
         makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 25, false);
         Contact c = makeContact();
         c.CARES_Tier__c = tier.Id;
-        update c;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
 
         CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'NOT_CLEAN', 5.00, 0, 0, '');
         System.assertEquals(false, r.eligible, 'An inactive policy row must not be matched');
@@ -328,7 +339,7 @@ private class CARES_Refund_ActionsTest {
         makePolicy(tier, 'Stolen', 5.00, 5.00, 10, true);
         Contact c = makeContact();
         c.CARES_Tier__c = tier.Id;
-        update c;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
 
         CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Stolen', 'UNKNOWN', 0, 25.00, 25.00, 'EUR');
         System.assertEquals(25.00, r.refundAmount, 'READY path bypasses the small policy ceiling (D-021/D-028)');
@@ -342,7 +353,7 @@ private class CARES_Refund_ActionsTest {
         makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
         Contact c = makeContact();
         c.CARES_Tier__c = tier.Id;
-        update c;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
 
         CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'NOT_CLEAN', 40.00, 0, 10.00, '');
         System.assertEquals(10.00, r.refundAmount, 'Order total cap applies even under the policy ceiling');
@@ -358,7 +369,7 @@ private class CARES_Refund_ActionsTest {
         makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
         Contact c = makeContact();
         c.CARES_Tier__c = tier.Id;
-        update c;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
 
         CARES_Refund_CalculateOffer.Request a = new CARES_Refund_CalculateOffer.Request();
         a.contactId = c.Id;
@@ -371,9 +382,10 @@ private class CARES_Refund_ActionsTest {
         b.orderOutcome = 'Stolen';
         b.riskStatus = 'UNKNOWN';
         b.approvedFullAmount = 30.00;
-        List<CARES_Refund_CalculateOffer.Result> rs = CARES_Refund_CalculateOffer.execute(
-            new List<CARES_Refund_CalculateOffer.Request>{ a, b }
-        );
+        List<CARES_Refund_CalculateOffer.Result> rs;
+        System.runAs(refundUser()) {
+            rs = CARES_Refund_CalculateOffer.execute(new List<CARES_Refund_CalculateOffer.Request>{ a, b });
+        }
         System.assertEquals(2, rs.size());
         System.assertEquals(5.00, rs[0].refundAmount);
         System.assertEquals(30.00, rs[1].refundAmount);

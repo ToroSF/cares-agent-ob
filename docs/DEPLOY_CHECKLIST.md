@@ -2,7 +2,7 @@
 
 What the person who deploys must do after this branch is merged into `main`. Follows the order in [CONTRIBUTING.md](CONTRIBUTING.md): merge → validate → one person deploys → tests → that person publishes and activates. Written 2026-10-20 by @Mateus-Goes. Nothing here has been deployed yet.
 
-**Updated 2026-10-21:** this branch now includes `main` after PR #18 (audit and the real Refund backend). None of PR #18 is in the org yet either (checked 2026-10-21: the org still runs the Refund stubs and has no `CARES_Tier__c`), and its Apex tests have never run in an org. So the deploy below carries both.
+**Updated 2026-10-21:** this branch now includes `main` after PR #18 (audit and the real Refund backend). None of PR #18 is in the org yet either (checked 2026-10-21: the org still runs the Refund stubs and has no `CARES_Tier__c`). Its Apex tests first ran in a check-only deploy on 2026-10-21, and two deploy blockers were fixed on this branch (G-078). So the deploy below carries both.
 
 ## What this branch adds to the org
 | Component | Type | New or changed | Notes |
@@ -16,7 +16,7 @@ What the person who deploys must do after this branch is merged into `main`. Fol
 | `CARES_Identity_FindContactByEmail`, `CARES_Identity_Access` | Apex class, permission set | In the org since PR #16; PR #18 changed formatting only | The bundle calls this class from Identify Customer. The agent user needs `CARES_Identity_Access`, or the bundle fails its startup action check (same as G-050) |
 | `CARES_Tier__c`, `CARES_Refund_Policy__c`, `CARES_Resolution__c`, `Contact.CARES_Tier__c` | Custom objects, field | New (PR #18) | Tier and policy rows set the refund ceilings (D-046, D-047); Resolution is the audit row (D-048). **No rows are seeded** (R-17) |
 | `CARES_Refund_CalculateOffer`, `CARES_Refund_IssueResolution`, `CARES_Refund_LogOrderIssue`, `CARES_Refund_FindOrder`, `CARES_Refund_ActionsTest` | Apex | Changed (PR #18) | Real policy, audit row, double-payout block, items must be on the order. `FindOrder` and `ApplySettlement` are still stubs (G-004) |
-| `CARES_Refund_Access`, `CARES_Experience_Rating_Access` | Permission sets | Changed (PR #18) | Access to the new objects; CSAT field and Contact read (D-056) |
+| `CARES_Refund_Access`, `CARES_Experience_Rating_Access` | Permission sets | Changed (PR #18) | Access to the new objects; CSAT field and Contact read (D-056). Field access to required fields removed on this branch, or the deploy fails (G-078) |
 | `CARES_Customer_Policy` | Data Library | **Already in the org** (D-067) | Created 2026-10-20 in Setup; READY, 3 files indexed. Not used by any agent until the bundle above is deployed |
 
 ## Before the deploy
@@ -24,7 +24,9 @@ What the person who deploys must do after this branch is merged into `main`. Fol
 2. Check the agent user can read the library: Data Cloud permission set and the Data Space scope (Setup UI only). Without them, search results are empty and **nothing shows an error** (G-069).
 3. The agent user has `CARES_Identity_Access` (PR #16) and the four CARES permission sets (G-050). All true on 2026-10-20.
 4. `sf agent validate authoring-bundle --api-name CARES --target-org <team org> --json` on merged `main`.
-5. Check-only deploy of the metadata with tests (`sf project deploy validate --source-dir force-app --test-level RunLocalTests`) on merged `main`. It is the first run of PR #18's Apex tests in an org.
+5. Check-only deploy with tests on merged `main`. Use `RunSpecifiedTests`, not `RunLocalTests`: old `Agent*` classes in the org do not compile (G-079).
+   `sf project deploy validate --source-dir force-app --test-level RunSpecifiedTests --tests CARES_Identity_FindContactByEmailTest --tests CARES_Refund_ActionsTest --tests CARES_StolenDelayedActionsTest --tests CARES_StolenDelayedPolicyTest --tests CsatRatingSaverTest --target-org <team org> --json`
+   Passed on this branch on 2026-10-21: 69 components, 81/81 tests. Use the same test list for the real deploy.
 6. **Blocking: Refund data (R-17).** At least one active `CARES_Tier__c` row and one active `CARES_Refund_Policy__c` row per order outcome (Stolen, Delayed, Wrong_Missing_Items, Quality_Issue) for that tier. Owner: the Refund owner. Without them every direct-path refund is ineligible (D-047, [refund.md](subagents/refund.md)).
 7. The agent user has `CARES_Refund_Access` with PR #18's object permissions (assign again if the permission set changed).
 
