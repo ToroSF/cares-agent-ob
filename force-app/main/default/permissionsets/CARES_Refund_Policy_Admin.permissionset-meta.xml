@@ -65,4 +65,24 @@
         <readable>true</readable>
         <editable>false</editable>
     </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Resolution__c.Driver_Compensation__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Resolution__c.Restaurant_Reimbursement__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Resolution__c.Loss_Absorption__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Resolution__c.Settlement_Status__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
 </PermissionSet>

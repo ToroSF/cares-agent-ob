@@ -341,9 +341,9 @@
     "amounts": [
      "{offer_one}"
     ],
-    "no_actions": [
-     "apply_settlement"
-    ],
+    "inputs_none": {
+     "issue_resolution.driverCompensation": "\\S"
+    },
     "reply_any": [
      "[A-Z0-9]{2,}-?\\d{3,}|reference"
     ]
@@ -531,14 +531,14 @@
     "Yes, confirm."
    ],
    "expect": {
-    "no_actions": [
-     "apply_settlement"
-    ],
+    "inputs_none": {
+     "issue_resolution.driverCompensation": "\\S"
+    },
     "max_calls": {
      "issue_resolution": 1
     }
    },
-   "judge": "Direct path: apply_settlement never runs, even after an issue (D-031). Simulated, writes nothing. Simulated outputs make up the items, so turn 2 names the first listed item, not a real one."
+   "judge": "Direct path: no settlement is recorded; issue_resolution gets no driver or restaurant recommendation (D-092). Simulated, writes nothing. Simulated outputs make up the items, so turn 2 names the first listed item, not a real one."
   },
   {
    "id": "B-RF-19",
@@ -877,7 +877,7 @@
      "issue_resolution": 1
     }
    },
-   "judge": "Plausibility only: READY path depends on simulated outputs. apply_settlement only after an issue on READY."
+   "judge": "Plausibility only: READY path depends on simulated outputs. The driver and restaurant recommendations are recorded with the issue on READY (D-092)."
   },
   {
    "id": "B-IN-03",

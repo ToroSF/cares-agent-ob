@@ -140,6 +140,8 @@ variables:
         description: "Identify Customer: email lookups tried in this conversation. Capped at 2, then a person helps."
     refund_order_already_resolved: mutable boolean = False
         description: "Refund: True when the order already has a refund or credit on file, from calculate_refund_offer. Set by the script (D-088)."
+    refund_settlement_status: mutable string = ""
+        description: "Refund: Not_Applicable, Recorded or Needs_Review, from issue_resolution. Needs_Review opens a review case for the team (D-092)."
 
 knowledge:
     # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-060, D-066, D-067)
@@ -385,6 +387,10 @@ subagent refund:
                 with refundAmount = @variables.refund_offer_amount
                 with creditAmount = @variables.refund_credit_amount
                 with currencyCode = @variables.refund_currency
+                with driverCompensation = @variables.stolen_delayed_driver_compensation if @variables.refund_sd_path == "READY" else ""
+                with restaurantReimbursement = @variables.stolen_delayed_restaurant_reimbursement if @variables.refund_sd_path == "READY" else ""
+                with lossAbsorption = @variables.stolen_delayed_loss_absorption if @variables.refund_sd_path == "READY" else False
+                set @variables.refund_settlement_status = @outputs.settlementStatus
                 set @variables.refund_issue_attempted = True
                 set @variables.refund_issued = @outputs.success
 
@@ -396,12 +402,23 @@ subagent refund:
                 description: "Hand off to a human when the customer has no account, rejects the offer, wants more, disputes the outcome, or issuing fails."
 
     after_reasoning:
-        if @variables.refund_issued == True and @variables.refund_sd_path == "READY":
-            run @actions.apply_settlement
+        # The settlement is recorded with the payout (D-092). One a person must act on gets a review case;
+        # the customer is already paid, so nothing is said and the chat is not transferred (no session id)
+        if @variables.refund_issued == True and @variables.refund_settlement_status == "Needs_Review":
+            run @actions.create_settlement_review_case
+                with contactId = @variables.customer_id
+                with channelContactId = @variables.ContactId if @variables.ContactId is not None else ""
+                with escalationCategory = "CLAIM_REVIEW"
+                with escalationReason = "SETTLEMENT_REVIEW"
+                with sessionId = ""
                 with orderId = @variables.refund_order_id
-                with driverCompensation = @variables.stolen_delayed_driver_compensation
-                with restaurantReimbursement = @variables.stolen_delayed_restaurant_reimbursement
-                with lossAbsorption = @variables.stolen_delayed_loss_absorption
+                with stolenDelayedDecision = @variables.stolen_delayed_decision
+                with stolenDelayedReason = @variables.stolen_delayed_reason
+                with riskStatus = @variables.risk_status
+                with offerAmount = @variables.refund_offer_amount
+                with creditAmount = @variables.refund_credit_amount
+                with currencyCode = @variables.refund_currency
+                with chosenResolution = @variables.refund_chosen_resolution
         if @variables.refund_issued == True:
             set @variables.router_active_task = ""
             set @variables.refund_handled_order_id = @variables.refund_order_id
@@ -419,6 +436,7 @@ subagent refund:
             set @variables.refund_offer_eligible = False
             set @variables.refund_offer_ineligible_reason = ""
             set @variables.refund_order_already_resolved = False
+            set @variables.refund_settlement_status = ""
             set @variables.refund_offer_amount = 0
             set @variables.refund_credit_amount = 0
             set @variables.refund_currency = ""
@@ -545,6 +563,12 @@ subagent refund:
                     is_required: True
                 currencyCode: string
                     description: "ISO currency code of the amounts, from the offer; blank means the org default"
+                driverCompensation: string
+                    description: "Driver pay recommendation from Stolen & Delayed, approved-claim path only."
+                restaurantReimbursement: string
+                    description: "Restaurant recommendation from Stolen & Delayed, approved-claim path only."
+                lossAbsorption: boolean
+                    description: "True for a Stolen & Delayed loss absorption case."
             outputs:
                 success: boolean
                     filter_from_agent: True
@@ -554,20 +578,52 @@ subagent refund:
                 message: string
                     description: "Customer-facing confirmation of what was issued"
                     filter_from_agent: False
+                settlementStatus: string
+                    description: "Not_Applicable, Recorded or Needs_Review. Internal only."
+                    filter_from_agent: True
 
-        apply_settlement:
-            description: "Applies the driver pay and restaurant reimbursement recommendations after a customer resolution is issued"
-            target: "apex://CARES_Refund_ApplySettlement"
+        create_settlement_review_case:
+            description: "Logs a review case for the team when a payout's driver or restaurant settlement needs a person. Not a hand-off: the chat is not transferred."
+            target: "flow://CARES_Create_Escalation_Case"
             inputs:
+                contactId: string
+                    description: "The customer's contact id."
+                channelContactId: string
+                    description: "The contact of the signed-in chat user, blank when not signed in."
+                escalationCategory: string
+                    description: "CLAIM_REVIEW."
+                escalationReason: string
+                    description: "SETTLEMENT_REVIEW."
+                sessionId: string
+                    description: "Blank, so the chat is not transferred."
                 orderId: string
-                    is_required: True
-                driverCompensation: string
-                    description: "PAY_IN_FULL, WITHHOLD_DELIVERY_PAY or HOLD_FOR_REVIEW"
-                restaurantReimbursement: string
-                    description: "REIMBURSE or NO_CHANGE"
-                lossAbsorption: boolean
+                    description: "Order id of the payout."
+                stolenDelayedDecision: string
+                    description: "Stolen & Delayed decision."
+                stolenDelayedReason: string
+                    description: "Stolen & Delayed internal reason code."
+                riskStatus: string
+                    description: "CLEAN, NOT_CLEAN or UNKNOWN. Internal only."
+                offerAmount: number
+                    description: "Refund amount offered."
+                creditAmount: number
+                    description: "Store credit amount offered."
+                currencyCode: string
+                    description: "ISO currency code of the offer."
+                chosenResolution: string
+                    description: "Refund or Store_Credit."
             outputs:
                 success: boolean
+                    description: "Whether the case was created."
+                    filter_from_agent: True
+                caseNumber: string
+                    description: "Case number. Internal only here."
+                    filter_from_agent: True
+                reusedExisting: boolean
+                    description: "True when it was added to an open case."
+                    filter_from_agent: True
+                caseId: string
+                    description: "Record id of the case. Internal only."
                     filter_from_agent: True
 
 subagent stolen_delayed_orders:

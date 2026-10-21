@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Retires the apply_settlement stub (D-092). How to deploy it: README.md in this folder. -->
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>CARES_Refund_ApplySettlement</members>
+        <name>ApexClass</name>
+    </types>
+</Package>

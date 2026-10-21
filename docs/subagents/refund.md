@@ -32,7 +32,7 @@ Refund reads the `stolen_delayed_*` variables, which are set only by Stolen & De
 
 | Condition (all also need `stolen_delayed_needs_person == False`, an order Refund hasn't handled yet, Refund not already on a Stolen & Delayed path, and nothing confirmed or attempted, see D-033) | Path | What Refund does |
 |---|---|---|
-| `stolen_delayed_handoff_status == "READY_FOR_REFUND"` | READY | Order = `stolen_delayed_order_id`, outcome `Stolen`, approved amount and cap = `stolen_delayed_order_total`. Offer: the full total as a refund, or the full total + bonus as wallet credit (D-029). The script maps the customer's choice to `refund_chosen_resolution` (`WALLET_CREDIT` → `Store_Credit`, `REFUND` → `Refund`, D-035), and only that method is offered. Confirm once, then issue (D-028). Then `apply_settlement` with the driver and restaurant recommendations (D-031) |
+| `stolen_delayed_handoff_status == "READY_FOR_REFUND"` | READY | Order = `stolen_delayed_order_id`, outcome `Stolen`, approved amount and cap = `stolen_delayed_order_total`. Offer: the full total as a refund, or the full total + bonus as wallet credit (D-029). The script maps the customer's choice to `refund_chosen_resolution` (`WALLET_CREDIT` → `Store_Credit`, `REFUND` → `Refund`, D-035), and only that method is offered. Confirm once, then issue (D-028). The driver and restaurant recommendations are recorded on the payout row by `issue_resolution` (D-092) |
 | `stolen_delayed_decision == "STANDARD_PATH"` | STANDARD | Order = `stolen_delayed_order_id`, cap = `stolen_delayed_order_total`. Ask "stolen or late?" and log `Stolen` or `Delayed` (D-030). Then the normal offer, capped at the order total |
 | `stolen_delayed_needs_person == True` | none | Never offer or issue. Tell the customer a person will take it |
 
@@ -52,7 +52,7 @@ Each step is a branch in the instructions. Only one is shown to the model at a t
 5. **Offer both options**, with the amounts injected from variables. The customer picks one. The agent repeats the option and amount and asks for an explicit yes.
 6. **Confirm.** `confirm_refund` or `confirm_store_credit` sets the choice as a literal (`Refund` / `Store_Credit`), so the model never types it (D-022).
 7. **Issue.** `issue_resolution`, only available after confirmation and only once. All inputs come from variables.
-8. **Done.** The agent tells the customer the confirmation message and reference number. On the READY path, `after_reasoning` then runs `apply_settlement`. Then it clears the `refund_` variables (except `refund_handled_order_id`). No direct transition (D-023).
+8. **Done.** The agent tells the customer the confirmation message and reference number. On the READY path the settlement was recorded with the payout; if it needs a person (`Needs_Review`), `after_reasoning` opens a review case without transferring the chat (D-092). Then it clears the `refund_` variables (except `refund_handled_order_id`). No direct transition (D-023).
 
 At any step: rejects both options, asks for more, or disputes → hand off to a person. No negotiation, no counter-offer.
 
@@ -105,7 +105,7 @@ Customer to tier: `Contact.CARES_Tier__c` (lookup). Blank, or an inactive tier, 
 Why a new object, not the existing `Refund__c` / `Gift_Certificate__c`: in the shared org both have no custom fields and no refund records, and they belong to the Pronto demo. One CARES object covers refund and credit and makes "one per order" a single unique field.
 
 ## Actions
-All five are invocable Apex, with the fixed contract (inputs, outputs) from D-020. `apply_settlement` is still a **stub**; `find_order` reads Data Cloud since v5. `log_order_issue`, `calculate_refund_offer` and `issue_resolution` now read or write real data where G-004 allows it (D-045 to D-048); see "State" above and "Offer rule" / "Data model" for exactly what's real. Names match the `@InvocableVariable` fields.
+Four invocable Apex actions plus the review case Flow. `apply_settlement` was retired in D-092 (`issue_resolution` records the settlement); `find_order` reads Data Cloud since v5. `log_order_issue`, `calculate_refund_offer` and `issue_resolution` now read or write real data where G-004 allows it (D-045 to D-048); see "State" above and "Offer rule" / "Data model" for exactly what's real. Names match the `@InvocableVariable` fields.
 
 | Action | Target | Inputs (source) | Outputs (shown to customer?) |
 |---|---|---|---|
@@ -113,7 +113,7 @@ All five are invocable Apex, with the fixed contract (inputs, outputs) from D-02
 | `log_order_issue` (values items from the real order) | `apex://CARES_Refund_LogOrderIssue` | `contactId`, `orderId`, `deliveryPath` (variables), `issueType`, `issueDescription`, `affectedItems` (chat) | `orderOutcome` (no), `affectedValue` (no), `accepted` (no) |
 | `calculate_refund_offer` (policy real, order value still stub) | `apex://CARES_Refund_CalculateOffer` | `contactId`, `orderId`, `orderOutcome`, `riskStatus`, `affectedValue`, `approvedFullAmount`, `orderTotalCap`, `orderCurrency` (all variables) | `eligible` (no), `ineligibleReason`, `refundAmount`, `creditAmount`, `currencyCode` (yes), `tierName` (no) |
 | `issue_resolution` (real insert) | `apex://CARES_Refund_IssueResolution` | `contactId`, `orderId`, `resolutionType`, `refundAmount`, `creditAmount` (all variables) | `success` (no), `referenceNumber` (yes, now the `CARES_Resolution__c` record id), `message` (yes) |
-| `apply_settlement` (stub) | `apex://CARES_Refund_ApplySettlement` | `orderId`, `driverCompensation`, `restaurantReimbursement`, `lossAbsorption` (all variables) | `success` (no) |
+| `create_settlement_review_case` | `flow://CARES_Create_Escalation_Case` | Category `CLAIM_REVIEW`, reason `SETTLEMENT_REVIEW`, no session id, plus the payout context (all variables) | `success`, `caseNumber` (no) |
 
 | Action | How it's called | Why |
 |---|---|---|
@@ -122,7 +122,7 @@ All five are invocable Apex, with the fixed contract (inputs, outputs) from D-02
 | `calculate_refund_offer` | Script (`run`) | Money: must run exactly once, as soon as its inputs exist |
 | `confirm_refund` / `confirm_store_credit` | Model, `setVariables` with literal values | Records consent; nothing to type |
 | `issue_resolution` | Model, every input bound to a variable | Customer-initiated; the model can't change any input |
-| `apply_settlement` | Script (`run` in `after_reasoning`), READY path only, after a successful issue | Driver pay and restaurant reimbursement depend on the refund actually happening (SD-D2) |
+| `create_settlement_review_case` | Script (`run` in `after_reasoning`), only after a successful issue whose settlement is `Needs_Review` | A person acts on the driver or restaurant; the customer is already paid, so nothing is said (D-092) |
 
 Access: permission set `CARES_Refund_Access` gives the agent user access to the five classes, read on `CARES_Tier__c` and `CARES_Refund_Policy__c`, and create/read on `CARES_Resolution__c` (D-045 to D-048). Not assigned. Assigning it is a rollout step.
 
@@ -158,7 +158,7 @@ Reads, not owned: `ContactId` (channel), `risk_checked` and `risk_status` (Risk 
 | ID | Case | Expected |
 |---|---|---|
 | R-01 | Wrong item, credit chosen | Find order → log `Wrong_Missing_Items` → offer → credit → read-back → yes → issued with reference → state cleared |
-| R-02 | READY, customer chose `REFUND` | Skips intake → confirms full order total to original payment → issued → `apply_settlement` runs with the recommendations |
+| R-02 | READY, customer chose `REFUND` | Skips intake → confirms full order total to original payment → issued → the recommendations are on the resolution row (`Settlement_Status__c`); `Needs_Review` opens a review case |
 | R-03 | READY, customer chose `WALLET_CREDIT` | Only the credit option (total + bonus) is offered → issued → settlement runs |
 | R-15 | STANDARD path | Asks "stolen or late?" → logs it → offer capped at the order total; no settlement |
 | R-16 | `stolen_delayed_needs_person == True` | No offer; issue action hidden |

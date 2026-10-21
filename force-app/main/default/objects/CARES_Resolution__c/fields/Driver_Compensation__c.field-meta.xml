@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Driver_Compensation__c</fullName>
+    <label>Driver Compensation</label>
+    <description
+  >Stolen &amp; Delayed driver pay recommendation, recorded with the payout (D-092). Blank off the approved-claim path.</description>
+    <type>Picklist</type>
+    <required>false</required>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>PAY_IN_FULL</fullName>
+                <default>false</default>
+            </value>
+            <value>
+                <fullName>WITHHOLD_DELIVERY_PAY</fullName>
+                <default>false</default>
+            </value>
+            <value>
+                <fullName>HOLD_FOR_REVIEW</fullName>
+                <default>false</default>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
