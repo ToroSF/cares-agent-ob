@@ -57,9 +57,11 @@ Each step is a branch in the instructions. Only one is shown to the model at a t
 At any step: rejects both options, asks for more, or disputes → hand off to a person. No negotiation, no counter-offer.
 
 ## Offer rule (owned by `calculate_refund_offer`)
+**First, on every path (D-088):** if the order already has a `CARES_Resolution__c` row (any status), the offer is not eligible, both amounts are 0, `alreadyResolved` is true and the reason is "This order already has a refund or credit on file…". Refund then sets `escalation_category = CLAIM_REVIEW` if it was blank, so a hand-off is categorised (G-091).
+
 READY path: `refund = approved full amount`. Otherwise `refund = min(affected value, ceiling, order total cap)`, where the ceiling is the higher limit if `risk_status` is `CLEAN`, and the standard limit for `NOT_CLEAN` or `UNKNOWN` (D-008). Then `credit = refund × (1 + bonus %)`. If no active tier can be resolved, or no active policy row matches, the offer is not eligible.
 
-**Real today (D-046, D-047):** the ceiling, and the credit bonus percent, come from the Contact's `CARES_Tier__c` and a matching active `CARES_Refund_Policy__c` row for that tier × `orderOutcome`. A Contact with no tier, or an inactive one, falls back to the lowest-ranked active `CARES_Tier__c`; no active tier at all makes the offer ineligible. The READY path skips the policy lookup (the Stolen & Delayed contract carries an approved amount, not a tier) and uses a 20% bonus.
+**Real today (D-046, D-047):** the ceiling, and the credit bonus percent, come from the Contact's `CARES_Tier__c` and a matching active `CARES_Refund_Policy__c` row for that tier × `orderOutcome`. A Contact with no tier, or an inactive one, falls back to the lowest-ranked active `CARES_Tier__c`; no active tier at all makes the offer ineligible. The READY path skips the policy ceiling (the Stolen & Delayed contract carries an approved amount) and takes the credit bonus from the same tier row for that outcome; no row means no bonus (D-082).
 
 **Real since v5:** `affectedValue` and, on the direct path, `orderTotalCap` come from the real order (D-071, D-072). `approvedFullAmount` and the cap on the Stolen & Delayed path still come from its mock platform (G-081).
 
@@ -163,7 +165,7 @@ Reads, not owned: `ContactId` (channel), `risk_checked` and `risk_status` (Risk 
 | R-17 | After a READY payout, customer asks again in the same conversation | Same order not paid twice (`refund_handled_order_id`) |
 | R-04 | 1 of 4 items missing | Offer based on that item only |
 | R-05 | Cold fries in a 4-item order | `Quality_Issue`, offer on the fries only |
-| R-06 | Already resolved order | Not eligible → reason → offer a person |
+| R-06 | Already resolved order | Not eligible before any amount (D-088) → reason → offer a person; escalation category CLAIM_REVIEW |
 | R-07 | "Not enough, I want more" | Hand off to a person, no counter-offer |
 | R-08 | Changes mind before yes | New read-back; nothing confirmed until a new yes |
 | R-09 | Declines everything | Nothing issued; polite close |

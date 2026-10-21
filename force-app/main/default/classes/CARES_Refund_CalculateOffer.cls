@@ -76,22 +76,42 @@ public with sharing class CARES_Refund_CalculateOffer {
             description='Customer tier used for the calculation'
         )
         public String tierName;
+        @InvocableVariable(
+            label='Already Resolved'
+            description='True when the order already has a refund or credit on file; no offer is made'
+        )
+        public Boolean alreadyResolved;
     }
     @InvocableMethod(
         label='CARES Refund Calculate Offer'
         description='Calculates the refund and store credit offer from tier, order outcome and risk status'
     )
     public static List<Result> execute(List<Request> requests) {
-        // The order VALUE (affectedValue, approvedFullAmount, orderTotalCap) still
-        // comes from the find_order/log_order_issue stubs (G-004: no real Order
-        // object). The POLICY/LIMIT logic below is real: it reads Contact.CARES_Tier__c
-        // and CARES_Refund_Policy__c (D-024, D-025, D-029) instead of the old
-        // hardcoded 15.00/18.00 values.
+        // The order value comes from the real orders (find_order / log_order_issue,
+        // D-071, D-072). The limits come from Contact.CARES_Tier__c and
+        // CARES_Refund_Policy__c (D-024, D-025, D-029).
         Set<Id> contactIds = new Set<Id>();
+        Set<String> orderIds = new Set<String>();
         for (Request req : requests) {
             Id contactId = toId(req.contactId);
             if (contactId != null) {
                 contactIds.add(contactId);
+            }
+            if (String.isNotBlank(req.orderId)) {
+                orderIds.add(req.orderId);
+            }
+        }
+
+        // One resolution per order (D-024): an order with a resolution gets no offer, on any path (G-091, D-088)
+        Set<String> resolvedOrderIds = new Set<String>();
+        if (!orderIds.isEmpty()) {
+            for (CARES_Resolution__c res : [
+                SELECT Order_Id__c
+                FROM CARES_Resolution__c
+                WHERE Order_Id__c IN :orderIds
+                WITH USER_MODE
+            ]) {
+                resolvedOrderIds.add(res.Order_Id__c);
             }
         }
 
@@ -113,7 +133,7 @@ public with sharing class CARES_Refund_CalculateOffer {
 
         List<Result> results = new List<Result>();
         for (Request req : requests) {
-            results.add(calculateOne(req, contactsById, lowestActiveTier, policiesByKey));
+            results.add(calculateOne(req, contactsById, lowestActiveTier, policiesByKey, resolvedOrderIds));
         }
         return results;
     }
@@ -122,10 +142,21 @@ public with sharing class CARES_Refund_CalculateOffer {
         Request req,
         Map<Id, Contact> contactsById,
         CARES_Tier__c lowestActiveTier,
-        Map<String, CARES_Refund_Policy__c> policiesByKey
+        Map<String, CARES_Refund_Policy__c> policiesByKey,
+        Set<String> resolvedOrderIds
     ) {
         Result r = new Result();
         r.currencyCode = String.isBlank(req.orderCurrency) ? UserInfo.getDefaultCurrency() : req.orderCurrency;
+        r.alreadyResolved = false;
+        if (String.isNotBlank(req.orderId) && resolvedOrderIds.contains(req.orderId)) {
+            r.alreadyResolved = true;
+            r.eligible = false;
+            r.ineligibleReason = 'This order already has a refund or credit on file, so I can\'t offer another one. A team member can check it if something looks wrong.';
+            r.refundAmount = 0;
+            r.creditAmount = 0;
+            r.tierName = '';
+            return r;
+        }
 
         CARES_Tier__c tier = resolveTier(req.contactId, contactsById, lowestActiveTier);
         r.tierName = tier == null ? '' : tier.Name;

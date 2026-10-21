@@ -138,6 +138,8 @@ variables:
         description: "Customer Contact Id used by Refund, Stolen & Delayed, Experience Rating and Escalate. From ContactId, or from the email lookup when the chat has no contact (D-058). Never typed by the model."
     identify_attempts: mutable number = 0
         description: "Identify Customer: email lookups tried in this conversation. Capped at 2, then a person helps."
+    refund_order_already_resolved: mutable boolean = False
+        description: "Refund: True when the order already has a refund or credit on file, from calculate_refund_offer. Set by the script (D-088)."
 
 knowledge:
     # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-060, D-066, D-067)
@@ -245,6 +247,7 @@ subagent refund:
                 set @variables.refund_offer_calculated = False
                 set @variables.refund_offer_eligible = False
                 set @variables.refund_offer_ineligible_reason = ""
+                set @variables.refund_order_already_resolved = False
                 set @variables.refund_offer_amount = 0
                 set @variables.refund_credit_amount = 0
                 set @variables.refund_chosen_resolution = "Store_Credit" if @variables.stolen_delayed_customer_choice == "WALLET_CREDIT" else "Refund"
@@ -259,6 +262,7 @@ subagent refund:
                 set @variables.refund_offer_calculated = False
                 set @variables.refund_offer_eligible = False
                 set @variables.refund_offer_ineligible_reason = ""
+                set @variables.refund_order_already_resolved = False
                 set @variables.refund_offer_amount = 0
                 set @variables.refund_credit_amount = 0
                 set @variables.refund_chosen_resolution = ""
@@ -279,7 +283,12 @@ subagent refund:
                     set @variables.refund_credit_amount = @outputs.creditAmount
                     set @variables.refund_currency = @outputs.currencyCode
                     set @variables.refund_tier_name = @outputs.tierName
+                    set @variables.refund_order_already_resolved = @outputs.alreadyResolved
                 set @variables.refund_offer_calculated = True
+
+            # A repeat claim on a resolved order is a claim review for the person (G-091); never override URGENT or PATTERN_REVIEW
+            if @variables.refund_order_already_resolved == True and @variables.escalation_category == "":
+                set @variables.escalation_category = "CLAIM_REVIEW"
 
             # A person owns the Stolen & Delayed order only; other orders can still be resolved (ids are platform ids, D-038)
             if @variables.stolen_delayed_needs_person == True and (@variables.refund_sd_path != "" or (@variables.refund_order_id != "" and @variables.refund_order_id == @variables.stolen_delayed_order_id)):
@@ -409,6 +418,7 @@ subagent refund:
             set @variables.refund_offer_calculated = False
             set @variables.refund_offer_eligible = False
             set @variables.refund_offer_ineligible_reason = ""
+            set @variables.refund_order_already_resolved = False
             set @variables.refund_offer_amount = 0
             set @variables.refund_credit_amount = 0
             set @variables.refund_currency = ""
@@ -512,6 +522,9 @@ subagent refund:
                 currencyCode: string
                     filter_from_agent: False
                 tierName: string
+                    filter_from_agent: True
+                alreadyResolved: boolean
+                    description: "True when the order already has a refund or credit on file; no offer is made."
                     filter_from_agent: True
 
         issue_resolution:

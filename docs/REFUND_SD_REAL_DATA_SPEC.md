@@ -1,6 +1,6 @@
 # Spec: Refund and Stolen & Delayed on real data, and a CARES Admin app (G-091, G-081, G-098, G-031)
 
-Status date: 2026-10-21. Status: `PROPOSAL`, decisions B-D1 to B-D3 and C-D1 `DECIDED` 2026-10-21 by @lucasmpalomanes (sections B5 and C3). Branch: `fix/refund-sd-real-data`. Source: `main` at `fe62128`. Nothing in this file is built yet.
+Status date: 2026-10-21. Status: `PROPOSAL`, decisions B-D1 to B-D3 and C-D1 `DECIDED` 2026-10-21 by @lucasmpalomanes (sections B5 and C3). Branch: `fix/refund-sd-real-data`. Source: `main` at `e756ed2` (rebased 2026-10-21 onto PRs #37, #38, #40). Nothing in this file is built yet.
 
 One branch, four parts. They are built and reviewed in this order, because each part's tests assume the one before it:
 
@@ -102,7 +102,7 @@ B-RF-25 runs two sessions on one pool contact (`burns: true`). New expectations 
 ## A4. Docs to update (Part A)
 | File | Change |
 |---|---|
-| `docs/DECISIONS.md` | D-078: check before the offer, in `calculate_refund_offer`, on every path; the CLAIM_REVIEW category rule |
+| `docs/DECISIONS.md` | D-088: check before the offer, in `calculate_refund_offer`, on every path; the CLAIM_REVIEW category rule |
 | `docs/GAPS.md` | G-091 closed on the branch (untested live until the preview below) |
 | `docs/subagents/refund.md` | "Offer rule" and steps: the resolved-order check comes first; the new tests |
 | `docs/V6_FOCUS.md` | Item 5 marked done |
@@ -132,7 +132,7 @@ B-RF-25 runs two sessions on one pool contact (`burns: true`). New expectations 
 | `orderFound`, `customerMatches` | `CARES_OrderData.find(contactId, orderNumber, false)`: `found`. The query is filtered by customer, so a found order always matches |
 | `orderStatus` | Mapped: `Delivered` → `DELIVERED`; `Preparing`, `PickedUp`, `Out for Delivery` → `IN_TRANSIT`; `Canceled` → `CANCELED`. The policy compares to uppercase `DELIVERED` |
 | `orderTotal` | `Total_Amount__c` |
-| `currencyIsoCode` | No column. Use `UserInfo.getDefaultCurrency()` (same rule as D-077); USD in the team org |
+| `currencyIsoCode` | No column. Use `UserInfo.getDefaultCurrency()` (same rule as D-082); USD in the team org |
 | `priorClaimOnOrder` | `CARES_Resolution__c` exists for `Order_Id__c` (same query as Part A) |
 | `customerOrderCount`, `customerClaimRate` | Real counts (B-D1): non-canceled orders in `Order__dlm`; the contact's `CARES_Resolution__c` rows ÷ that count |
 | Photos, GPS, wait time, calls and chats, driver rates, fraud flags, `redispatchEligible` | **Not in the data.** They stay null (unknown) unless the platform is configured (B-D2: kept as optional enrichment) |
@@ -309,12 +309,12 @@ What the matrix gives with only these fields:
 
 ## Docs (on this branch)
 - **`docs/DECISIONS.md`:**
-  - D-078: Part A
-  - D-079: S&D reads the real orders, with the platform kept as optional enrichment (B-D2)
-  - D-080: customer trust from real counts (B-D1)
-  - D-081: a claim on a canceled order goes to a person (B-D3)
-  - D-082: settlements recorded on the resolution row, plus a review Case; `apply_settlement` retired (C-D1)
-  - D-083: the CARES Admin app, its tabs, layouts and list views, visible to policy admins only (D-D1 to D-D4)
+  - D-088: Part A
+  - D-089: S&D reads the real orders, with the platform kept as optional enrichment (B-D2)
+  - D-090: customer trust from real counts (B-D1)
+  - D-091: a claim on a canceled order goes to a person (B-D3)
+  - D-092: settlements recorded on the resolution row, plus a review Case; `apply_settlement` retired (C-D1)
+  - D-093: the CARES Admin app, its tabs, layouts and list views, visible to policy admins only (D-D1 to D-D4)
 - **`docs/GAPS.md`:** G-091, G-081 (reworded), G-098, G-077 and G-031 closed on the branch. New gaps for anything still unknown live (GPS, photos and fraud stay out of the data).
 - **Subagent docs:** `docs/subagents/refund.md` and `docs/subagents/stolen-delayed-orders.md` (data source table, SD-G1 and SD-G3).
 - **`docs/V6_FOCUS.md`:** items 5, 8, 9 and 10.

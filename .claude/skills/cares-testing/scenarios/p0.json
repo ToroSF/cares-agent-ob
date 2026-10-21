@@ -666,13 +666,19 @@
    "fixture": "pool:ESC",
    "expect": {
     "max_calls": {
-     "issue_resolution": 2
+     "issue_resolution": 1
     },
     "outputs": {
      "issue_resolution.success": [
-      true,
-      false
+      true
+     ],
+     "calculate_refund_offer.alreadyResolved": [
+      false,
+      true
      ]
+    },
+    "inputs_none": {
+     "create_escalation_case.escalationCategory": "^$"
     }
    },
    "sessions": [
@@ -692,13 +698,13 @@
    "burns": true,
    "soft": {
     "max_calls": {
-     "calculate_refund_offer": 1
+     "calculate_refund_offer": 2
     },
     "inputs": {
-     "create_escalation_case.escalationCategory": "\\S"
+     "create_escalation_case.escalationCategory": "CLAIM_REVIEW"
     }
    },
-   "judge": "Session 2 must not claim a payout; apology and a person. An offer shown again in session 2 is a FINDING (the duplicate is only caught at issue time). Session 2 escalation with a blank category is G-091."
+   "judge": "Session 2: the offer is refused before any amount (\"already has a refund or credit on file\", D-088). No amount is said in session 2, nothing is claimed as issued (INV-3), and a person is offered. If it escalates, the category is CLAIM_REVIEW (G-091)."
   },
   {
    "id": "B-SD-01",

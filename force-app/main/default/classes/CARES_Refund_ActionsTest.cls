@@ -116,6 +116,17 @@ private class CARES_Refund_ActionsTest {
         return CARES_Refund_LogOrderIssue.execute(new List<CARES_Refund_LogOrderIssue.Request>{ req })[0];
     }
 
+    // Order id the offer() helper uses; tests about another order set it first
+    private static String offerOrderId = ORDER_ID;
+
+    // Inserts a resolution row for an order, as the payout would (SYSTEM_MODE: test setup only)
+    private static void resolve(Id contactId, String orderId, String status) {
+        Database.insert(new CARES_Resolution__c(
+            Contact__c = contactId, Order_Id__c = orderId, Resolution_Type__c = 'Refund',
+            Amount__c = 10.00, Status__c = status
+        ), AccessLevel.SYSTEM_MODE);
+    }
+
     private static CARES_Refund_CalculateOffer.Result offer(
         String contactId,
         String orderOutcome,
@@ -127,7 +138,7 @@ private class CARES_Refund_ActionsTest {
     ) {
         CARES_Refund_CalculateOffer.Request req = new CARES_Refund_CalculateOffer.Request();
         req.contactId = contactId;
-        req.orderId = ORDER_ID;
+        req.orderId = offerOrderId;
         req.orderOutcome = orderOutcome;
         req.riskStatus = riskStatus;
         req.affectedValue = affectedValue;
@@ -406,6 +417,87 @@ private class CARES_Refund_ActionsTest {
         System.assertEquals(25.00, r.refundAmount, 'READY path bypasses the small policy ceiling (D-021/D-028)');
         System.assertEquals(27.50, r.creditAmount, 'READY path credit is total + the tier row bonus, 10% here (D-029), not an invented 20%');
         System.assertEquals('EUR', r.currencyCode, 'Order currency is echoed (D-036)');
+    }
+
+    // G-091 (D-088): no offer on an order that already has a resolution, on any path
+
+    @IsTest
+    static void offerOnAnOrderWithAResolutionIsIneligible() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
+        Contact c = makeContact();
+        resolve(c.Id, ORDER_ID, 'Issued');
+
+        CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'CLEAN', 20.00, 0, 0, '');
+        System.assertEquals(false, r.eligible);
+        System.assertEquals(true, r.alreadyResolved);
+        System.assertEquals(0, r.refundAmount);
+        System.assertEquals(0, r.creditAmount);
+        System.assert(r.ineligibleReason.contains('already has a refund or credit on file'), r.ineligibleReason);
+    }
+
+    @IsTest
+    static void readyPathOnAResolvedOrderIsIneligible() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Stolen', 5.00, 5.00, 10, true);
+        Contact c = makeContact();
+        resolve(c.Id, ORDER_ID, 'Issued');
+
+        CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Stolen', 'UNKNOWN', 0, 25.00, 25.00, 'EUR');
+        System.assertEquals(false, r.eligible, 'An approved Stolen & Delayed claim is refused too when the order is paid');
+        System.assertEquals(true, r.alreadyResolved);
+        System.assertEquals(0, r.refundAmount);
+    }
+
+    @IsTest
+    static void aDifferentOrderIsStillEligible() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
+        Contact c = makeContact();
+        resolve(c.Id, 'PR-241019-TEST002', 'Issued');
+
+        CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'NOT_CLEAN', 20.00, 0, 0, '');
+        System.assertEquals(true, r.eligible, 'A resolution on another order does not block this one');
+        System.assertEquals(false, r.alreadyResolved);
+        System.assertEquals(20.00, r.refundAmount);
+    }
+
+    @IsTest
+    static void aFailedResolutionAlsoBlocks() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
+        Contact c = makeContact();
+        resolve(c.Id, ORDER_ID, 'Failed');
+
+        CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Wrong_Missing_Items', 'CLEAN', 20.00, 0, 0, '');
+        System.assertEquals(false, r.eligible, 'Any row blocks, so a person reviews instead of a second payout');
+        System.assertEquals(true, r.alreadyResolved);
+    }
+
+    @IsTest
+    static void mixedBatchKeepsRequestOrder() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        makePolicy(tier, 'Wrong_Missing_Items', 50.00, 75.00, 20, true);
+        Contact c = makeContact();
+        resolve(c.Id, ORDER_ID, 'Issued');
+
+        List<CARES_Refund_CalculateOffer.Request> reqs = new List<CARES_Refund_CalculateOffer.Request>();
+        for (String orderId : new List<String>{ ORDER_ID, 'PR-241019-TEST002' }) {
+            CARES_Refund_CalculateOffer.Request req = new CARES_Refund_CalculateOffer.Request();
+            req.contactId = c.Id;
+            req.orderId = orderId;
+            req.orderOutcome = 'Wrong_Missing_Items';
+            req.riskStatus = 'NOT_CLEAN';
+            req.affectedValue = 20.00;
+            reqs.add(req);
+        }
+        List<CARES_Refund_CalculateOffer.Result> rs;
+        System.runAs(refundUser()) {
+            rs = CARES_Refund_CalculateOffer.execute(reqs);
+        }
+        System.assertEquals(false, rs[0].eligible, 'Resolved order first');
+        System.assertEquals(true, rs[1].eligible, 'New order second');
+        System.assertEquals(false, rs[1].alreadyResolved);
     }
 
     @IsTest
