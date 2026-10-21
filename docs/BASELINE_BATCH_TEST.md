@@ -61,6 +61,7 @@ They prove a documented gap. A fail is recorded as `EXPECTED_FAIL`. A pass is re
 | B-AD-14 (P2), B-CT-03              | v5: a long message goes to Off Topic, which promises a hand-off it cannot make; a late order raised during the refund offer stays in Refund | G-095, G-096 |
 | B-RT-09, B-PO-12                   | v5: a missing item plus another request in one message: Refund logs the item, then hands everything to a person with no offer and no category | G-097 |
 | B-PO-10, B-PO-11, B-PO-15 (Tier S) | Pronto policy steps the agent does not do yet: "delivered but not here" self-check, address check for never arrived, cold-food questions | POL-F04, POL-P09, POL-F06 |
+| B-IN-10, B-ER-06                   | v5: the Stolen & Delayed escalation Case has no order id; a typed "5 out of 5" is not mapped to thumbs up | G-098, G-099 |
 
 Not on this list on purpose: B-PO-02, B-PO-03, B-PO-05, B-ES-04 and B-RT-08 (safety and fraud reports) fail today because of G-088 and G-086, and stay a hard FAIL so they are not missed.
 
@@ -125,6 +126,7 @@ Agent v5 reads real orders from Data Cloud, so the expected amounts can now be c
 - **P1 real-data checks.** `scenarios/p1-realdata.json` holds 8 more real-data scenarios (B-RF-21, B-RF-26, B-OS-03, B-OS-08, B-OS-10..B-OS-13) in the same format; run it with `--scenarios` pointing to that file. First run: 7 PASS, 1 FLAKY (B-OS-08, G-094).
 - **P1 Refund, Red team, Continuity.** `scenarios/p1.json` holds 25 more (B-RF-07..B-RF-17, B-AD-07..B-AD-15, B-CT-03..B-CT-08). First run: 22 PASS, 2 EXPECTED_FAIL (G-095, G-096), 1 N/A. With p0.json and p1-realdata.json, 105 of the 180 scenarios are machine-checked.
 - **P1 Router, Escalation, Policy, Stolen & Delayed.** 27 more in `scenarios/p1.json` (B-RT-04, B-RT-06..B-RT-11, B-ES-04..B-ES-09, B-PO-09..B-PO-13, B-PO-15, B-PO-16, B-SD-06..B-SD-12; Stolen & Delayed and three policy ones simulated). First run: 20 PASS, 5 EXPECTED_FAIL (G-097, POL-F04, POL-P09, POL-F06), 2 FAIL (B-ES-04, B-RT-08: the guard topic, G-088). 132 of the 180 scenarios are now machine-checked.
+- **P1 Risk Detection, Integration, Experience Rating, Failure, Customer experience.** `scenarios/p1-rest.json` holds 21 more (B-RD-06..B-RD-08, B-RD-11, B-SD-13, B-SD-15, B-IN-05, B-IN-10, B-IN-14, B-ER-06, B-ER-07, B-ER-09..B-ER-13, B-FL-10, B-CX-03..B-CX-06). Saves in Experience Rating are simulated while G-089 is open. Run (after a second short outage, G-090): 18 PASS, 2 EXPECTED_FAIL (G-098, G-099), 1 FLAKY (B-CX-06, G-047). 153 of the 180 scenarios are now machine-checked. The rest need a switch in the org (a Flow off, a permission set removed), a second fixture kind (FX-ACCT, FX-SHARED) or are documentation or judge-only.
 - **Changed expectations.** With no contact, Refund now asks for the email (Identify Customer) instead of escalating (B-SM-03, B-RD-03, B-RF-16). "Order 1042" is not a Pronto number any more, so Stolen & Delayed scenarios use the customer's real order number. The G-084 scenarios check the rest of the scenario as usual and keep only the risk value as the expected fail.
 
 ## What the batch does not cover

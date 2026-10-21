@@ -281,6 +281,10 @@ def check(sc, sessions, fx):
         for who, t in s["convo"]:
             if who == "agent" and GENERIC_ERROR.search(t):
                 problems.append("ERROR platform: " + GENERIC_ERROR.search(t).group(0))
+        # A turn that ran no sub-agent at all and said nothing is the same outage (seen at its start, G-090)
+        replies = [t for who, t in s["convo"] if who == "agent"]
+        if replies and not s["trace"]["path"] and all(t.replace("<EndOfTurn>", "").strip() == "" for t in replies):
+            problems.append("ERROR platform: empty turn with no sub-agent")
     problems += expect_problems(sc.get("expect", {}), sessions, fx)
     inv, notes = invariant_problems(sc, sessions)
     problems += inv
@@ -311,6 +315,8 @@ def resolve_fixture(name, fixtures, alloc, sc, run):
         return None, {}
     if name == "blank":
         return "", {}
+    if name.startswith("id:"):  # a made-up contact id (FX-FAKE): check it returns 0 rows first
+        return name[3:], {}
     if name.startswith("pool:"):
         pool = name[5:]
         with alloc["lock"]:
