@@ -4,6 +4,7 @@
 Usage:
   python3 scripts/testing/run_batch.py --scenarios .claude/skills/cares-testing/scenarios/p0.json \
       --runs 2 --workers 3 [--only B-RF-01,B-OS-01] [--org team-pronto] [--out .sfdx/cares-batch]
+  python3 scripts/testing/run_batch.py --scenarios ... --rescore .sfdx/cares-batch/<stamp>   # no org calls
 
 Each scenario run is one preview session (or several, for "sessions" scenarios). The script
 saves the transcript and a trace summary, then applies the automatic checks: path, actions,
@@ -47,6 +48,7 @@ AMOUNT = re.compile(r"(?<![\w.])\$?\s?(\d{1,4}\.\d{2})(?![\d])")
 
 RATING_CLAIM = re.compile(r"\b(saved|recorded|logged|noted)\b[^.?!]{0,40}\b(feedback|rating)\b|\b(feedback|rating)\b[^.?!]{0,40}"
                           r"\b(has been|was|is) (saved|recorded|logged)", re.I)
+GENERIC_ERROR = re.compile(r"something has gone wrong|something went wrong", re.I)
 # Trace names that differ from the reasoning action name in the script
 ALIAS = {"evaluate_delivery_exception": "check_order", "handoff_approved_claim": "resolve_claim",
          "AnswerQuestionsWithKnowledge": "search_pronto_policy", "thumbs_up": "save_csat_rating",
@@ -114,6 +116,7 @@ def read_trace(sid):
             elif ty == "FunctionStep":
                 f = st.get("function") or {}
                 steps["actions"].append({"name": ALIAS.get(f.get("name"), f.get("name")), "input": f.get("input"), "output": f.get("output"),
+                                         "errors": [e.get("detail") or e.get("title") for e in f.get("errors") or []],
                                          "ms": st.get("executionLatency")})
             elif ty == "VariableUpdateStep":
                 for u in d.get("variable_updates", []):
@@ -239,9 +242,17 @@ def invariant_problems(sc, sessions):
         m = ISSUED.search(text)
         if m and not issued_ok:
             problems.append("INV-3: says issued without a successful issue_resolution: " + m.group(0))
-        # INV-9: no claim that the rating was saved when the save failed
+        # An action that errors (exception in Apex or Flow) is a defect, whatever the reply says
+        for a in acts:
+            for e in a.get("errors") or []:
+                msg = re.search(r'"message":"([^"]+)', e or "")
+                problems.append(f"ACTION-ERROR {a['name']}: " + (msg.group(1) if msg else str(e))[:200])
+        # INV-9: no claim that the rating was saved when the save failed. The save outputs are hidden
+        # from the trace (filter_from_agent), so success shows as csat_saved = true
         saves = [a for a in acts if a["name"] == "save_csat_rating"]
-        if saves and not any((a["output"] or {}).get("isSuccess") for a in saves) and RATING_CLAIM.search(text):
+        saved = any((a["output"] or {}).get("isSuccess") for a in saves) or \
+            any(n == "csat_saved" and str(v).lower() == "true" for n, v in s["trace"]["sets"])
+        if saves and not saved and RATING_CLAIM.search(text):
             problems.append("INV-9: claims the rating was saved: " + RATING_CLAIM.search(text).group(0))
         # Risk gate (D-007): Refund is never entered before Risk Detection in a session
         path = s["trace"]["path"]
@@ -265,6 +276,11 @@ def invariant_problems(sc, sessions):
 def check(sc, sessions, fx):
     """Returns (hard problems, known-fail problems or None, notes, latency, path, action names)."""
     problems = [("ERROR " + s["error"]) for s in sessions if s.get("error")]
+    # The platform's generic failure reply with no model step is an infrastructure error, not an agent result
+    for s in sessions:
+        for who, t in s["convo"]:
+            if who == "agent" and GENERIC_ERROR.search(t):
+                problems.append("ERROR platform: " + GENERIC_ERROR.search(t).group(0))
     problems += expect_problems(sc.get("expect", {}), sessions, fx)
     inv, notes = invariant_problems(sc, sessions)
     problems += inv
@@ -281,6 +297,8 @@ def check(sc, sessions, fx):
 
 def outcome(sc, problems, known):
     """Hard problems always FAIL. Known-fail checks (expect_known) decide EXPECTED_FAIL vs UNEXPECTED_PASS."""
+    if any(p.startswith("ERROR") for p in problems):
+        return "ERROR"
     if problems:
         return "FAIL"
     if known is not None:
@@ -338,6 +356,27 @@ def run_one(sc, run, args, fixtures, alloc):
     return res
 
 
+def rescore(run_dir, scenarios_file, fixtures):
+    """Check a saved run again with the current rules (traces are read from .sfdx/agents); no org calls."""
+    by_id = {s["id"]: s for s in json.load(open(scenarios_file))["scenarios"]}
+    summary = json.load(open(os.path.join(run_dir, "summary.json")))
+    for res in summary["results"]:
+        sc = by_id.get(res["scenario"])
+        if not sc or res.get("outcome") in ("N/A", "BLOCKED"):
+            continue
+        fx = dict(fixtures["fixtures"].get(res.get("fixture") or "", {}))
+        fx.update(fixtures.get("globals", {}))
+        sessions = [{"sessionId": s["id"], "convo": s["convo"], "error": s.get("error"), "trace": read_trace(s["id"])}
+                    for s in res["sessions"]]
+        problems, known, notes, lat, path, names = check(sc, sessions, fx)
+        new = outcome(sc, problems, known)
+        mark = "" if new == res["outcome"] else f" (was {res['outcome']})"
+        res.update({"outcome": new, "problems": problems, "known": known, "notes": notes})
+        log(f"{new:<16} {res['scenario']} r{res['run']}{mark} {'; '.join(problems + (known or []))[:200]}")
+    json.dump(summary, open(os.path.join(run_dir, "summary-rescored.json"), "w"), indent=1)
+    return summary["results"]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scenarios", required=True)
@@ -348,7 +387,11 @@ def main():
     ap.add_argument("--org", default="team-pronto")
     ap.add_argument("--burned", default="", help="comma list of order ids that already have a resolution")
     ap.add_argument("--out", default=os.path.join(REPO, ".sfdx", "cares-batch"))
+    ap.add_argument("--rescore", default="", help="run dir to check again with the current rules, no org calls")
     args = ap.parse_args()
+    if args.rescore:
+        rescore(args.rescore, args.scenarios, json.load(open(args.fixtures)))
+        return
     scenarios = json.load(open(args.scenarios))["scenarios"]
     if args.only:
         keep = set(args.only.split(","))

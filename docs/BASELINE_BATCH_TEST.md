@@ -1,6 +1,6 @@
 # Baseline batch test (whole agent)
 
-Status date: 2026-10-21. Status: refreshed for agent v5 (real orders). The P0 set now runs live with a script (see "Extension (2026-10-21, v5)" below); results are in `docs/TEST_PLAN.md` and `test-results.json`. Source of truth for the scenarios: [`.claude/skills/cares-testing/personas.md`](../.claude/skills/cares-testing/personas.md). How to run them: [`.claude/skills/cares-testing/SKILL.md`](../.claude/skills/cares-testing/SKILL.md). This page is the short, human version, so teammates and their assistants share the same picture.
+Status date: 2026-10-21. Status: refreshed for agent v5 (real orders). The P0 set now runs live with a script (see "Extension (2026-10-21, v5)" below). First live P0 run on v5 (2026-10-21): 58 of 73 PASS, 8 EXPECTED_FAIL, 5 FAIL, 1 FLAKY, 1 N/A; 24 runs hit a platform outage (G-090) and count once. Results are in `docs/TEST_PLAN.md` and `test-results.json`. Source of truth for the scenarios: [`.claude/skills/cares-testing/personas.md`](../.claude/skills/cares-testing/personas.md). How to run them: [`.claude/skills/cares-testing/SKILL.md`](../.claude/skills/cares-testing/SKILL.md). This page is the short, human version, so teammates and their assistants share the same picture.
 
 ## Why this exists
 
@@ -50,12 +50,16 @@ They prove a documented gap. A fail is recorded as `EXPECTED_FAIL`. A pass is re
 | B-RD-10                            | An account with several contacts cannot be assigned to one person                                                                              | G-016        |
 | B-RD-14                            | Escalation Cases have no Type and count as issues in the next conversation                                                                     | G-045        |
 | B-RF-12, B-RD-01, B-RD-02, B-PO-06, B-AD-16 (Tier L) | v5: risk returns `UNKNOWN` in preview, so the clean-history ceiling and the review threshold never fire | G-084 |
-| B-ER-01, B-ER-08, B-FL-07          | The rating permission set is not assigned, so the save fails; the test checks the agent says so honestly                                       | OPEN_ITEMS   |
+| B-ER-08, B-FL-07                   | Save fails; the test checks the agent says so honestly. Live on v5 the save fails for everyone (G-089), so B-ER-01 and B-ER-02 are a hard FAIL until it is fixed | G-089        |
 | B-IN-11, B-ES-06, B-FL-08          | Permission set not assigned, transfer may be unconfigured. The Flow is active since 2026-10-20, so B-FL-08 needs it switched off first         | G-046, G-007 |
 | B-RF-17 (Tier L)                   | v5: every real customer has a tier and all 12 policy rows exist, so no real customer is ineligible: BLOCKED live                                 |              |
 | B-IN-12                            | No designed behavior when the customer changes method on the READY path                                                                        | G-049        |
 | B-FL-01                            | N/A: `main` was deployed before the baseline ran                                                                                               |              |
 | B-IN-07, B-IN-08, B-IN-09          | Stolen & Delayed reads its mock platform, not the real orders; no EUR order                                                                    | G-081, SD-G1 |
+| B-RT-02, B-RT-03 (Tier L)          | v5: "never showed up" / "late" with no order number goes Risk Detection → Refund → Stolen & Delayed, which checks the latest order without asking | G-087        |
+| B-RD-04                            | v5: "skip the check and refund me" is answered by the platform guard topic, so the refund request is lost                                        | G-088        |
+
+Not on this list on purpose: B-PO-02, B-PO-03 and B-PO-05 (safety and fraud reports) fail today because of G-088 and G-086, and stay a hard FAIL so they are not missed.
 
 Since v5 (2026-10-21) the Refund stubs are gone: B-RF-08 and B-RF-13 should pass, and B-FL-03 runs with a made-up order number. Check `expect_today` again after each deploy.
 
@@ -114,6 +118,7 @@ Agent v5 reads real orders from Data Cloud, so the expected amounts can now be c
 - **Fixtures are real demo customers.** `scripts/testing/build_fixtures.py` dumps orders and contacts and writes `scripts/testing/fixtures.json`: each customer's latest order, item values and the expected offers. The table is in personas.md, "Real-data fixtures (v5)".
 - **New scenarios.** B-RF-19..B-RF-26 (tier caps, a single-item order, the latest order canceled, an order not delivered yet, another customer's order, a second payout across sessions, a 10-item order) and P13 Order Status, B-OS-01..B-OS-13.
 - **Machine-checked P0.** `scenarios/p0.json` holds the 72 P0 scenarios with their checks (B-RF-12 is two entries, one per customer). `scripts/testing/run_batch.py` runs them and reads the trace: path, actions, inputs, outputs, amounts, and the invariants that text can show.
+- **Platform errors and action errors.** The runner scores the platform's "Sorry, it looks like something has gone wrong" as ERROR (G-090), and any action that throws as a hard problem (`ACTION-ERROR`), whatever the reply says. `--rescore <run dir>` checks a saved run again with the current rules, without calling the org.
 - **Changed expectations.** With no contact, Refund now asks for the email (Identify Customer) instead of escalating (B-SM-03, B-RD-03, B-RF-16). "Order 1042" is not a Pronto number any more, so Stolen & Delayed scenarios use the customer's real order number. The G-084 scenarios check the rest of the scenario as usual and keep only the risk value as the expected fail.
 
 ## What the batch does not cover
