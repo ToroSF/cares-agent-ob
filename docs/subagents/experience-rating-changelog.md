@@ -5,6 +5,15 @@ changed and why, so collaborators working this sub-agent on its own branch
 can see what shifted without re-reading the whole `.agent` file. The full
 baseline this diffs against is [`experience-rating-v1.md`](experience-rating-v1.md).
 
+## v1.4 — Typed-reply mapping, no mid-task jump (2026-10-21, `fix/v6-rating-polish`)
+
+See D-078 and D-079 (the latter on the router, not this subagent's own block). Local edit only; not validated against an org, not deployed.
+
+- **A typed reply can now count as the rating.** Before: only a click on thumbs up/down was accepted; a typed "5 out of 5" or "10/10" fell through to the "declined or no response" branch, so the thumbs were shown again and the customer was thanked for feedback that was never saved (G-099, B-ER-06). Now: a clearly positive or negative typed reply is mapped to the matching thumb and the save proceeds exactly as if the customer had clicked. A 1-5 number is still never echoed back or stored as a scale — it only decides which thumb. A genuinely ambiguous typed reply still gets a re-ask for thumbs up/down only.
+- **Not this subagent's own change, but affects when it's reached:** the router's `go_to_experience_rating` transition is now gated on `router_active_task == ""`, and the router's instructions add a small-talk rule so a mid-task "Thanks, you're great!" stays with the open task instead of jumping here (G-047, B-CX-06). Flagged per `CONTRIBUTING.md` as a router change proposed alongside this subagent's own fix, pending the router owner's sign-off.
+- **Why:** both close a path where the customer's feedback (or their open task) was silently lost, which is the same shape of failure as the G-089/G-084 fixes elsewhere in v5 — the mechanism existed, but a real customer input didn't reach it.
+- **Not re-run against Testing Center or deployed.** Re-run B-ER-06, B-CX-06 and B-ER-11 before merging.
+
 ## v1.3 — Thumbs up/down, model-generated feedback (2026-10-20, `feature/experience-rating-thumbs`)
 
 See D-044. Local compile only; not validated against an org, not deployed.
