@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <label>CARES Refund Access</label>
-    <description>Grants the Einstein Agent User running CARES access to the Refund sub-agent's invocable Apex actions. Assignment is an explicit rollout step, not a side effect of deploying the agent.</description>
+    <description>Lets the CARES agent user run the Refund and Order Status Apex actions and read the app account id that links a Contact to its Data Cloud orders (D-071). Assign it as a rollout step.</description>
     <hasActivationRequired>false</hasActivationRequired>
+    <classAccesses>
+        <apexClass>CARES_Order_GetStatus</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <classAccesses>
         <apexClass>CARES_Refund_ApplySettlement</apexClass>
         <enabled>true</enabled>
@@ -50,6 +54,11 @@
         <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>false</modifyAllRecords>
     </objectPermissions>
+    <fieldPermissions>
+        <field>Contact.Pronto_App_Account_Id__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
     <fieldPermissions>
         <field>Contact.CARES_Tier__c</field>
         <readable>true</readable>

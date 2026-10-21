@@ -2,7 +2,7 @@
 
 Status date: 2026-10-19. Source: the `CARES` authoring bundle in this repo (identical to the version in the shared team org on this date).
 
-> **Deploy status (2026-10-21): nothing new is deployed yet.** `main` now has PR #15 (policy alignment, Pronto Help, Urgent Escalation) and PR #18 (real Refund backend). Both passed a check-only deploy with tests (81/81), but the team org still runs the published v1 agent and the Refund stubs. Deploy steps and blockers: [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md).
+> **Deploy status (2026-10-21):** `main` is deployed to the team org. Agent v4 (PR #15, #18, #19, #20) was published and activated on 2026-10-21. v5 adds real orders from Data Cloud (D-071) and the Order Status sub-agent (D-075). Deploy steps: [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md).
 
 ## 1. Use case and business framing
 
@@ -65,7 +65,7 @@ Design principle `DECIDED` (proposal from one member, adopted as the working rul
 | Subagent                       | Owner                | Status                                                                                                                          | Doc                                                                                                     |
 | ------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Agent Router                   | `OPEN`               | Real, weak: no conditions, "best guess" when unclear                                                                            | n/a                                                                                                     |
-| Refund                         | Refund owner         | Real tier and policy offer and audit row since PR #18 (`find_order`, `apply_settlement` and order values still stubs, G-004). Check-only tests pass; not deployed; needs tier and policy rows (R-17) | [node spec](subagents/refund.md)                                                                        |
+| Refund                         | Refund owner         | Real tier and policy offer and audit row since PR #18; real orders and item values from Data Cloud since v5 (D-071, D-072). `apply_settlement` is still a stub. Tier and policy rows seeded (R-17 closed) | [node spec](subagents/refund.md)                                                                        |
 | Stolen & Delayed Orders        | @rojasC10            | Built on branch (`feature/delivery-exceptions`), validated, not deployed                                                        | [design](subagents/stolen-delayed-orders.md)                                                            |
 | Risk Detection                 | Risk Detection owner | Built on branch, validated, not deployed                                                                                        | [node spec](subagents/risk-detection-node-spec.md), [design](subagents/risk-detection.md)               |
 | Experience Rating              | @ToroSF              | Built on branch (`feature/experience-rating-thumbs`), validated, not deployed. Thumbs up/down + model-generated summary (D-044) | [v1 baseline](subagents/experience-rating-v1.md), [changelog](subagents/experience-rating-changelog.md) |

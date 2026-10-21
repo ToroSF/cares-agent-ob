@@ -1,11 +1,10 @@
 /**
- * Unit tests for the five Refund invocable actions. find_order and the order
- * VALUE inputs to calculate_refund_offer are still stubs (G-004: no real Order
- * object in this org). calculate_refund_offer's policy/limit lookup and
- * issue_resolution's audit-trail insert are real sObjects/SOQL/DML (D-024).
- * They pin the rules the agent relies on (D-019, D-030, D-036) and the explicit
- * stub line-item list the baseline batch assumes in Tier L (personas.md). When a
- * stub is replaced by real logic, update the stub-value tests in the same PR.
+ * Unit tests for the five Refund invocable actions. find_order and log_order_issue
+ * read real orders from Data Cloud (D-071); Data Cloud does not run in unit tests,
+ * so they use CARES_OrderData.mockRows (one delivered order, four items, $38.50,
+ * so each item is worth 9.62 and the last one 9.64, D-072). calculate_refund_offer's
+ * policy/limit lookup and issue_resolution's audit-trail insert are real
+ * sObjects/SOQL/DML (D-024). They pin the rules the agent relies on (D-019, D-030, D-036).
  *
  * First run in an org: check-only validation on 2026-10-21. Test data is written
  * in SYSTEM_MODE because the user running the tests has no access to the new
@@ -13,7 +12,27 @@
  */
 @IsTest
 private class CARES_Refund_ActionsTest {
-    private static final String ORDER_ID = 'STUB-ORDER-1042';
+    private static final String ORDER_ID = 'PR-241018-TEST001';
+    private static final String APP_ID = 'PA-test-orders-1';
+
+    // A delivered order of APP_ID, rowData in CARES_OrderData's column order
+    private static void mockOrder() {
+        CARES_OrderData.mockRows = new List<List<Object>>{
+            new List<Object>{
+                APP_ID, ORDER_ID, '2024-10-18 18:00:00.000 UTC', 'Delivered', 'Test Kitchen', '38.50',
+                'Cheeseburger; 1x Large Fries; Chicken Salad; Lemonade', null, null, '2024-10-18 18:40:00.000 UTC'
+            }
+        };
+    }
+
+    private static Contact orderContact() {
+        Contact c = new Contact(LastName = 'CARES Orders', Pronto_App_Account_Id__c = APP_ID);
+        Database.insert(c, AccessLevel.SYSTEM_MODE);
+        mockOrder();
+        return c;
+    }
+
+    private static Id cachedOrderContactId;
 
     private static Account makeAccount() {
         Account a = new Account(Name = 'CARES Test Account');
@@ -84,7 +103,11 @@ private class CARES_Refund_ActionsTest {
     }
 
     private static CARES_Refund_LogOrderIssue.Result logIssue(String issueType, String affectedItems, String deliveryPath) {
+        if (cachedOrderContactId == null) {
+            cachedOrderContactId = orderContact().Id;
+        }
         CARES_Refund_LogOrderIssue.Request req = new CARES_Refund_LogOrderIssue.Request();
+        req.contactId = cachedOrderContactId;
         req.orderId = ORDER_ID;
         req.issueType = issueType;
         req.issueDescription = 'Customer description';
@@ -134,18 +157,36 @@ private class CARES_Refund_ActionsTest {
         return CARES_Refund_IssueResolution.execute(new List<CARES_Refund_IssueResolution.Request>{ req })[0];
     }
 
-    // find_order (stub, G-004)
+    // find_order (real orders, D-071)
 
     @IsTest
-    static void findOrderReturnsTheStubOrderWithExplicitLineItems() {
+    static void findOrderReturnsTheCustomersDeliveredOrderWithPricedItems() {
+        Contact c = orderContact();
         CARES_Refund_FindOrder.Request req = new CARES_Refund_FindOrder.Request();
-        req.contactId = '003000000000001';
+        req.contactId = c.Id;
         req.orderNumber = '';
         CARES_Refund_FindOrder.Result r = CARES_Refund_FindOrder.execute(new List<CARES_Refund_FindOrder.Request>{ req })[0];
         System.assertEquals(true, r.found);
         System.assertEquals(ORDER_ID, r.orderId);
-        System.assert(r.lineItems.contains('Large Fries $5.50'), 'Line items are what B-RF-02 names');
-        System.assertEquals(4, CARES_Refund_FindOrder.STUB_LINE_ITEM_NAMES.size(), 'Explicit, defined line-item list (G-023)');
+        System.assertEquals(38.50, r.orderTotal, 'The real total becomes the refund cap');
+        System.assert(r.lineItems.contains('Large Fries $9.62'), 'Quantity prefix removed, price = total / items: ' + r.lineItems);
+        System.assert(r.orderSummary.contains('Test Kitchen'), r.orderSummary);
+        System.assertEquals('', r.notFoundReason);
+    }
+
+    @IsTest
+    static void findOrderDoesNotReturnAnOrderOfAnotherCustomer() {
+        Contact other = new Contact(LastName = 'Other', Pronto_App_Account_Id__c = 'PA-someone-else');
+        Database.insert(other, AccessLevel.SYSTEM_MODE);
+        mockOrder();
+        CARES_Refund_FindOrder.Request req = new CARES_Refund_FindOrder.Request();
+        req.contactId = other.Id;
+        req.orderNumber = ORDER_ID;
+        CARES_Refund_FindOrder.Result r = CARES_Refund_FindOrder.execute(new List<CARES_Refund_FindOrder.Request>{ req })[0];
+        System.assertEquals(false, r.found);
+        System.assertEquals('', r.orderId);
+        System.assertEquals(0, r.orderTotal);
+        System.assertEquals(CARES_OrderData.NOT_FOUND, r.notFoundReason);
     }
 
     // log_order_issue: path rules (D-030) and item validation (G-023)
@@ -155,11 +196,11 @@ private class CARES_Refund_ActionsTest {
         CARES_Refund_LogOrderIssue.Result wrong = logIssue('Wrong_Missing_Items', 'Cheeseburger', '');
         System.assertEquals(true, wrong.accepted);
         System.assertEquals('Wrong_Missing_Items', wrong.orderOutcome);
-        System.assertEquals(14.00, wrong.affectedValue, 'Priced from the explicit line-item list, not a flat 12.00');
+        System.assertEquals(9.62, wrong.affectedValue, 'Priced from the real order (total / items), not a flat 12.00');
 
         CARES_Refund_LogOrderIssue.Result quality = logIssue('Quality_Issue', 'Large Fries', '');
         System.assertEquals('Quality_Issue', quality.orderOutcome);
-        System.assertEquals(5.50, quality.affectedValue);
+        System.assertEquals(9.62, quality.affectedValue, 'Matches the name without the 1x prefix');
 
         CARES_Refund_LogOrderIssue.Result noItems = logIssue('Wrong_Missing_Items', '', '');
         System.assertEquals(false, noItems.accepted);
@@ -171,7 +212,7 @@ private class CARES_Refund_ActionsTest {
     static void itemNotOnTheOrderIsRejectedNotValuedAtTwelve() {
         // Closes the known issue in G-023: an unlisted item must be rejected, not accepted at 12.00
         CARES_Refund_LogOrderIssue.Result r = logIssue('Wrong_Missing_Items', 'Sushi', '');
-        System.assertEquals(false, r.accepted, 'Sushi is not on the stub order');
+        System.assertEquals(false, r.accepted, 'Sushi is not on the order');
         System.assertEquals('', r.orderOutcome);
         System.assertEquals(0, r.affectedValue);
     }
@@ -180,7 +221,7 @@ private class CARES_Refund_ActionsTest {
     static void multipleListedItemsSumTheirRealPrices() {
         CARES_Refund_LogOrderIssue.Result r = logIssue('Wrong_Missing_Items', 'Cheeseburger, Lemonade', '');
         System.assertEquals(true, r.accepted);
-        System.assertEquals(21.00, r.affectedValue, '14.00 Cheeseburger + 7.00 Lemonade');
+        System.assertEquals(19.26, r.affectedValue, '9.62 Cheeseburger + 9.64 Lemonade (the last item takes the rounding)');
     }
 
     @IsTest
@@ -194,7 +235,27 @@ private class CARES_Refund_ActionsTest {
     static void itemNameMatchingIsCaseInsensitive() {
         CARES_Refund_LogOrderIssue.Result r = logIssue('Quality_Issue', 'cheeseburger', '');
         System.assertEquals(true, r.accepted);
-        System.assertEquals(14.00, r.affectedValue);
+        System.assertEquals(9.62, r.affectedValue);
+    }
+
+    @IsTest
+    static void itemCopiedWithItsPriceStillMatches() {
+        CARES_Refund_LogOrderIssue.Result r = logIssue('Wrong_Missing_Items', 'Lemonade $9.64', '');
+        System.assertEquals(true, r.accepted);
+        System.assertEquals(9.64, r.affectedValue, 'The value comes from the order, not from the copied text');
+    }
+
+    @IsTest
+    static void itemIssueOnAnOrderThatIsNotTheCustomersIsRejected() {
+        CARES_Refund_LogOrderIssue.Request req = new CARES_Refund_LogOrderIssue.Request();
+        req.contactId = orderContact().Id;
+        req.orderId = 'PR-241018-NOTMINE';
+        req.issueType = 'Wrong_Missing_Items';
+        req.issueDescription = 'Customer description';
+        req.affectedItems = 'Cheeseburger';
+        CARES_Refund_LogOrderIssue.Result r = CARES_Refund_LogOrderIssue.execute(new List<CARES_Refund_LogOrderIssue.Request>{ req })[0];
+        System.assertEquals(false, r.accepted);
+        System.assertEquals(0, r.affectedValue);
     }
 
     @IsTest
@@ -452,7 +513,7 @@ private class CARES_Refund_ActionsTest {
         Contact c = makeContact();
         System.runAs(refundUser()) {
             CARES_Refund_IssueResolution.Result first = issue(c.Id, ORDER_ID, 'Refund', 15.00, 18.00);
-            CARES_Refund_IssueResolution.Result secondOrder = issue(c.Id, 'STUB-ORDER-2099', 'Refund', 10.00, 12.00);
+            CARES_Refund_IssueResolution.Result secondOrder = issue(c.Id, 'PR-241019-TEST002', 'Refund', 10.00, 12.00);
             System.assertEquals(true, first.success);
             System.assertEquals(true, secondOrder.success);
         }

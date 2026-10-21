@@ -64,6 +64,17 @@ Not done on this branch on purpose: activating a Flow changes what the live agen
 6. Write each result in [TEST_PLAN.md](TEST_PLAN.md).
 7. Publish and activate: only the designated person, only after steps 2 to 5 pass.
 
+## v5: real orders from Data Cloud (`feature/real-order-data`)
+
+Adds `CARES_OrderData`, `CARES_Order_GetStatus` and `CARES_OrderDataTest`, changes `CARES_Refund_FindOrder`, `CARES_Refund_LogOrderIssue`, `CARES_Refund_ActionsTest`, `CARES_Refund_Access` and `CARES.agent` (Order Status sub-agent). Decisions D-071, D-072, D-074, D-075.
+
+1. Needs in the org (already there in the team org): the Data Cloud stream `Order` (`Order__dlm`), the field `Contact.Pronto_App_Account_Id__c` filled for the customers, and `AgentforceServiceAgentUserPsg` on the agent user (it gives read on `Order__dlm`).
+2. Check-only with the new test class (2026-10-21: 99/99, coverage `CARES_OrderData` 90.5%, the others 97 to 100%):
+   `sf project deploy validate --source-dir force-app --test-level RunSpecifiedTests --tests CARES_Identity_FindContactByEmailTest --tests CARES_Refund_ActionsTest --tests CARES_StolenDelayedActionsTest --tests CARES_StolenDelayedPolicyTest --tests CsatRatingSaverTest --tests CARES_OrderDataTest --target-org <team org> --json`
+3. Deploy the Apex, the permission set and the bundle together. The new `find_order` and `log_order_issue` also change what the active v4 does: v4 does not send `contactId` to `log_order_issue`, so item refunds on v4 stop being accepted until v5 is active. Publish v5 soon after the deploy, or roll back.
+4. Preview from the authoring bundle with live actions and `'$Context.ContactId=<id>'` (demo customers in `.claude/skills/cares-testing/personas.md`): (a) a missing item on the latest order gets a real `PR-...` order and an offer within the order total; (b) "where is my order?" gives the real status and ETA; (c) another customer's order number is not found.
+5. Publish and activate v5. Rollback: activate v4 and deploy the Apex from tag `pre-v5`.
+
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).
