@@ -2,7 +2,7 @@
 
 How the Escalate to Human subagent and its hand-off work, as built on `feature/escalation-handoff`. For the why, read D-083 to D-087 in [../DECISIONS.md](../DECISIONS.md). Gaps: G-086, G-082, G-068 (and G-064, G-093, G-095, G-098). Owner: @Mateus-Goes.
 
-State: built, compiled locally with no errors, `sf agent validate` passes, check-only deploy passes (94 components, 122/122 tests after the rebase onto `main` (PR #36 to #38), `CARES_EscalationAlerts` 95% coverage). **Not deployed yet.** Last updated: 2026-10-21.
+State: built, compiled locally with no errors, `sf agent validate` passes, check-only deploy passes (94 components, 122/122 tests after the rebase onto `main` (PR #36 to #38), `CARES_EscalationAlerts` 95% coverage). Deployed to the team org on 2026-10-21 with the fixes G-104 to G-107; see the record in [../DEPLOY_CHECKLIST.md](../DEPLOY_CHECKLIST.md). Last updated: 2026-10-21.
 
 ## In one paragraph
 When CARES cannot or must not finish a request itself (a safety report, repeated issues, a claim review, a failed step, a dispute, or a customer asking for a person), Escalate to Human logs one case with a fixed summary, tells the customer the case number and what happens next, and alerts the support team. In a real website chat it also transfers the chat to a person in Omni-Channel. The customer never has to repeat themselves, and the person never has to read the whole transcript.

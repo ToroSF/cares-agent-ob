@@ -117,6 +117,19 @@ Decisions D-083 to D-087, gaps G-086, G-082, G-068. Design: [subagents/escalate-
 8. A real chat on `CARES_Web` once v6 is active: the chat reaches `CARES_Support_Chat` and the case is linked to the session.
 9. Rollback: activate v5. To stop the alerts, set `Bell_Enabled__c` false and Mode `OFF` on `Default` (no deploy needed). To go back to the old case summary, activate Flow version 2 of `CARES_Create_Escalation_Case`.
 
+**Done 2026-10-21 (deploy of `main` after PR #40, with PR #36 to #38):**
+- Deploy `0AfjV000004aBidSAE`: 94 components, 122/122 tests. Flows: `CARES_Create_Escalation_Case` v3 Active, `CARES_Route_To_Support` v1 Active, `CARES_Get_Risk_Result` v3 **Draft** (PR #38: activate it in Setup, it was not done here).
+- Setup script: 4 people in `CARES_Support_Team`, Service Cloud User, presence permission set (after the G-106 fix).
+- PR #38 backfill: 143 cases marked `CARES_Escalation__c`, 0 failed. The CLI user got `CARES_Escalation_Access` to run it.
+- Problems found by the first batch after the deploy, fixed the same hour: no case created (G-104), alert job failed (G-105), alert status unreadable (G-107). Lesson: the Apex tests run as an admin; a Flow or job that the agent user runs needs a test as the Einstein Agent User profile.
+- Escalation scenarios after the fixes, 2 runs each: B-ES-01, B-ES-06, B-ES-10, B-PO-01, B-PO-06, B-SD-01, B-AD-16, B-CX-05 PASS 2/2. B-PO-03 FAIL 2/2, the known guard-topic gap (G-088), not this block.
+- Cases after the fixes: each has the account, the 12-line summary, a reason code and `Bell: Sent | Slack: Off`; SAFETY cases are High.
+- Full P0 on the v6 draft, 2 runs (`.sfdx/cares-batch/20261021T172107Z`): 115 PASS, 9 FAIL, 12 ERROR, 6 EXPECTED_FAIL, 2 BLOCKED, 2 N/A. Run 1 finished before any outage and has no regression. Every FAIL has a known cause:
+  - B-PO-03 (2) and B-PO-05 (1): the guard topic `Inappropriate_Content` (G-088), the same on v5.
+  - B-RF-01 and B-RF-02 (2 each): the fixture orders were paid by the morning batch, so the agent escalated with a case number, as D-048 says (G-108).
+  - B-SM-01 (2): the greeting said "How can I assist you" instead of "help"; the regex wants the word "help". Wording only.
+  - All 12 ERRORs are in run 2 from 17:36 UTC: "something has gone wrong" for every agent in the org, CARES v5 included (G-090, third time today). The 2 BLOCKED ran out of fresh escalation contacts (pool `ESC`).
+
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).

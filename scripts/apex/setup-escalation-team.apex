@@ -2,7 +2,7 @@
 // Run once after the CARES_Support_Team group and the two queues are deployed:
 //   sf apex run --file scripts/apex/setup-escalation-team.apex --target-org <team org>
 // Safe to run again: it only adds what is missing. It never removes anyone.
-// Set DRY_RUN = true to print what would change without writing.
+// Starts with DRY_RUN = true: it prints what would change and writes nothing. Set it to false to write.
 //
 // For each person in TEAM it:
 //   1. adds them to the CARES_Support_Team group (members of both CARES queues and of the bell);
@@ -10,7 +10,7 @@
 //   3. assigns Agent_Presence_Status_Access (the "Available" status on the Messaging channel).
 // Group membership is not deployable metadata, which is why this is a script.
 
-Boolean DRY_RUN = false;
+Boolean DRY_RUN = true;
 
 // Usernames in the team org. Demo usernames, not secrets.
 List<String> TEAM = new List<String>{
@@ -20,12 +20,12 @@ List<String> TEAM = new List<String>{
     'lpalomaneshub2@salesforce.com'
 };
 
-Group team = [SELECT Id FROM Group WHERE DeveloperName = 'CARES_Support_Team' AND Type = 'Regular' LIMIT 1];
+Group supportGroup = [SELECT Id FROM Group WHERE DeveloperName = 'CARES_Support_Team' AND Type = 'Regular' LIMIT 1];
 PermissionSet presence = [SELECT Id FROM PermissionSet WHERE Name = 'Agent_Presence_Status_Access' LIMIT 1];
 
 List<User> users = [SELECT Id, Username, UserPermissionsSupportUser FROM User WHERE Username IN :TEAM AND IsActive = true];
 Set<Id> inGroup = new Set<Id>();
-for (GroupMember m : [SELECT UserOrGroupId FROM GroupMember WHERE GroupId = :team.Id]) {
+for (GroupMember m : [SELECT UserOrGroupId FROM GroupMember WHERE GroupId = :supportGroup.Id]) {
     inGroup.add(m.UserOrGroupId);
 }
 Set<Id> hasPresence = new Set<Id>();
@@ -38,7 +38,7 @@ List<User> supportUsers = new List<User>();
 List<PermissionSetAssignment> assignments = new List<PermissionSetAssignment>();
 for (User u : users) {
     if (!inGroup.contains(u.Id)) {
-        members.add(new GroupMember(GroupId = team.Id, UserOrGroupId = u.Id));
+        members.add(new GroupMember(GroupId = supportGroup.Id, UserOrGroupId = u.Id));
     }
     if (u.UserPermissionsSupportUser != true) {
         supportUsers.add(new User(Id = u.Id, UserPermissionsSupportUser = true));
