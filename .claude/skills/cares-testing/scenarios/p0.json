@@ -710,7 +710,7 @@
    "id": "B-SD-01",
    "priority": "P0",
    "mode": "live",
-   "fixture": "pool:ESC",
+   "fixture": "pool:ESC-LOW",
    "turns": [
     "The app says delivered but I never got it. Order {order}."
    ],
@@ -806,7 +806,7 @@
    "id": "B-SD-14",
    "priority": "P0",
    "mode": "live",
-   "fixture": "pool:ESC",
+   "fixture": "pool:ESC-LOW",
    "turns": [
     "The app says delivered but I never got it. Order {order}, nothing was at my door."
    ],
@@ -823,12 +823,19 @@
      "create_escalation_case": 1
     },
     "outputs": {
-     "check_order.decision": "ESCALATE"
+     "check_order.decision": "MANUAL_REVIEW"
     },
     "inputs": {
-     "create_escalation_case.stolenDelayedDecision": "ESCALATE",
-     "create_escalation_case.stolenDelayedReason": "DATA_UNAVAILABLE"
-    }
+     "create_escalation_case.stolenDelayedDecision": "MANUAL_REVIEW",
+     "create_escalation_case.stolenDelayedReason": "TRUST_NOT_ESTABLISHED|LOW_TRUST_CUSTOMER",
+     "create_escalation_case.orderId": "{order}"
+    },
+    "reply_any": [
+     "\\b0\\d{7}\\b"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation"
+    ]
    },
    "burns": true
   },
