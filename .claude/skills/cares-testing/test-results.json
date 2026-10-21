@@ -3385,6 +3385,631 @@
           ]
         }
       }
+    },
+    {
+      "timestamp": "2026-10-21T09:59:24Z",
+      "tier": "L",
+      "configHash": "26f41d647b95d645",
+      "commit": "ddfabba",
+      "agentVersion": "v5 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p1-rest.json",
+      "runner": "scripts/testing/run_batch.py --runs 2 --workers 2 (rescored with the empty-turn ERROR rule). The first try, 20261021T095124Z, hit a second short platform outage (about 09:50-09:58 UTC, G-090); its valid runs agree with this one except B-CX-06.",
+      "why": "First run of 21 more P1/P2 scenarios: Risk Detection, Stolen & Delayed and Integration (simulated), Experience Rating, Failure and Customer experience.",
+      "counts": {
+        "before": {
+          "Case": 146,
+          "CaseComment": 20,
+          "CARES_Resolution__c": 17
+        },
+        "after": {
+          "Case": 151,
+          "CaseComment": 20,
+          "CARES_Resolution__c": 17,
+          "CSAT_Rating__c": 0
+        }
+      },
+      "testData": "Fixtures rebuilt before the run (FX-CLEAN = Darren Gommery, ESC pool skips contacts with Cases or a payout). B-RD-11 uses the made-up id 003jV00000Zz9Zz (0 rows). Nothing deleted.",
+      "personas": {
+        "P11": {
+          "name": "Customer experience",
+          "mode": "live",
+          "totalScenarios": 4,
+          "passed": 3,
+          "failed": 0,
+          "flaky": 1,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-CX-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": "FINDING: no apology, the offer comes at once. FINDING: reply lacks /sorry|apolog|understand/"
+            },
+            {
+              "scenario": "B-CX-04",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-CX-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": "Hands off with only the placeholder reply (G-086)."
+            },
+            {
+              "scenario": "B-CX-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "FAIL"
+              ],
+              "result": "FLAKY",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "experience_rating"
+                ]
+              ],
+              "notes": "G-047: \"Thanks, you're great!\" during the offer asked for a rating. Also FAIL in the valid r2 of 20261021T095124Z, so 2 of 3 runs fail."
+            }
+          ],
+          "status": "PASS 3/4"
+        },
+        "P6": {
+          "name": "Experience Rating",
+          "mode": "mixed (B-ER-11, B-ER-12 live; saves simulated while G-089 is open)",
+          "totalScenarios": 7,
+          "passed": 6,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 1,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-ER-06",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "path": [
+                [
+                  "order_status",
+                  "experience_rating",
+                  "experience_rating"
+                ],
+                [
+                  "order_status",
+                  "experience_rating",
+                  "experience_rating"
+                ]
+              ],
+              "notes": "KNOWN_FAIL(G-099): \"5 out of 5\" not mapped, nothing saved."
+            },
+            {
+              "scenario": "B-ER-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "order_status",
+                  "experience_rating",
+                  "experience_rating",
+                  "experience_rating"
+                ],
+                [
+                  "order_status",
+                  "experience_rating",
+                  "experience_rating",
+                  "experience_rating"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-09",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "order_status",
+                  "experience_rating",
+                  "experience_rating"
+                ],
+                [
+                  "order_status",
+                  "experience_rating",
+                  "experience_rating"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-10",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "urgent_escalation",
+                  "escalate_to_human",
+                  "__human__",
+                  "order_status",
+                  "experience_rating"
+                ],
+                [
+                  "urgent_escalation",
+                  "escalate_to_human",
+                  "escalate_to_human",
+                  "__human__",
+                  "experience_rating"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-11",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-12",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "experience_rating",
+                  "experience_rating_skipped"
+                ],
+                [
+                  "experience_rating",
+                  "experience_rating_skipped"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-13",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "urgent_escalation",
+                  "escalate_to_human",
+                  "__human__",
+                  "experience_rating",
+                  "experience_rating"
+                ],
+                [
+                  "urgent_escalation",
+                  "escalate_to_human",
+                  "__human__",
+                  "experience_rating",
+                  "experience_rating"
+                ]
+              ],
+              "notes": ""
+            }
+          ],
+          "status": "PASS 6/7"
+        },
+        "P10": {
+          "name": "Failure",
+          "mode": "live",
+          "totalScenarios": 1,
+          "passed": 1,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-FL-10",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            }
+          ],
+          "status": "PASS 1/1"
+        },
+        "P5": {
+          "name": "Contracts",
+          "mode": "mixed (B-IN-10 live, the rest simulated)",
+          "totalScenarios": 3,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 1,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-IN-05",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": "INV-6?: promises a person without Escalate in the path: connect you with a"
+            },
+            {
+              "scenario": "B-IN-10",
+              "repeats": 2,
+              "outcomes": [
+                "EXPECTED_FAIL",
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "path": [
+                [
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": "KNOWN_FAIL(G-098): the escalation Case input has no order id."
+            },
+            {
+              "scenario": "B-IN-14",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders"
+                ],
+                [
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders"
+                ]
+              ],
+              "notes": ""
+            }
+          ],
+          "status": "PASS 2/3"
+        },
+        "P2": {
+          "name": "Risk Detection",
+          "mode": "live",
+          "totalScenarios": 4,
+          "passed": 4,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-RD-06",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-07",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "Inappropriate_Content"
+                ],
+                [
+                  "Inappropriate_Content"
+                ]
+              ],
+              "notes": "Refused by the guard topic Inappropriate_Content (G-088)."
+            },
+            {
+              "scenario": "B-RD-08",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-11",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": "Fake id 003jV00000Zz9Zz (0 rows): no offer, asks for the order number."
+            }
+          ],
+          "status": "PASS 4/4"
+        },
+        "P4": {
+          "name": "Stolen & Delayed",
+          "mode": "simulated",
+          "totalScenarios": 2,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-SD-13",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-15",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "experience_rating"
+                ],
+                [
+                  "stolen_delayed_orders",
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "experience_rating"
+                ]
+              ],
+              "notes": ""
+            }
+          ],
+          "status": "PASS 2/2"
+        }
+      },
+      "summary": {
+        "scenarios": 21,
+        "PASS": 18,
+        "FLAKY": 1,
+        "EXPECTED_FAIL": 2,
+        "runs": 42,
+        "runsLostToPlatform": 0
+      }
     }
   ]
 }
