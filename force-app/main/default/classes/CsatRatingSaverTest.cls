@@ -114,6 +114,60 @@ private class CsatRatingSaverTest {
         System.assertEquals(0, [SELECT COUNT() FROM CSAT_Rating__c]);
     }
 
+    // The profile the real agent user has; System Administrator hid G-089
+    private static User agentUser() {
+        Profile p = [SELECT Id FROM Profile WHERE Name = 'Einstein Agent User' LIMIT 1];
+        User u = new User(
+            Alias = 'csata',
+            Email = 'csat.agent@example.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'CSAT Agent',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = p.Id,
+            TimeZoneSidKey = 'America/Los_Angeles',
+            UserName = 'csat.agent.' + System.currentTimeMillis() + '@example.com'
+        );
+        insert u;
+        PermissionSet ps = [SELECT Id FROM PermissionSet WHERE Name = 'CARES_Experience_Rating_Access' LIMIT 1];
+        insert new PermissionSetAssignment(AssigneeId = u.Id, PermissionSetId = ps.Id);
+        return u;
+    }
+
+    @IsTest
+    static void agentProfileNeverThrows() {
+        // Live on v5 the Contact query threw for the agent user (G-089), so the agent got an action error
+        // and no isSuccess. Whatever access the profile has, the result must say what happened (INV-9)
+        Contact c = makeContact();
+        CsatRatingSaver.Result r;
+        System.runAs(agentUser()) {
+            try {
+                r = save(c.Id, 5, null);
+            } catch (Exception e) {
+                System.assert(false, 'Threw instead of returning an error: ' + e.getMessage());
+            }
+        }
+        System.assertNotEquals(null, r);
+        Integer saved = [SELECT COUNT() FROM CSAT_Rating__c];
+        System.assertEquals(r.isSuccess ? 1 : 0, saved, 'isSuccess must match what was saved: ' + r.errorMessage);
+    }
+
+    @IsTest
+    static void agentProfileSavesLinkedToTheAccount() {
+        // G-089 fix: with Read on Account in the permission set, the agent profile saves the rating
+        // linked to the customer's account
+        Contact c = makeContact();
+        CsatRatingSaver.Result r;
+        System.runAs(agentUser()) {
+            r = save(c.Id, 5, 'Customer was happy with the refund.');
+        }
+        System.assert(r.isSuccess, r.errorMessage);
+        CSAT_Rating__c saved = [SELECT Contact__c, Account__c, Score__c FROM CSAT_Rating__c WHERE Id = :r.ratingId WITH SYSTEM_MODE];
+        System.assertEquals(c.Id, saved.Contact__c);
+        System.assertEquals(c.AccountId, saved.Account__c);
+        System.assertEquals(5, saved.Score__c);
+    }
+
     @IsTest
     static void unknownContactIsAnErrorNotASave() {
         Contact c = makeContact();

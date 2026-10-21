@@ -25,14 +25,23 @@ public with sharing class CsatRatingSaver {
 
     Map<Id, Contact> contactsById = new Map<Id, Contact>();
     if (!contactIds.isEmpty()) {
-      contactsById = new Map<Id, Contact>(
-        [
-          SELECT Id, AccountId
-          FROM Contact
-          WHERE Id IN :contactIds
-          WITH USER_MODE
-        ]
-      );
+      // Without read on Contact or Account the query throws in user mode; that must
+      // come back as isSuccess = false, not as an action error (G-089)
+      try {
+        contactsById = new Map<Id, Contact>(
+          [
+            SELECT Id, AccountId
+            FROM Contact
+            WHERE Id IN :contactIds
+            WITH USER_MODE
+          ]
+        );
+      } catch (Exception e) {
+        for (Integer i = 0; i < requests.size(); i++) {
+          results[i] = errorResult('Failed to read the customer: ' + e.getMessage());
+        }
+        return results;
+      }
     }
 
     List<CSAT_Rating__c> ratingsToInsert = new List<CSAT_Rating__c>();
