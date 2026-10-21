@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-21T08:09:37.436Z",
-  "commit": "fb79086",
-  "branch": "feature/metrics-dashboard",
+  "generatedAt": "2026-10-21T14:58:23.689Z",
+  "commit": "b72b774",
+  "branch": "fix/g084-g089-after-account-read",
   "docsRef": "working tree",
   "agent": {
     "lines": 1235,
@@ -399,10 +399,10 @@
       }
     },
     "gaps": {
-      "total": 87,
+      "total": 100,
       "byStatus": {
-        "CLOSED": 29,
-        "OPEN": 52,
+        "CLOSED": 32,
+        "OPEN": 62,
         "OTHER": 1,
         "PARTLY CLOSED": 3,
         "MITIGATED": 2
@@ -456,13 +456,13 @@
       ]
     },
     "scenarios": {
-      "total": 159,
-      "p0": 59,
+      "total": 180,
+      "p0": 72,
       "byPersona": {
         "P0 Harness and smoke checks": 7,
         "P1 Router and first contact": 11,
         "P2 Risk Detection": 14,
-        "P3 Refund, direct path": 18,
+        "P3 Refund, direct path": 26,
         "P4 Stolen & Delayed Orders": 15,
         "P5 Contracts between subagents": 15,
         "P6 Experience Rating": 13,
@@ -471,7 +471,8 @@
         "P9 Continuity and context retention": 8,
         "P10 Failure and degradation": 10,
         "P11 Customer experience and loyalty": 7,
-        "P12 Pronto policy": 16
+        "P12 Pronto policy": 16,
+        "P13 Order Status": 13
       }
     },
     "goldenQuestions": 25,
@@ -481,17 +482,17 @@
       "adversarial": 5
     },
     "runLog": {
-      "total": 40,
+      "total": 50,
       "byResult": {
         "Pass": 20,
         "Fail": 3,
         "Open": 9,
-        "Other": 8
+        "Other": 18
       }
     }
   },
   "org": {
-    "readAt": "2026-10-21T08:09:30.221Z",
+    "readAt": "2026-10-21T14:58:15.490Z",
     "versions": [
       {
         "version": 1,
@@ -520,33 +521,34 @@
       }
     ],
     "cases": {
-      "total": 83,
+      "total": 143,
       "byDay": {
         "2026-10-20": 64,
-        "2026-10-21": 19
+        "2026-10-21": 79
       },
       "byType": {
-        "Customer Order Issue": 83
+        "Customer Order Issue": 127,
+        "Delivery & Driver Issue": 16
       },
       "byReason": {
         "Missing items": 64,
-        "(none)": 8,
-        "Fraud or policy review": 11
+        "(none)": 56,
+        "Fraud or policy review": 23
       },
       "byPriority": {
-        "Medium": 72,
-        "High": 11
+        "Medium": 121,
+        "High": 22
       },
       "byStatus": {
-        "New": 72,
-        "Escalated": 11
+        "New": 121,
+        "Escalated": 22
       },
       "byOrigin": {
         "Chat": 64,
-        "Agentforce": 19
+        "Agentforce": 79
       },
       "byKind": {
-        "Escalation": 83
+        "Escalation": 143
       }
     },
     "sessions": {
@@ -559,12 +561,15 @@
       }
     },
     "csat": {
-      "total": 0,
-      "byScore": {}
+      "total": 6,
+      "byScore": {
+        "2": 3,
+        "5": 3
+      }
     },
     "conversations": {
-      "sessions": 272,
-      "engaged": 231,
+      "sessions": 277,
+      "engaged": 235,
       "escalated": 48,
       "transferred": 2,
       "customerMessages": {
@@ -585,23 +590,23 @@
           }
         },
         "Other (tests, API)": {
-          "sessions": 28,
-          "engaged": 28,
+          "sessions": 30,
+          "engaged": 30,
           "escalated": 2,
           "transferred": 0,
           "customerMessages": {
-            "mean": 2.46,
+            "mean": 2.47,
             "median": 2,
             "max": 7
           }
         },
         "Live chat (website)": {
-          "sessions": 6,
-          "engaged": 5,
+          "sessions": 9,
+          "engaged": 7,
           "escalated": 3,
           "transferred": 2,
           "customerMessages": {
-            "mean": 2,
+            "mean": 1.78,
             "median": 2,
             "max": 3
           }
@@ -653,33 +658,33 @@
           }
         },
         "v5": {
-          "sessions": 80,
-          "engaged": 79,
+          "sessions": 85,
+          "engaged": 83,
           "escalated": 8,
           "transferred": 0,
           "customerMessages": {
-            "mean": 1.93,
+            "mean": 1.92,
             "median": 2,
             "max": 3
           }
         }
       },
       "byEnd": {
-        "(still open)": 117,
-        "EndedByEndUser": 150,
+        "(still open)": 118,
+        "EndedByEndUser": 154,
         "Action": 2,
         "SessionTimedOut": 1,
         "Transferred": 2
       },
       "byDay": {
         "2026-10-20": 191,
-        "2026-10-21": 81
+        "2026-10-21": 86
       },
       "turnsHistogram": {
-        "0": 3,
+        "0": 4,
         "1": 110,
-        "2": 151,
-        "3": 5,
+        "2": 154,
+        "3": 6,
         "5": 3
       }
     }
@@ -3197,5 +3202,200 @@
         }
       ]
     }
-  ]
+  ],
+  "batch": {
+    "checkedScenarios": 153,
+    "runs": [
+      {
+        "at": "2026-10-21T08:14:31Z",
+        "file": "p0.json",
+        "agentVersion": "v5 (active)",
+        "scenarios": 73,
+        "sessions": 146,
+        "byOutcome": {
+          "PASS": 58,
+          "EXPECTED_FAIL": 8,
+          "FAIL": 5,
+          "FLAKY": 1,
+          "N/A": 1
+        }
+      },
+      {
+        "at": "2026-10-21T08:54:58Z",
+        "file": "p0.json",
+        "agentVersion": "v5 (active)",
+        "scenarios": 28,
+        "sessions": 57,
+        "byOutcome": {
+          "PASS": 19,
+          "EXPECTED_FAIL": 4,
+          "FAIL": 4,
+          "FLAKY": 1
+        }
+      },
+      {
+        "at": "2026-10-21T09:05:21Z",
+        "file": "p1-realdata.json",
+        "agentVersion": "v5 (active)",
+        "scenarios": 8,
+        "sessions": 16,
+        "byOutcome": {
+          "PASS": 7,
+          "FLAKY": 1
+        }
+      },
+      {
+        "at": "2026-10-21T09:13:51Z",
+        "file": "p1.json",
+        "agentVersion": "v5 (active)",
+        "scenarios": 25,
+        "sessions": 50,
+        "byOutcome": {
+          "PASS": 22,
+          "EXPECTED_FAIL": 2,
+          "N/A": 1
+        }
+      },
+      {
+        "at": "2026-10-21T09:28:02Z",
+        "file": "p1.json",
+        "agentVersion": "v5 (active)",
+        "scenarios": 27,
+        "sessions": 58,
+        "byOutcome": {
+          "FAIL": 2,
+          "PASS": 20,
+          "EXPECTED_FAIL": 5
+        }
+      },
+      {
+        "at": "2026-10-21T09:59:24Z",
+        "file": "p1-rest.json",
+        "agentVersion": "v5 (active)",
+        "scenarios": 21,
+        "sessions": 42,
+        "byOutcome": {
+          "PASS": 18,
+          "FLAKY": 1,
+          "EXPECTED_FAIL": 2
+        }
+      },
+      {
+        "at": "2026-10-21T10:12:47Z",
+        "file": "p0.json",
+        "agentVersion": "v5 (active)",
+        "scenarios": 52,
+        "sessions": 50,
+        "byOutcome": {
+          "PASS": 41,
+          "EXPECTED_FAIL": 6,
+          "FAIL": 3,
+          "N/A": 1,
+          "FLAKY": 1
+        }
+      },
+      {
+        "at": "2026-10-21T13:52:53Z",
+        "file": "p0.json",
+        "agentVersion": "v5 (active)",
+        "scenarios": 50,
+        "sessions": 50,
+        "byOutcome": {
+          "PASS": 40,
+          "UNEXPECTED_PASS": 4,
+          "N/A": 1,
+          "FAIL": 4,
+          "EXPECTED_FAIL": 1
+        }
+      },
+      {
+        "at": "2026-10-21T14:51:04Z",
+        "file": "p0.json",
+        "agentVersion": "v5 (active)",
+        "scenarios": 8,
+        "sessions": 24,
+        "byOutcome": {
+          "PASS": 8
+        }
+      }
+    ],
+    "totalSessions": 493,
+    "latest": {
+      "total": 154,
+      "byOutcome": {
+        "PASS": 132,
+        "EXPECTED_FAIL": 12,
+        "FLAKY": 3,
+        "N/A": 2,
+        "FAIL": 5
+      }
+    },
+    "byPersona": {
+      "P0 Harness and smoke checks": {
+        "PASS": 4
+      },
+      "P1 Router and first contact": {
+        "PASS": 7,
+        "EXPECTED_FAIL": 3,
+        "FAIL": 1
+      },
+      "P2 Risk Detection": {
+        "PASS": 8,
+        "EXPECTED_FAIL": 1
+      },
+      "P3 Refund, direct path": {
+        "PASS": 26,
+        "N/A": 1
+      },
+      "P4 Stolen & Delayed Orders": {
+        "PASS": 15
+      },
+      "P5 Contracts between subagents": {
+        "PASS": 5,
+        "EXPECTED_FAIL": 1
+      },
+      "P6 Experience Rating": {
+        "PASS": 11,
+        "EXPECTED_FAIL": 1
+      },
+      "P7 Escalate to Human": {
+        "PASS": 7,
+        "FLAKY": 1,
+        "FAIL": 1
+      },
+      "P8 Guardrails and red team": {
+        "PASS": 15,
+        "EXPECTED_FAIL": 1
+      },
+      "P9 Continuity and context retention": {
+        "PASS": 7,
+        "EXPECTED_FAIL": 1
+      },
+      "P10 Failure and degradation": {
+        "N/A": 1,
+        "PASS": 3
+      },
+      "P12 Pronto policy": {
+        "PASS": 9,
+        "FAIL": 3,
+        "EXPECTED_FAIL": 4
+      },
+      "P13 Order Status": {
+        "PASS": 12,
+        "FLAKY": 1
+      },
+      "P11 Customer experience and loyalty": {
+        "PASS": 3,
+        "FLAKY": 1
+      }
+    },
+    "outcomes": [
+      "PASS",
+      "EXPECTED_FAIL",
+      "FLAKY",
+      "FAIL",
+      "UNEXPECTED_PASS",
+      "N/A"
+    ]
+  }
 }

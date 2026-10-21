@@ -1,5 +1,5 @@
 {
-  "readAt": "2026-10-21T08:09:30.221Z",
+  "readAt": "2026-10-21T14:58:15.490Z",
   "versions": [
     {
       "version": 1,
@@ -28,33 +28,34 @@
     }
   ],
   "cases": {
-    "total": 83,
+    "total": 143,
     "byDay": {
       "2026-10-20": 64,
-      "2026-10-21": 19
+      "2026-10-21": 79
     },
     "byType": {
-      "Customer Order Issue": 83
+      "Customer Order Issue": 127,
+      "Delivery & Driver Issue": 16
     },
     "byReason": {
       "Missing items": 64,
-      "(none)": 8,
-      "Fraud or policy review": 11
+      "(none)": 56,
+      "Fraud or policy review": 23
     },
     "byPriority": {
-      "Medium": 72,
-      "High": 11
+      "Medium": 121,
+      "High": 22
     },
     "byStatus": {
-      "New": 72,
-      "Escalated": 11
+      "New": 121,
+      "Escalated": 22
     },
     "byOrigin": {
       "Chat": 64,
-      "Agentforce": 19
+      "Agentforce": 79
     },
     "byKind": {
-      "Escalation": 83
+      "Escalation": 143
     }
   },
   "sessions": {
@@ -67,12 +68,15 @@
     }
   },
   "csat": {
-    "total": 0,
-    "byScore": {}
+    "total": 6,
+    "byScore": {
+      "2": 3,
+      "5": 3
+    }
   },
   "conversations": {
-    "sessions": 272,
-    "engaged": 231,
+    "sessions": 277,
+    "engaged": 235,
     "escalated": 48,
     "transferred": 2,
     "customerMessages": {
@@ -93,23 +97,23 @@
         }
       },
       "Other (tests, API)": {
-        "sessions": 28,
-        "engaged": 28,
+        "sessions": 30,
+        "engaged": 30,
         "escalated": 2,
         "transferred": 0,
         "customerMessages": {
-          "mean": 2.46,
+          "mean": 2.47,
           "median": 2,
           "max": 7
         }
       },
       "Live chat (website)": {
-        "sessions": 6,
-        "engaged": 5,
+        "sessions": 9,
+        "engaged": 7,
         "escalated": 3,
         "transferred": 2,
         "customerMessages": {
-          "mean": 2,
+          "mean": 1.78,
           "median": 2,
           "max": 3
         }
@@ -161,33 +165,33 @@
         }
       },
       "v5": {
-        "sessions": 80,
-        "engaged": 79,
+        "sessions": 85,
+        "engaged": 83,
         "escalated": 8,
         "transferred": 0,
         "customerMessages": {
-          "mean": 1.93,
+          "mean": 1.92,
           "median": 2,
           "max": 3
         }
       }
     },
     "byEnd": {
-      "(still open)": 117,
-      "EndedByEndUser": 150,
+      "(still open)": 118,
+      "EndedByEndUser": 154,
       "Action": 2,
       "SessionTimedOut": 1,
       "Transferred": 2
     },
     "byDay": {
       "2026-10-20": 191,
-      "2026-10-21": 81
+      "2026-10-21": 86
     },
     "turnsHistogram": {
-      "0": 3,
+      "0": 4,
       "1": 110,
-      "2": 151,
-      "3": 5,
+      "2": 154,
+      "3": 6,
       "5": 3
     }
   }

@@ -78,7 +78,7 @@
 </div></header>
 <div class="wrap"><div class="kpis" id="kpis"></div></div>
 <nav><div class="wrap">
-  <a href="#quality">Quality</a><a href="#policy">Policy alignment</a><a href="#architecture">Architecture</a>
+  <a href="#quality">Quality</a><a href="#batch">Live batch</a><a href="#policy">Policy alignment</a><a href="#architecture">Architecture</a>
   <a href="#runtime">In the org</a><a href="#governance">Decisions &amp; gaps</a><a href="#sources">Sources</a>
 </div></nav>
 
@@ -87,6 +87,16 @@
     <h2>Quality: Testing Center</h2>
     <p class="lead">Each suite is pinned to one agent version, so a re-run on a new version can be compared with the one before.</p>
     <div id="tc"></div>
+  </section>
+
+  <section id="batch">
+    <h2>Quality: live batch runs</h2>
+    <p class="lead">Persona scenarios run by <code>scripts/testing/run_batch.py</code> against the active agent with live actions and real demo orders. Each scenario runs at least twice; the result is read from the trace (subagent path, actions, inputs, outputs, amounts), not only from the reply. EXPECTED_FAIL = a documented gap the test proves.</p>
+    <div id="batch-kpis" class="grid g4" style="margin-bottom:14px"></div>
+    <div class="grid g3">
+      <div class="card" style="grid-column:span 2"><h3>Each run</h3><div id="batch-runs"></div><div class="legend" id="batch-legend"></div></div>
+      <div class="card"><h3>Latest result, by persona</h3><div id="batch-personas"></div></div>
+    </div>
   </section>
 
   <section id="coverage">
@@ -325,6 +335,24 @@ $("kpis").innerHTML = [
     [...e.currentTarget.children].forEach((b) => b.classList.toggle("on", b === e.target));
     $("tc-rows").innerHTML = rows(filters[k]);
   });
+})();
+
+// ---------- live batch ----------
+(function batch() {
+  const B = D.batch;
+  if (!B?.runs?.length) { $("batch-kpis").innerHTML = `<div class="card">${empty("No live batch run yet", "Run scripts/testing/run_batch.py and record it in test-results.json.")}</div>`; return; }
+  const COLOR = { PASS: "#16a34a", EXPECTED_FAIL: "#f59e0b", FLAKY: "#8b5cf6", FAIL: "#dc2626", UNEXPECTED_PASS: "#06b6d4", "N/A": "#cbd5e1" };
+  const parts = (o) => B.outcomes.filter((k) => o[k]).map((k) => ({ label: k, value: o[k], color: COLOR[k] }));
+  const L = B.latest.byOutcome;
+  $("batch-kpis").innerHTML = [
+    kpi("Machine-checked", `${B.checkedScenarios}/${D.docs.scenarios.total}`, "scenarios the runner checks from the trace"),
+    kpi("Pass, latest", `${pct(L.PASS || 0, B.latest.total)}%`, `${L.PASS || 0}/${B.latest.total} scenarios · their latest run`),
+    kpi("Known gaps proven", L.EXPECTED_FAIL || 0, "EXPECTED_FAIL: fails as a written gap says"),
+    kpi("Fail or flaky", (L.FAIL || 0) + (L.FLAKY || 0), `${L.FAIL || 0} fail · ${L.FLAKY || 0} flaky · ${B.totalSessions} preview sessions in ${B.runs.length} runs`),
+  ].join("");
+  $("batch-runs").innerHTML = hbars(B.runs.map((r) => ({ label: `${r.at.slice(5, 16).replace("T", " ")} · ${r.file}`, display: `${r.byOutcome.PASS || 0}/${r.scenarios}`, parts: parts(r.byOutcome) })));
+  $("batch-legend").innerHTML = B.outcomes.map((k) => `<span><i style="background:${COLOR[k]}"></i>${k}</span>`).join("");
+  $("batch-personas").innerHTML = hbars(Object.entries(B.byPersona).sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })).map(([k, o]) => ({ label: k, display: `${o.PASS || 0}/${sum(o)}`, parts: parts(o) })));
 })();
 
 // ---------- coverage ----------

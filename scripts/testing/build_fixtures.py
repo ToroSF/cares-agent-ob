@@ -4,8 +4,9 @@
   python3 scripts/testing/build_fixtures.py [--org team-pronto] [--from-log saved-apex-output.json]
 
 Runs scripts/apex/dump-test-fixtures.apex (read-only), then computes for each named fixture its
-latest order, latest delivered order, the item values (total / items, D-072) and the expected
-offers from the policy rows below. If the policy rows change in the org, change POLICY here.
+latest order, latest delivered order, the item values (total / items, D-072), the risk the Risk Flow
+will return and the expected offers from the policy rows below. If the policy rows change in the org,
+change POLICY here.
 """
 import argparse
 import html
@@ -34,6 +35,7 @@ POOLS = {
     "R-PREP": ["Delmore Decroix", "Ellery Collopy", "Corie Fairleigh"],
     "R-CANC": ["Rubia A'Barrow", "Karena Cowburn", "Evanne Fosberry", "Candace Pigford"],
 }
+REVIEW_AT = 3  # risk_review_threshold: this many issue cases go to PATTERN_REVIEW (D-062)
 ESC_SIZE = 41  # Insiders with no cases: FX-CLEAN, then one each for scenarios that issue or create Cases
 
 
@@ -66,7 +68,8 @@ def parse(raw):
         if f[0] == "FXO" and len(f) >= 7:
             orders.setdefault(f[1], []).append({"id": f[2], "st": f[3], "cr": f[4], "tot": f[5], "items": f[6]})
         elif f[0] == "FXC" and len(f) >= 7:
-            contacts[f[5]] = {"cid": f[1], "name": f[2], "email": f[3], "tier": f[4], "cases": int(f[6])}
+            contacts[f[5]] = {"cid": f[1], "name": f[2], "email": f[3], "tier": f[4], "cases": int(f[6]),
+                              "issues": int(f[7]) if len(f) > 7 else int(f[6])}
     return contacts, orders
 
 
@@ -87,6 +90,10 @@ def offer(tier, affected, total, clean=False):
     return str(refund), str(credit)
 
 
+def risk(issues):
+    return "CLEAN" if issues == 0 else "NOT_CLEAN" if issues < REVIEW_AT else "PATTERN_REVIEW"
+
+
 def key_for(prefix, name):
     return prefix + "-" + "".join(ch for ch in name.upper().replace(" ", "-") if ch.isalnum() or ch == "-")
 
@@ -98,15 +105,19 @@ def fixture(c, orders):
     it, total = items(dl)
     names = [n for n, _ in it]
     fx = {"cid": c["cid"], "name": c["name"], "email": c["email"], "tier": c["tier"], "cases": c["cases"],
+          "issues": c["issues"], "risk": risk(c["issues"]),
           "latest": latest["id"], "latest_status": latest["st"], "order": dl["id"], "total": str(total),
           "item_count": len(it), "items_all": ", ".join(names[:-1]) + (" and " if len(names) > 1 else "") + names[-1]}
     for i, (n, p) in enumerate(it[:3], 1):
         fx[f"item{i}"], fx[f"price{i}"] = n, str(p)
-    fx["offer_one"], fx["credit_one"] = offer(c["tier"], it[0][1], total)
+    # Since G-084 was fixed the Risk Flow works, so a contact with no issue cases gets the clean-history cap
+    clean = c["issues"] == 0
+    fx["offer_one"], fx["credit_one"] = offer(c["tier"], it[0][1], total, clean)
     if len(it) > 1:
-        fx["offer_two"], fx["credit_two"] = offer(c["tier"], it[0][1] + it[1][1], total)
-    fx["offer_all"], fx["credit_all"] = offer(c["tier"], total, total)
+        fx["offer_two"], fx["credit_two"] = offer(c["tier"], it[0][1] + it[1][1], total, clean)
+    fx["offer_all"], fx["credit_all"] = offer(c["tier"], total, total, clean)
     fx["offer_all_clean"], fx["credit_all_clean"] = offer(c["tier"], total, total, clean=True)
+    fx["offer_all_std"], fx["credit_all_std"] = offer(c["tier"], total, total)
     return fx
 
 
@@ -139,6 +150,12 @@ def main():
     esc = [n for n, (app, c) in sorted(by_name.items()) if c["tier"] == "Insider" and c["cases"] == 0
            and n not in used and app in orders and fixture(c, orders[app])["order"] not in paid][:ESC_SIZE]
     add("FX-CLEAN", esc[0])  # generic clean contact for scenarios that never issue or escalate
+    # NOT_CLEAN but under the review threshold, with an order above the clean cap: shows the standard cap
+    low = [n for n, (app, c) in sorted(by_name.items(), key=lambda kv: (kv[1][1]["issues"], kv[0]))
+           if 0 < c["issues"] < REVIEW_AT and n not in used and app in orders
+           and fixture(c, orders[app])["order"] not in paid
+           and Decimal(fixture(c, orders[app])["total"]) > POLICY[c["tier"]][1]]
+    add("FX-NOTCLEAN", low[0])
     esc = esc[1:]
     out["pools"]["ESC"] = []
     for n in esc:

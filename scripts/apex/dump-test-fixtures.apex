@@ -15,6 +15,10 @@ for (Integer off = 0; off < 1200; off += 400) {
 System.debug('FXN|' + total);
 Map<Id, Integer> cases = new Map<Id, Integer>();
 for (AggregateResult a : [SELECT ContactId c, COUNT(Id) n FROM Case WHERE ContactId != null GROUP BY ContactId]) cases.put((Id) a.get('c'), (Integer) a.get('n'));
+// Issue cases as the Risk Flow counts them: last 30 days (risk_lookback_days), any Type but Refund / Compensation
+Map<Id, Integer> issues = new Map<Id, Integer>();
+Datetime windowStart = Datetime.now().addDays(-30);
+for (AggregateResult a : [SELECT ContactId c, COUNT(Id) n FROM Case WHERE ContactId != null AND CreatedDate >= :windowStart AND (Type = null OR Type != 'Refund / Compensation') GROUP BY ContactId]) issues.put((Id) a.get('c'), (Integer) a.get('n'));
 for (Contact c : [SELECT Id, Name, Email, CARES_Tier__r.Name, Pronto_App_Account_Id__c, AccountId FROM Contact WHERE Pronto_App_Account_Id__c != null]) {
-    System.debug('FXC|' + c.Id + '|' + c.Name + '|' + c.Email + '|' + c.CARES_Tier__r?.Name + '|' + c.Pronto_App_Account_Id__c + '|' + (cases.containsKey(c.Id) ? cases.get(c.Id) : 0));
+    System.debug('FXC|' + c.Id + '|' + c.Name + '|' + c.Email + '|' + c.CARES_Tier__r?.Name + '|' + c.Pronto_App_Account_Id__c + '|' + (cases.containsKey(c.Id) ? cases.get(c.Id) : 0) + '|' + (issues.containsKey(c.Id) ? issues.get(c.Id) : 0));
 }
