@@ -1,5 +1,5 @@
 {
-  "readAt": "2026-10-21T14:58:15.490Z",
+  "readAt": "2026-10-21T16:50:24.097Z",
   "versions": [
     {
       "version": 1,
@@ -74,6 +74,30 @@
       "5": 3
     }
   },
+  "resolutions": {
+    "total": 17,
+    "byStatus": {
+      "Issued": 17
+    },
+    "byType": {
+      "Refund": {
+        "count": 15,
+        "amount": 167.22
+      },
+      "Store_Credit": {
+        "count": 2,
+        "amount": 31.39
+      }
+    },
+    "amount": {
+      "total": 198.61,
+      "mean": 11.68,
+      "max": 29.4
+    },
+    "limitUsd": 100,
+    "withinLimit": 17
+  },
+  "alerts": null,
   "conversations": {
     "sessions": 277,
     "engaged": 235,

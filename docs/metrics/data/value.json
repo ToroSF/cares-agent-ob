@@ -1,0 +1,15 @@
+{
+  "headline": "Value kept each year by retaining customers after a complaint",
+  "status": "placeholder",
+  "note": "Team assumptions to be replaced by the market research. Leave a value null until it has a source; the page computes the dollar figure only when every input is filled.",
+  "formula": "(customers kept x orders per year x average order value x margin) + (cases not handled by a person x cost per case) - compensation paid",
+  "inputs": {
+    "complaintsPerYear": { "label": "Orders with a complaint, per year", "unit": "count", "value": null, "source": "Market research (planned)" },
+    "churnAfterBadOrder": { "label": "Customers who leave after a badly handled complaint", "unit": "pct", "value": null, "source": "Market research (planned)" },
+    "retainedByCares": { "label": "Share of those customers CARES keeps", "unit": "pct", "value": null, "source": "Market research (planned), then the retention KPI" },
+    "ordersPerCustomerYear": { "label": "Orders per customer, per year", "unit": "count", "value": null, "source": "Pronto order data (planned)" },
+    "avgOrderValue": { "label": "Average order value", "unit": "usd", "value": null, "source": "Pronto order data (planned)" },
+    "margin": { "label": "Pronto margin per order", "unit": "pct", "value": null, "source": "Market research (planned)" },
+    "costPerHumanCase": { "label": "Cost of a case handled by a person", "unit": "usd", "value": null, "source": "Market research (planned)" }
+  }
+}

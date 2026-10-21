@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-21T14:58:23.689Z",
-  "commit": "b72b774",
-  "branch": "fix/g084-g089-after-account-read",
+  "generatedAt": "2026-10-21T17:23:09.816Z",
+  "commit": "e912f64",
+  "branch": "feature/metrics-dashboard-v2",
   "docsRef": "working tree",
   "agent": {
     "lines": 1235,
@@ -492,7 +492,7 @@
     }
   },
   "org": {
-    "readAt": "2026-10-21T14:58:15.490Z",
+    "readAt": "2026-10-21T16:50:24.097Z",
     "versions": [
       {
         "version": 1,
@@ -567,6 +567,30 @@
         "5": 3
       }
     },
+    "resolutions": {
+      "total": 17,
+      "byStatus": {
+        "Issued": 17
+      },
+      "byType": {
+        "Refund": {
+          "count": 15,
+          "amount": 167.22
+        },
+        "Store_Credit": {
+          "count": 2,
+          "amount": 31.39
+        }
+      },
+      "amount": {
+        "total": 198.61,
+        "mean": 11.68,
+        "max": 29.4
+      },
+      "limitUsd": 100,
+      "withinLimit": 17
+    },
+    "alerts": null,
     "conversations": {
       "sessions": 277,
       "engaged": 235,
@@ -3205,6 +3229,7 @@
   ],
   "batch": {
     "checkedScenarios": 153,
+    "caseNumberInReply": null,
     "runs": [
       {
         "at": "2026-10-21T08:14:31Z",
@@ -3397,5 +3422,55 @@
       "UNEXPECTED_PASS",
       "N/A"
     ]
+  },
+  "value": {
+    "headline": "Value kept each year by retaining customers after a complaint",
+    "status": "placeholder",
+    "note": "Team assumptions to be replaced by the market research. Leave a value null until it has a source; the page computes the dollar figure only when every input is filled.",
+    "formula": "(customers kept x orders per year x average order value x margin) + (cases not handled by a person x cost per case) - compensation paid",
+    "inputs": {
+      "complaintsPerYear": {
+        "label": "Orders with a complaint, per year",
+        "unit": "count",
+        "value": null,
+        "source": "Market research (planned)"
+      },
+      "churnAfterBadOrder": {
+        "label": "Customers who leave after a badly handled complaint",
+        "unit": "pct",
+        "value": null,
+        "source": "Market research (planned)"
+      },
+      "retainedByCares": {
+        "label": "Share of those customers CARES keeps",
+        "unit": "pct",
+        "value": null,
+        "source": "Market research (planned), then the retention KPI"
+      },
+      "ordersPerCustomerYear": {
+        "label": "Orders per customer, per year",
+        "unit": "count",
+        "value": null,
+        "source": "Pronto order data (planned)"
+      },
+      "avgOrderValue": {
+        "label": "Average order value",
+        "unit": "usd",
+        "value": null,
+        "source": "Pronto order data (planned)"
+      },
+      "margin": {
+        "label": "Pronto margin per order",
+        "unit": "pct",
+        "value": null,
+        "source": "Market research (planned)"
+      },
+      "costPerHumanCase": {
+        "label": "Cost of a case handled by a person",
+        "unit": "usd",
+        "value": null,
+        "source": "Market research (planned)"
+      }
+    }
   }
 }

@@ -1,16 +1,54 @@
 # CARES metrics dashboard
 
-`index.html` is one self-contained page (no internet needed) with the agent's metrics. Open it in a browser. It works offline, so it can be shown in the panel.
+`index.html` is one self-contained page (no internet needed) with the agent's metrics. Open it in a browser. It works offline, so it can be shown in the panel. Business value comes first, engineering evidence after.
 
 ## What it shows
 | Section | Source | Refreshed by |
 |---|---|---|
-| Quality: Testing Center | Normalized suite results in `data/testing-center/*.json`; our reading of each run in `data/findings.json` | Running a suite, then the build |
-| Test coverage we planned | Scenarios in `.claude/skills/cares-testing/personas.md`, the golden set | The build |
+| Why it matters | The value chain: customers keep ordering → CARES resolves inside policy → fewer cases need a person → dollars kept | Static text |
+| Business KPIs | Resolved without a person (active version's conversations), average refund or credit (`CARES_Resolution__c`), CSAT. Two tiles say "Measured from v6" until their data exists (see below) | The build |
+| Headline KPI and sizing | `data/value.json` plus the two measured inputs above | Editing `value.json`, then the build |
+| Quality: Testing Center | Normalized suite results in `data/testing-center/*.json`; our reading of each run in `data/findings.json`. Findings are split over two slides: what still fails, and what works | Running a suite, then the build |
+| Live batch runs and personas | `.claude/skills/cares-testing/test-results.json` (outcome counts only) | Running `run_batch.py`, then the build |
 | Policy alignment | `docs/POLICY_ALIGNMENT.md` (v0 vs v1 status per rule) | The build |
-| Architecture | `CARES.agent`: subagents, actions by type, hand-offs | The build |
-| In the org | SOQL counts, read only: agent versions, conversations from the platform's session log (`ConversationDefinitionSession` and its event log: hand-offs, transfers, messages per conversation), cases logged by CARES, messaging sessions, CSAT | The build (without `--offline`) |
+| Architecture and subagents | `CARES.agent`: subagents, actions by type, hand-offs | The build |
+| In the org | SOQL counts, read only: agent versions, conversations from the platform's session log (`ConversationDefinitionSession` and its event log: hand-offs, transfers, messages per conversation), cases logged by CARES, refunds and credits, messaging sessions, CSAT | The build (without `--offline`) |
 | Decisions, gaps and risks | `DECISIONS.md`, `GAPS.md`, `RISKS.md`, the run log in `TEST_PLAN.md` | The build |
+| Appendix | Every Testing Center case (synthetic utterances), collapsed | The build |
+
+## The dollar figure (`data/value.json`)
+The headline is the value kept each year by retaining customers after a complaint:
+
+```
+(customers kept × orders per year × average order value × margin)
++ (cases not handled by a person × cost per case)
+− compensation paid
+```
+
+- Customers kept = complaints per year × churn after a bad complaint × share CARES keeps.
+- "Resolved without a person" and "average refund or credit" are measured from the org. The rest are inputs in `value.json`.
+- Every input starts as `null` and shows "Market research pending". The page computes the dollar figure only when **every** input is a number. Until then the headline is "$ —".
+- Units: `count` and `usd` are plain numbers. `pct` is a fraction: `0.3` means 30%.
+- Write where each number came from in `source`. The numbers are team assumptions until the research lands; do not quote them outside the team.
+
+## Measured from v6
+Two escalation KPIs have tiles now and data later:
+
+- **Escalations with the case number in the reply.** From live batch runs: scenarios whose spec has a hard `reply_any` check for a case number (`0\d{7}`), and how many of those passed. Shows a value once a run with that check is recorded.
+- **Alerts delivered.** `Case.CARES_Alert_Status__c`, counted as sent or failed. Until the field is deployed the query fails, is skipped, and the tile stays "Measured from v6".
+
+## Presentation mode
+- Press **P** or the **Present** button. Each section becomes one slide.
+- **→ / Space / Page Down** next, **← / Page Up** back, **Esc** to leave. The counter shows where you are.
+- Print (Cmd+P, landscape) gives one slide per page, for a PDF.
+- At 1440×900 a few dense slides scroll a little. On a 1080p screen they fit.
+
+## Brand build (`presentation.html`, local only)
+The Salesforce fonts (Avant Garde for Salesforce, Salesforce Sans) and brand art (logo, Agentforce ball, sparkles) are licensed, and this repo is public. So they never enter git:
+
+- Put the files in `docs/metrics/brand/` (ignored by git): `avantgarde.woff`, `sfsans-regular.woff`, `sfsans-bold.woff`, `salesforce-horizontal-mono.svg`, `agentforce-ball.png` and `sparkle-*.png`.
+- When that folder exists, the build also writes `presentation.html` (ignored by git) with them inlined. **Present from that file.**
+- `index.html` (committed) has the same content and colours, with system fonts and no brand art.
 
 ## Run a Testing Center suite
 1. The suite spec is in `suites/` (synthetic data only). Deploy and run it with `sf agent test create` and `sf agent test run` on the team org. A run creates test Cases and calls live actions.
@@ -38,7 +76,8 @@ node scripts/metrics/build-dashboard.mjs --target-org <team org alias>
 - `--compare-ref <git ref>`: show the agent from another branch and the change from the checkout.
 
 ## Rules (public repo)
-- Only counts and aggregates are written. No record ids, names, emails or message text.
+- Only counts and aggregates are written. No record ids, names, emails or message text. The dashboard shows no customer data.
+- Licensed fonts and brand art stay in the ignored `brand/` folder and `presentation.html`.
 - Raw Testing Center exports (`*.raw.json`) are ignored by git. Commit only the normalized file.
 - A Testing Center pass shows routing, actions and outcome on test utterances. It is not live behavior with real data.
 - Each suite is pinned to one agent version. To compare versions, run the same suite on the new version and add its normalized result next to the old one.
