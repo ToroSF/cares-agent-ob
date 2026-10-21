@@ -1,14 +1,15 @@
-# Spec: Refund and Stolen & Delayed on real data (G-091, G-081, G-098, G-031)
+# Spec: Refund and Stolen & Delayed on real data, and a CARES Admin app (G-091, G-081, G-098, G-031)
 
 Status date: 2026-10-21. Status: `PROPOSAL`, decisions B-D1 to B-D3 and C-D1 `DECIDED` 2026-10-21 by @lucasmpalomanes (sections B5 and C3). Branch: `fix/refund-sd-real-data`. Source: `main` at `fe62128`. Nothing in this file is built yet.
 
-One branch, three parts. They are built and reviewed in this order, because each part's tests assume the one before it:
+One branch, four parts. They are built and reviewed in this order, because each part's tests assume the one before it:
 
 | Part | Gap | What | Owner | Decisions |
 |---|---|---|---|---|
 | A | G-091 | Refuse a second claim on a resolved order before any offer | @lucasmpalomanes (Refund) | None needed |
 | B | G-081, G-098, G-077 | Stolen & Delayed reads the real orders; the escalation Case always has the order id; transitions that fire | @rojasC10 (Stolen & Delayed) | B-D1 to B-D3 decided (section B5) |
 | C | G-031, V6 item 10 | What `apply_settlement` does with the driver and restaurant recommendations | @lucasmpalomanes / Team | C-D1 decided: record on the resolution (section C3) |
+| D | — | A **CARES Admin** app with tabs to view and maintain the policy records in the org | @lucasmpalomanes | D-D1 to D-D4 decided (section D2) |
 
 Part B edits another owner's block, so @rojasC10 reviews it (CONTRIBUTING.md).
 
@@ -241,6 +242,69 @@ What the matrix gives with only these fields:
 - **Permissions:** `CARES_Refund_Access` gets read and edit field permissions on the four new fields, for the insert. `CARES_Refund_Policy_Admin` gets read, for audit.
 - **Tests:** a READY payout writes all three recommendations and the right status. A direct payout is `Not_Applicable`. `HOLD_FOR_REVIEW` gives `Needs_Review` and a Case. A failed insert writes nothing (atomic).
 
+# Part D. A CARES Admin app to view the policies in the org
+
+## D1. Why
+- **Today there's no way to browse the policy records in the org UI.** They're plain custom objects with no tab, app or page layout in the repo. Admins have to use the CLI or a report.
+- **This matters because these records drive the agent's money decisions.** The refund limits (`CARES_Refund_Policy__c`) and tiers (`CARES_Tier__c`) decide the offer; `CARES_Resolution__c` is the payout audit trail.
+- **It goes in the repo, not Setup.** Creating a tab by hand in Setup would change the org outside version control, against `CLAUDE.md`'s rule that a person handles org changes. Here the tabs, app, layouts and list views are metadata in this branch, so they're reviewed in the PR and deployed with the rest.
+
+## D2. Decisions (DECIDED 2026-10-21, @lucasmpalomanes)
+| ID | Question | Decision |
+|---|---|---|
+| D-D1 | Which objects get a tab? | `CARES_Refund_Policy__c`, `CARES_Tier__c` and `CARES_Resolution__c`. Not `CARES_Stolen_Delayed_Policy__mdt`: custom metadata can't have a normal tab, and it stays under Setup → Custom Metadata Types |
+| D-D2 | Where do the tabs show up? | A new Lightning app, **CARES Admin**, in the App Launcher, holding only these three tabs |
+| D-D3 | Who sees them? | Policy admins only: tab and app visibility in `CARES_Refund_Policy_Admin`. Not the agent user, not support staff |
+| D-D4 | Ready-made list views? | Yes, the four in D3.4 |
+
+## D3. Change (all new metadata under `force-app/main/default/`)
+
+### D3.1 Tabs (`tabs/`)
+- **New files:** `CARES_Refund_Policy__c.tab-meta.xml`, `CARES_Tier__c.tab-meta.xml`, `CARES_Resolution__c.tab-meta.xml`.
+- **Settings:** `<customObject>true</customObject>`, each with a standard `motif` (tab icon) chosen when built.
+
+### D3.2 App (`applications/CARES_Admin.app-meta.xml`)
+- **Settings:** Lightning (`uiType` Lightning, `navType` Standard, form factor Large). Label **CARES Admin**.
+- **Description:** "Refund tiers, policy limits and payouts that drive the CARES agent's offers."
+- **Tabs, in order:** CARES Refund Policy, CARES Tier, CARES Resolution.
+- **No utility bar and no custom home page.**
+
+### D3.3 Page layouts (`layouts/`)
+- **Why:** fields deployed after an object exists aren't added to its default layout. Without these, Part C's settlement fields (and some earlier ones) don't show on record pages.
+- **One layout per object, with every field:**
+  - **Refund Policy:** Tier, Order Outcome, Max Refund, Clean-History Max Refund, Store Credit Bonus %, Active.
+  - **Tier:** Name, Rank, Active, and a related list of its policy rows.
+  - **Resolution:** Contact, Order Id, Resolution Type, Amount, Status, Tier, Risk Status, Order Outcome, plus Part C's Driver Compensation, Restaurant Reimbursement, Loss Absorption and Settlement Status.
+- **Read-only on Resolution:** every field is read-only, because the payout record is written only by `issue_resolution` (D-048). The layout keeps that clear even though the permission set already gives admins no edit.
+
+### D3.4 List views (`objects/<object>/listViews/`)
+| Object | View | Filter / columns |
+|---|---|---|
+| Refund Policy | **Active policies by tier** | `Active__c = true`; columns Tier, Outcome, Max, Clean-History Max, Bonus %; sorted by Tier |
+| Refund Policy | **Inactive policies** | `Active__c = false`, to see what the agent ignores |
+| Resolution | **Needing review** | `Settlement_Status__c = Needs_Review` (from Part C), so it's built after Part C's fields |
+| Resolution | **This week** | Created this week; columns Name, Contact, Order Id, Type, Amount, Status |
+
+### D3.5 Access (`permissionsets/CARES_Refund_Policy_Admin`)
+- **Tab settings:** `<tabSettings>` set to `Visible` for the three tabs.
+- **App visibility:** `<applicationVisibilities>` set to visible for `CARES_Admin`.
+- **No new object or field permissions are needed:** the set already grants edit on tiers and policies, read on resolutions, and the field reads for `Active__c`, `Tier__c` and the rest (PR #36). The only additions are the new settlement fields from Part C, read-only.
+- **Not added to `CARES_Refund_Access` (the agent user):** the agent doesn't need a UI.
+
+### D3.6 What does not change
+- **No Apex or agent change.**
+- **No layout assignment to profiles.** The layouts become the objects' default layouts. If a profile needs a different one, that's a separate change.
+
+## D4. Tests and verification
+- **Dry-run deploy:** the tabs, app, layouts, list views and the permission set deploy together, and the dry run must pass (D3.4's "Needing review" view depends on Part C's `Settlement_Status__c`).
+- **In the org, after deploy, as a user holding `CARES_Refund_Policy_Admin`** (the team org's CLI user holds it since PR #36):
+  - App Launcher shows **CARES Admin**.
+  - Its three tabs open.
+  - "Active policies by tier" lists the 12 seeded rows.
+  - A Resolution record shows all fields, read-only.
+  - Editing a policy so the clean-history max is below the standard max is blocked by the PR #36 validation rule.
+- **As a user without that permission set:** neither the app nor the tabs appear.
+
 # Shared: docs, order of work, verification
 
 ## Docs (on this branch)
@@ -250,6 +314,7 @@ What the matrix gives with only these fields:
   - D-080: customer trust from real counts (B-D1)
   - D-081: a claim on a canceled order goes to a person (B-D3)
   - D-082: settlements recorded on the resolution row, plus a review Case; `apply_settlement` retired (C-D1)
+  - D-083: the CARES Admin app, its tabs, layouts and list views, visible to policy admins only (D-D1 to D-D4)
 - **`docs/GAPS.md`:** G-091, G-081 (reworded), G-098, G-077 and G-031 closed on the branch. New gaps for anything still unknown live (GPS, photos and fraud stay out of the data).
 - **Subagent docs:** `docs/subagents/refund.md` and `docs/subagents/stolen-delayed-orders.md` (data source table, SD-G1 and SD-G3).
 - **`docs/V6_FOCUS.md`:** items 5, 8, 9 and 10.
@@ -258,6 +323,7 @@ What the matrix gives with only these fields:
 1. Part A, built and tested.
 2. Part B. The decisions are made; @rojasC10 reviews the Stolen & Delayed changes before merge.
 3. Part C. Its `issue_resolution` changes build on Part A's test helpers.
+4. Part D. Its layouts and the "Needing review" list view use Part C's settlement fields.
 
 ## Verification (whole branch, before the PR)
 1. Local AgentScript compiler: 0 errors. All descriptions ≤ 255 characters (G-051).
@@ -268,4 +334,5 @@ What the matrix gives with only these fields:
    - B-SD-14 and B-IN-10: the Case has the order id (Part B)
    - B-IN-01: STANDARD reaches Refund in the same turn (Part B)
    - a READY payout writes the settlement fields (Part C)
+   - the CARES Admin app and its tabs, as in D4, in the org after the deploy (Part D)
 5. After merge: deploy, publish and activate the next version, then the P0 set twice (`personas.md` pass rule).
