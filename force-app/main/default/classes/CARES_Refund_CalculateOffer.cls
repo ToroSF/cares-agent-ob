@@ -125,7 +125,7 @@ public with sharing class CARES_Refund_CalculateOffer {
         Map<String, CARES_Refund_Policy__c> policiesByKey
     ) {
         Result r = new Result();
-        r.currencyCode = String.isBlank(req.orderCurrency) ? 'USD' : req.orderCurrency;
+        r.currencyCode = String.isBlank(req.orderCurrency) ? UserInfo.getDefaultCurrency() : req.orderCurrency;
 
         CARES_Tier__c tier = resolveTier(req.contactId, contactsById, lowestActiveTier);
         r.tierName = tier == null ? '' : tier.Name;
@@ -134,12 +134,15 @@ public with sharing class CARES_Refund_CalculateOffer {
         Boolean readyPath = approvedFullAmount > 0;
 
         Decimal refund;
-        // Default bonus when the READY path skips the policy lookup (D-029: the
-        // Stolen & Delayed contract doesn't carry a tier, only an approved amount).
-        Decimal bonusPercent = 20;
+        Decimal bonusPercent = 0;
         if (readyPath) {
             // READY path: refund = the approved full amount, no policy ceiling applied (per the node spec).
             refund = approvedFullAmount;
+            // Credit bonus from the customer's tier row for this outcome (D-029). No row means no bonus, never an invented one
+            CARES_Refund_Policy__c readyPolicy = tier == null ? null : policiesByKey.get(policyKey(tier.Id, req.orderOutcome));
+            if (readyPolicy != null && readyPolicy.Store_Credit_Bonus_Pct__c != null) {
+                bonusPercent = readyPolicy.Store_Credit_Bonus_Pct__c;
+            }
         } else {
             if (tier == null) {
                 r.eligible = false;
