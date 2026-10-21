@@ -30,6 +30,11 @@ public with sharing class CARES_Refund_IssueResolution {
             required=true
         )
         public Decimal creditAmount;
+        @InvocableVariable(
+            label='Currency Code'
+            description='ISO currency code of the amounts; blank means the org default currency'
+        )
+        public String currencyCode;
     }
     public class Result {
         @InvocableVariable(
@@ -149,9 +154,11 @@ public with sharing class CARES_Refund_IssueResolution {
                     Result r = new Result();
                     r.success = true;
                     r.referenceNumber = resolutionsToInsert[j].Id;
+                    // No timing promise: no Pronto source gives a refund window (D-065)
+                    String currencyLabel = String.isBlank(req.currencyCode) ? UserInfo.getDefaultCurrency() : req.currencyCode;
                     r.message = req.resolutionType == 'Store_Credit'
-                        ? 'Store credit of $' + req.creditAmount.setScale(2) + ' has been added to your account.'
-                        : 'Refund of $' + req.refundAmount.setScale(2) + ' to your original payment method in 3-5 business days.';
+                        ? 'Store credit of ' + req.creditAmount.setScale(2) + ' ' + currencyLabel + ' has been added to your account.'
+                        : 'Refund of ' + req.refundAmount.setScale(2) + ' ' + currencyLabel + ' to your original payment method.';
                     results[position] = r;
                 } else {
                     // A unique-field collision lands here when two requests in this

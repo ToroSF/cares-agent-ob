@@ -358,6 +358,7 @@ subagent refund:
                 with resolutionType = @variables.refund_chosen_resolution
                 with refundAmount = @variables.refund_offer_amount
                 with creditAmount = @variables.refund_credit_amount
+                with currencyCode = @variables.refund_currency
                 set @variables.refund_issue_attempted = True
                 set @variables.refund_issued = @outputs.success
 
@@ -511,6 +512,8 @@ subagent refund:
                     is_required: True
                 creditAmount: number
                     is_required: True
+                currencyCode: string
+                    description: "ISO currency code of the amounts, from the offer; blank means the org default"
             outputs:
                 success: boolean
                     filter_from_agent: True

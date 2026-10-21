@@ -301,7 +301,7 @@ private class CARES_Refund_ActionsTest {
         System.assertEquals(14.00, r.refundAmount, 'Affected value is below the 50.00 standard ceiling');
         System.assertEquals(17.50, r.creditAmount, '14.00 + 25% bonus');
         System.assertEquals('Gold', r.tierName);
-        System.assertEquals('USD', r.currencyCode, 'Blank order currency falls back to USD');
+        System.assertEquals(UserInfo.getDefaultCurrency(), r.currencyCode, 'Blank order currency falls back to the org default, not a hardcoded USD');
     }
 
     @IsTest
@@ -404,8 +404,50 @@ private class CARES_Refund_ActionsTest {
 
         CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Stolen', 'UNKNOWN', 0, 25.00, 25.00, 'EUR');
         System.assertEquals(25.00, r.refundAmount, 'READY path bypasses the small policy ceiling (D-021/D-028)');
-        System.assertEquals(30.00, r.creditAmount, 'READY path credit is total + default bonus (D-029)');
+        System.assertEquals(27.50, r.creditAmount, 'READY path credit is total + the tier row bonus, 10% here (D-029), not an invented 20%');
         System.assertEquals('EUR', r.currencyCode, 'Order currency is echoed (D-036)');
+    }
+
+    @IsTest
+    static void readyPathWithoutAPolicyRowGivesNoBonus() {
+        CARES_Tier__c tier = makeTier('Bronze', 1, true);
+        Contact c = makeContact();
+        c.CARES_Tier__c = tier.Id;
+        Database.update(c, AccessLevel.SYSTEM_MODE);
+
+        CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Stolen', 'UNKNOWN', 0, 25.00, 25.00, 'EUR');
+        System.assertEquals(25.00, r.refundAmount);
+        System.assertEquals(25.00, r.creditAmount, 'No policy row for the outcome means no bonus, never a default one');
+    }
+
+    // CARES_Refund_Policy__c validation rules
+
+    private static String insertError(Decimal maxRefund, Decimal cleanMax, Decimal bonusPct) {
+        CARES_Tier__c tier = makeTier('Rules', 9, true);
+        Database.SaveResult sr = Database.insert(new CARES_Refund_Policy__c(
+            Tier__c = tier.Id, Order_Outcome__c = 'Delayed', Max_Refund__c = maxRefund,
+            Clean_History_Max_Refund__c = cleanMax, Store_Credit_Bonus_Pct__c = bonusPct, Active__c = true
+        ), false, AccessLevel.SYSTEM_MODE);
+        return sr.isSuccess() ? '' : sr.getErrors()[0].getMessage();
+    }
+
+    @IsTest
+    static void cleanMaxBelowTheStandardMaxIsRejected() {
+        System.assert(insertError(40.00, 30.00, 10).contains('at least the standard max'), 'Clean max under standard max must fail');
+        System.assertEquals('', insertError(40.00, 40.00, 10), 'Equal limits are allowed');
+    }
+
+    @IsTest
+    static void negativeLimitsAreRejected() {
+        System.assert(insertError(-5.00, 10.00, 10).contains('cannot be negative'));
+    }
+
+    @IsTest
+    static void bonusOutsideZeroToHundredIsRejected() {
+        System.assert(insertError(10.00, 20.00, 150).contains('between 0% and 100%'), '150% must fail');
+        System.assert(insertError(10.00, 20.00, -1).contains('between 0% and 100%'), '-1% must fail');
+        System.assertEquals('', insertError(10.00, 20.00, 100), '100% is allowed');
+        System.assertEquals('', insertError(10.00, 20.00, 0), '0% is allowed');
     }
 
     @IsTest
@@ -485,8 +527,29 @@ private class CARES_Refund_ActionsTest {
         }
         System.assert(r.message.contains('15.00'), 'Refund message shows the refund amount');
         System.assert(r.message.contains('original payment method'), 'Refunds go to the original payment method only');
+        System.assert(r.message.contains(UserInfo.getDefaultCurrency()), 'Blank currency shows the org default: ' + r.message);
+        System.assert(!r.message.contains('$'), 'No hardcoded dollar sign: ' + r.message);
+        System.assert(!r.message.contains('business days'), 'No unsourced timing promise (D-065): ' + r.message);
         CARES_Resolution__c saved = [SELECT Amount__c FROM CARES_Resolution__c WHERE Order_Id__c = :ORDER_ID];
         System.assertEquals(15.00, saved.Amount__c);
+    }
+
+    @IsTest
+    static void creditMessageUsesTheOfferCurrency() {
+        Contact c = makeContact();
+        CARES_Refund_IssueResolution.Request req = new CARES_Refund_IssueResolution.Request();
+        req.contactId = c.Id;
+        req.orderId = ORDER_ID;
+        req.resolutionType = 'Store_Credit';
+        req.refundAmount = 25.00;
+        req.creditAmount = 27.50;
+        req.currencyCode = 'EUR';
+        CARES_Refund_IssueResolution.Result r;
+        System.runAs(refundUser()) {
+            r = CARES_Refund_IssueResolution.execute(new List<CARES_Refund_IssueResolution.Request>{ req })[0];
+        }
+        System.assertEquals(true, r.success, 'Issue failed: ' + r.message);
+        System.assert(r.message.contains('27.50 EUR'), 'Credit message shows amount and currency: ' + r.message);
     }
 
     @IsTest

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Clean_Max_At_Least_Standard_Max</fullName>
+    <active>true</active>
+    <description>A clean history must never get a lower ceiling than the standard one (D-025).</description>
+    <errorConditionFormula>Clean_History_Max_Refund__c &lt; Max_Refund__c</errorConditionFormula>
+    <errorDisplayField>Clean_History_Max_Refund__c</errorDisplayField>
+    <errorMessage>Clean-history max refund must be at least the standard max refund.</errorMessage>
+</ValidationRule>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Bonus_Between_0_And_100</fullName>
+    <active>true</active>
+    <description>The store credit bonus is a percentage between 0% and 100% (D-029). Percent fields read as a fraction in formulas.</description>
+    <errorConditionFormula>OR(Store_Credit_Bonus_Pct__c &lt; 0, Store_Credit_Bonus_Pct__c &gt; 1)</errorConditionFormula>
+    <errorDisplayField>Store_Credit_Bonus_Pct__c</errorDisplayField>
+    <errorMessage>Store credit bonus must be between 0% and 100%.</errorMessage>
+</ValidationRule>
