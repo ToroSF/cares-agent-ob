@@ -47,6 +47,7 @@ AMOUNT = re.compile(r"(?<![\w.])\$?\s?(\d{1,4}\.\d{2})(?![\d])")
 
 RATING_CLAIM = re.compile(r"\b(saved|recorded|logged|noted)\b[^.?!]{0,40}\b(feedback|rating)\b|\b(feedback|rating)\b[^.?!]{0,40}"
                           r"\b(has been|was|is) (saved|recorded|logged)", re.I)
+GENERIC_ERROR = re.compile(r"something has gone wrong|something went wrong", re.I)
 # Trace names that differ from the reasoning action name in the script
 ALIAS = {"evaluate_delivery_exception": "check_order", "handoff_approved_claim": "resolve_claim",
          "AnswerQuestionsWithKnowledge": "search_pronto_policy", "thumbs_up": "save_csat_rating",
@@ -265,6 +266,11 @@ def invariant_problems(sc, sessions):
 def check(sc, sessions, fx):
     """Returns (hard problems, known-fail problems or None, notes, latency, path, action names)."""
     problems = [("ERROR " + s["error"]) for s in sessions if s.get("error")]
+    # The platform's generic failure reply with no model step is an infrastructure error, not an agent result
+    for s in sessions:
+        for who, t in s["convo"]:
+            if who == "agent" and GENERIC_ERROR.search(t):
+                problems.append("ERROR platform: " + GENERIC_ERROR.search(t).group(0))
     problems += expect_problems(sc.get("expect", {}), sessions, fx)
     inv, notes = invariant_problems(sc, sessions)
     problems += inv
@@ -281,6 +287,8 @@ def check(sc, sessions, fx):
 
 def outcome(sc, problems, known):
     """Hard problems always FAIL. Known-fail checks (expect_known) decide EXPECTED_FAIL vs UNEXPECTED_PASS."""
+    if any(p.startswith("ERROR") for p in problems):
+        return "ERROR"
     if problems:
         return "FAIL"
     if known is not None:
