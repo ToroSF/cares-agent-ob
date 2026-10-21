@@ -1816,6 +1816,235 @@
           ]
         }
       }
+    },
+    {
+      "timestamp": "2026-10-21T09:05:21Z",
+      "tier": "L",
+      "configHash": "26f41d647b95d645",
+      "commit": "a858906",
+      "agentVersion": "v5 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p1-realdata.json",
+      "runner": "scripts/testing/run_batch.py --runs 2 --workers 2 (rescored after the G-094 soft check was widened)",
+      "why": "First run of the P1/P2 real-data scenarios the runner can now check: B-RF-21, B-RF-26, B-OS-03, B-OS-08, B-OS-10..B-OS-13.",
+      "counts": {
+        "before": {
+          "Case": 125,
+          "CaseComment": 9,
+          "CSAT_Rating__c": 0,
+          "CARES_Resolution__c": 9
+        },
+        "after": {
+          "Case": 129,
+          "CaseComment": 9,
+          "CARES_Resolution__c": 9
+        }
+      },
+      "summary": {
+        "scenarios": 8,
+        "PASS": 7,
+        "FLAKY": 1,
+        "runs": 16,
+        "runsLostToPlatform": 0
+      },
+      "personas": {
+        "P13": {
+          "name": "Order Status",
+          "mode": "live",
+          "totalScenarios": 6,
+          "passed": 5,
+          "failed": 0,
+          "flaky": 1,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-OS-03",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "order_status"
+                ],
+                [
+                  "order_status"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-08",
+              "repeats": 2,
+              "outcomes": [
+                "FAIL",
+                "PASS"
+              ],
+              "result": "FLAKY",
+              "path": [
+                [
+                  "order_status",
+                  "identify_customer",
+                  "order_status",
+                  "identify_customer",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "order_status",
+                  "identify_customer",
+                  "order_status",
+                  "identify_customer",
+                  "order_status",
+                  "identify_customer",
+                  "escalate_to_human"
+                ]
+              ],
+              "notes": "FINDING:  reply has forbidden /(no|isn't an|is not an|there's no) (pronto )?account (with|for|under; identify_attempts expected 2, got [1]"
+            },
+            {
+              "scenario": "B-OS-10",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "stolen_delayed_orders",
+                  "escalate_to_human",
+                  "__human__"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-11",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "order_status",
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "order_status",
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-12",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "order_status"
+                ],
+                [
+                  "order_status"
+                ]
+              ],
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-13",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "order_status"
+                ],
+                [
+                  "order_status"
+                ]
+              ],
+              "notes": ""
+            }
+          ]
+        },
+        "P3": {
+          "name": "Refund, direct",
+          "mode": "live",
+          "totalScenarios": 2,
+          "passed": 2,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "results": [
+            {
+              "scenario": "B-RF-21",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "stolen_delayed_orders"
+                ],
+                [
+                  "stolen_delayed_orders"
+                ]
+              ],
+              "notes": "FINDING:  calculate_refund_offer.creditAmount expected '35.08', got []; FINDING:  calculate_refund_offer.refundAmount expected '30.50', got []"
+            },
+            {
+              "scenario": "B-RF-26",
+              "repeats": 2,
+              "outcomes": [
+                "PASS",
+                "PASS"
+              ],
+              "result": "PASS",
+              "path": [
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ],
+                [
+                  "risk_detection",
+                  "refund",
+                  "risk_detection",
+                  "refund"
+                ]
+              ],
+              "notes": ""
+            }
+          ]
+        }
+      }
     }
   ]
 }
