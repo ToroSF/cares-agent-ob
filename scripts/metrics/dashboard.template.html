@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CARES · Agent metrics</title>
+<style>
+  :root {
+    --bg:#f4f6fb; --card:#fff; --ink:#0f172a; --mute:#64748b; --line:#e2e8f0;
+    --brand:#4f46e5; --brand2:#06b6d4; --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626; --gray:#94a3b8;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif; background:var(--bg); color:var(--ink); }
+  header.hero { background:linear-gradient(120deg,#0f172a 0%,#312e81 55%,#0e7490 100%); color:#fff; padding:40px 0 96px; }
+  .wrap { max-width:1200px; margin:0 auto; padding:0 28px; }
+  .hero h1 { margin:0; font-size:34px; letter-spacing:-.02em; }
+  .hero .sub { opacity:.8; margin-top:6px; }
+  .hero .meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:99px; font-size:12px; font-weight:600; background:rgba(255,255,255,.14); }
+  nav { position:sticky; top:0; z-index:5; background:rgba(244,246,251,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
+  nav .wrap { display:flex; gap:4px; overflow-x:auto; }
+  nav a { padding:12px 14px; color:var(--mute); text-decoration:none; font-weight:600; font-size:14px; white-space:nowrap; border-bottom:2px solid transparent; }
+  nav a:hover { color:var(--ink); border-color:var(--brand); }
+  .kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-top:-64px; }
+  .kpi { background:var(--card); border-radius:14px; padding:16px 18px; box-shadow:0 8px 24px rgba(15,23,42,.08); }
+  .kpi .label { color:var(--mute); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .kpi .value { font-size:30px; font-weight:750; letter-spacing:-.02em; margin-top:4px; }
+  .kpi .hint { color:var(--mute); font-size:12px; margin-top:2px; }
+  section { margin-top:40px; }
+  section > h2 { font-size:22px; margin:0 0 4px; letter-spacing:-.01em; }
+  section > p.lead { color:var(--mute); margin:0 0 16px; }
+  .grid { display:grid; gap:14px; }
+  .g5 { grid-template-columns:repeat(5,minmax(0,1fr)); }
+  .finding { border-left:4px solid; border-radius:10px; padding:12px 14px; font-size:13px; }
+  .finding b { display:block; font-size:14px; margin-bottom:4px; }
+  .g2 { grid-template-columns:repeat(2,minmax(0,1fr)); } .g3 { grid-template-columns:repeat(3,minmax(0,1fr)); } .g4 { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .card { background:var(--card); border-radius:14px; padding:18px 20px; box-shadow:0 1px 3px rgba(15,23,42,.06); min-width:0; }
+  .card h3 { margin:0 0 12px; font-size:15px; }
+  .card .note { color:var(--mute); font-size:13px; margin-top:10px; }
+  .empty { border:2px dashed var(--line); border-radius:12px; padding:22px; text-align:center; color:var(--mute); }
+  .empty b { display:block; color:var(--ink); margin-bottom:4px; }
+  .legend { display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--mute); margin-top:10px; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+  .hbar { display:grid; grid-template-columns:minmax(90px,38%) 1fr 44px; gap:10px; align-items:center; font-size:13px; margin:7px 0; }
+  .hbar .track { background:#eef2f7; border-radius:6px; height:12px; overflow:hidden; display:flex; }
+  .hbar .track span { display:block; height:100%; }
+  .hbar .n { text-align:right; font-variant-numeric:tabular-nums; color:var(--mute); }
+  .hbar .lbl { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sub-card { border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .sub-card.new { border-color:var(--brand); background:#eef2ff; }
+  .sub-card h4 { margin:0; font-size:14px; display:flex; justify-content:space-between; gap:8px; }
+  .sub-card .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+  .tag { font-size:11px; padding:2px 8px; border-radius:99px; background:#f1f5f9; color:#334155; font-weight:600; }
+  .tag.flow { background:#dbeafe; color:#1d4ed8; } .tag.apex { background:#ede9fe; color:#6d28d9; } .tag.standard { background:#cffafe; color:#0e7490; }
+  .tag.ok { background:#dcfce7; color:var(--ok); } .tag.bad { background:#fee2e2; color:var(--bad); } .tag.warn { background:#fef3c7; color:#b45309; }
+  .tag.go { background:#f8fafc; border:1px solid var(--line); color:var(--mute); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--mute); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; position:sticky; top:0; background:var(--card); }
+  .scroll { max-height:520px; overflow:auto; }
+  .filters { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .filters button { border:1px solid var(--line); background:#fff; border-radius:99px; padding:4px 12px; font-size:12px; font-weight:600; color:var(--mute); cursor:pointer; }
+  .filters button.on { background:var(--ink); border-color:var(--ink); color:#fff; }
+  .donut-wrap { display:flex; align-items:center; gap:18px; }
+  .big-center { font-size:26px; font-weight:750; }
+  footer { margin:48px 0 40px; color:var(--mute); font-size:13px; }
+  footer code { background:#e2e8f0; padding:1px 6px; border-radius:5px; }
+  @media (max-width:1000px) { .kpis { grid-template-columns:repeat(3,1fr); } .g3,.g4,.g5 { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:640px) { .kpis,.g2,.g3,.g4,.g5 { grid-template-columns:1fr; } }
+  @media print { nav { display:none; } .scroll { max-height:none; } section { break-inside:avoid; } }
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <h1>CARES · Agent metrics</h1>
+  <div class="sub">Pronto customer care agent: quality, policy alignment, architecture and what runs in the org.</div>
+  <div class="meta" id="meta"></div>
+</div></header>
+<div class="wrap"><div class="kpis" id="kpis"></div></div>
+<nav><div class="wrap">
+  <a href="#quality">Quality</a><a href="#policy">Policy alignment</a><a href="#architecture">Architecture</a>
+  <a href="#runtime">In the org</a><a href="#governance">Decisions &amp; gaps</a><a href="#sources">Sources</a>
+</div></nav>
+
+<main class="wrap">
+  <section id="quality">
+    <h2>Quality: Testing Center</h2>
+    <p class="lead">Each suite is pinned to one agent version, so a re-run on a new version can be compared with the one before.</p>
+    <div id="tc"></div>
+  </section>
+
+  <section id="coverage">
+    <h2>Test coverage we planned</h2>
+    <p class="lead">Scenarios written in the repo, by persona. P0 = must pass before anything else is trusted.</p>
+    <div class="grid g3">
+      <div class="card" style="grid-column:span 2"><h3>Scenarios by persona</h3><div id="personas"></div></div>
+      <div class="card"><h3>At a glance</h3><div id="coverage-kpis"></div></div>
+    </div>
+  </section>
+
+  <section id="policy">
+    <h2>Policy alignment</h2>
+    <p class="lead">Every rule in Pronto's 4 official documents, checked against CARES before (v0, <code>main</code>) and after (v1) the grounding work.</p>
+    <div class="grid g3">
+      <div class="card" style="grid-column:span 2"><h3>Rules by status</h3><div id="policy-bars"></div><div class="legend" id="policy-legend"></div></div>
+      <div class="card"><h3>Critical rules</h3><div id="policy-critical"></div></div>
+    </div>
+  </section>
+
+  <section id="architecture">
+    <h2>Architecture</h2>
+    <p class="lead">Router plus specialist subagents. Money, identity and limits live in Flows and Apex, not in the prompt.</p>
+    <div class="grid g3">
+      <div class="card"><h3>Actions by implementation</h3><div id="action-donut"></div></div>
+      <div class="card" style="grid-column:span 2"><h3>Size</h3><div id="arch-kpis" class="grid g4"></div><div class="note" id="arch-note"></div></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3>Subagents</h3><div id="subagents" class="grid g3"></div><div class="legend"><span><i style="background:#eef2ff;border:1px solid var(--brand)"></i>new in the compared branch</span></div></div>
+  </section>
+
+  <section id="runtime">
+    <h2>In the org</h2>
+    <p class="lead">Read-only snapshot. All numbers are counts: no record ids, names or message text.</p>
+    <div id="conv-kpis" class="grid g4" style="margin-bottom:14px"></div>
+    <div class="grid g3" style="margin-bottom:14px">
+      <div class="card"><h3>Conversations by agent version</h3><div id="conv-version"></div></div>
+      <div class="card"><h3>Where conversations came from</h3><div id="conv-mode"></div></div>
+      <div class="card"><h3>Customer messages per conversation</h3><div id="conv-turns"></div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px" id="conv-note"></div>
+    <div class="grid g2">
+      <div class="card"><h3>Cases logged by CARES, per day</h3><div id="cases-day"></div></div>
+      <div class="card"><h3>Agent versions</h3><div id="versions"></div></div>
+      <div class="card"><h3>Cases by priority</h3><div id="cases-priority"></div></div>
+      <div class="card"><h3>Cases by type</h3><div id="cases-type"></div></div>
+      <div class="card"><h3>Messaging sessions, per day</h3><div id="sessions-day"></div></div>
+      <div class="card"><h3>Customer rating (CSAT)</h3><div id="csat"></div></div>
+    </div>
+  </section>
+
+  <section id="governance">
+    <h2>Decisions, gaps and risks</h2>
+    <p class="lead">Everything is written down in the repo: what we chose, what is still missing, what can go wrong.</p>
+    <div class="grid g4">
+      <div class="card"><h3>Decisions</h3><div id="decisions"></div></div>
+      <div class="card"><h3>Gaps</h3><div id="gaps"></div></div>
+      <div class="card"><h3>Risks</h3><div id="risks"></div></div>
+      <div class="card"><h3>Test run log</h3><div id="runlog"></div></div>
+    </div>
+  </section>
+
+  <footer id="sources"></footer>
+</main>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const sum = (o) => Object.values(o || {}).reduce((a, b) => a + b, 0);
+const pct = (a, b) => (b ? Math.round((100 * a) / b) : 0);
+const PALETTE = ["#4f46e5","#06b6d4","#16a34a","#f59e0b","#dc2626","#8b5cf6","#0ea5e9","#64748b","#ec4899","#84cc16"];
+const POLICY = {
+  "✅": ["Aligned", "#16a34a"], "🟡": ["Partial", "#f59e0b"], "🔴": ["Different", "#dc2626"], "⬜": ["Missing", "#94a3b8"],
+  "❓": ["To decide", "#8b5cf6"], "∅": ["No source", "#475569"], "🚫": ["Out of scope", "#cbd5e1"], "?": ["Unclassified", "#e2e8f0"],
+};
+const METRIC = {
+  topic_assertion: "Right subagent", actions_assertion: "Right actions", output_validation: "Right answer (LLM judge)",
+  coherence: "Coherent (LLM judge)", completeness: "Complete (LLM judge)",
+};
+const STATUS_COLOR = { DECIDED:"#16a34a", PROPOSAL:"#f59e0b", OPEN:"#dc2626", CLOSED:"#16a34a", "PARTLY CLOSED":"#06b6d4", SUPERSEDED:"#94a3b8", OTHER:"#cbd5e1" };
+
+function empty(title, text) { return `<div class="empty"><b>${esc(title)}</b>${esc(text)}</div>`; }
+
+function hbars(rows, { max, suffix = "" } = {}) {
+  if (!rows.length) return empty("No data", "Nothing to show yet.");
+  const m = max ?? Math.max(...rows.map((r) => r.parts ? sum(Object.fromEntries(r.parts.map((p, i) => [i, p.value]))) : r.value), 1);
+  return rows.map((r) => {
+    const parts = r.parts || [{ value: r.value, color: r.color || PALETTE[0] }];
+    const total = parts.reduce((a, p) => a + p.value, 0);
+    const bars = parts.map((p) => `<span title="${esc(p.label || "")}: ${p.value}" style="width:${(100 * p.value) / m}%;background:${p.color}"></span>`).join("");
+    return `<div class="hbar"><div class="lbl" title="${esc(r.label)}">${esc(r.label)}</div><div class="track">${bars}</div><div class="n">${r.display ?? total}${suffix}</div></div>`;
+  }).join("");
+}
+
+function donut(segments, center = "", centerLabel = "") {
+  const total = segments.reduce((a, s) => a + s.value, 0);
+  if (!total) return empty("No data", "Nothing to show yet.");
+  const r = 52, c = 2 * Math.PI * r;
+  let off = 0;
+  const arcs = segments.filter((s) => s.value).map((s) => {
+    const len = (s.value / total) * c;
+    const a = `<circle r="${r}" cx="70" cy="70" fill="none" stroke="${s.color}" stroke-width="18" stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-off}"><title>${esc(s.label)}: ${s.value}</title></circle>`;
+    off += len;
+    return a;
+  }).join("");
+  const legend = segments.filter((s) => s.value).map((s) => `<div><i style="background:${s.color}"></i>${esc(s.label)} <b style="color:var(--ink)">${s.value}</b></div>`).join("");
+  return `<div class="donut-wrap"><svg width="140" height="140" viewBox="0 0 140 140" style="transform:rotate(-90deg)">${arcs}</svg>
+    <div><div class="big-center">${esc(center || total)}</div><div style="color:var(--mute);font-size:12px;margin-bottom:6px">${esc(centerLabel)}</div><div class="legend" style="flex-direction:column;gap:4px;margin:0">${legend}</div></div></div>`;
+}
+
+function columns(byDay) {
+  const days = Object.keys(byDay || {}).sort();
+  if (!days.length) return empty("No data", "Nothing recorded yet.");
+  const max = Math.max(...days.map((d) => byDay[d]));
+  const W = 560, slot = W / days.length, bw = Math.min(56, slot * 0.7);
+  const bars = days.map((d, i) => {
+    const h = (byDay[d] / max) * 110, x = i * slot + (slot - bw) / 2;
+    return `<g><rect x="${x}" y="${134 - h}" width="${bw}" height="${h}" rx="5" fill="url(#g)"><title>${d}: ${byDay[d]}</title></rect>
+      <text x="${x + bw / 2}" y="${128 - h}" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">${byDay[d]}</text>
+      <text x="${x + bw / 2}" y="152" text-anchor="middle" font-size="11" fill="#64748b">${d.slice(5)}</text></g>`;
+  }).join("");
+  return `<svg width="100%" height="160" viewBox="0 0 ${W} 160" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><line x1="0" x2="${W}" y1="134" y2="134" stroke="#e2e8f0"/>${bars}</svg>`;
+}
+
+function kpi(label, value, hint = "") {
+  return `<div class="kpi"><div class="label">${esc(label)}</div><div class="value">${value}</div><div class="hint">${hint}</div></div>`;
+}
+function objRows(o, colorFn) {
+  return Object.entries(o || {}).sort((a, b) => b[1] - a[1]).map(([k, v], i) => ({ label: k, value: v, color: colorFn ? colorFn(k, i) : PALETTE[i % PALETTE.length] }));
+}
+
+// ---------- header + KPIs ----------
+const active = D.org?.versions?.find((v) => v.status === "Active");
+const latest = D.testing[D.testing.length - 1];
+const pol = D.docs.policy;
+const aligned = (o) => (o?.["✅"] || 0);
+$("meta").innerHTML = [
+  `Generated ${new Date(D.generatedAt).toLocaleString()}`,
+  `Commit ${esc(D.commit)} · ${esc(D.branch)}`,
+  D.docsRef !== "working tree" ? `Docs from ${esc(D.docsRef)}` : "",
+  D.org ? `Org read ${new Date(D.org.readAt).toLocaleString()}` : "Org not read",
+].filter(Boolean).map((t) => `<span class="chip">${t}</span>`).join("");
+
+const openGaps = D.docs.gaps.byStatus.OPEN || 0;
+$("kpis").innerHTML = [
+  kpi("Active version", active ? `v${active.version}` : "—", active ? `since ${active.date}` : "org not read"),
+  kpi("Test pass rate", latest ? `${pct(latest.totals.passed, latest.totals.cases)}%` : "—", latest ? `${latest.totals.passed}/${latest.totals.cases} · v${latest.agentVersion}` : "no Testing Center run yet"),
+  kpi("Policy rules aligned", pol.rules ? `${aligned(pol.v1)}/${pol.rules}` : "—", pol.rules ? `was ${aligned(pol.v0)} before grounding` : "matrix not in this checkout"),
+  kpi("Subagents", D.agent?.subagents.length ?? "—", `${D.agent?.actionCount ?? 0} actions`),
+  kpi("Cases logged", D.org?.cases?.total ?? "—", "by CARES in the org"),
+  kpi("Open gaps", openGaps, `of ${D.docs.gaps.total} written down`),
+].join("");
+
+// ---------- Testing Center ----------
+(function testing() {
+  if (!D.testing.length) {
+    $("tc").innerHTML = `<div class="card">${empty("No Testing Center run yet", "Run a suite, save the normalized result in docs/metrics/data/testing-center/, then rebuild this page.")}</div>`;
+    return;
+  }
+  const run = latest;
+  const metricRows = Object.entries(run.byMetric || {}).map(([k, v]) => ({
+    label: METRIC[k] || k, display: `${pct(v.passed, v.passed + v.failed)}%`,
+    parts: [{ label: "passed", value: v.passed, color: "#16a34a" }, { label: "failed", value: v.failed, color: "#fca5a5" }],
+  }));
+  const failed = (c) => typeof c.casePass === "boolean" ? !c.casePass : c.outcomePass === false || c.topicPass === false || c.actionPass === false;
+  const notInVersion = (c) => (c.tags || []).some((t) => t.includes("not_in"));
+  const inScope = run.cases.filter((c) => !notInVersion(c));
+  const inScopePassed = inScope.filter((c) => !failed(c)).length;
+  const byPersona = {};
+  for (const c of run.cases) {
+    const k = c.persona || "other";
+    byPersona[k] ??= { p: 0, f: 0 };
+    failed(c) ? byPersona[k].f++ : byPersona[k].p++;
+  }
+  const personaRows = Object.entries(byPersona).map(([k, v]) => ({
+    label: k, display: `${v.p}/${v.p + v.f}`,
+    parts: [{ label: "passed", value: v.p, color: "#16a34a" }, { label: "failed", value: v.f, color: "#fca5a5" }],
+  }));
+  const lat = run.cases.map((c) => c.latencyMs).filter((n) => typeof n === "number").sort((a, b) => a - b);
+  const q = (p) => lat[Math.min(lat.length - 1, Math.floor(p * lat.length))];
+  const latKpi = run.latencyMs?.median
+    ? kpi("Response time", `${(run.latencyMs.median / 1000).toFixed(1)}s`, `median · p90 ${(run.latencyMs.p90 / 1000).toFixed(1)}s · max ${(run.latencyMs.max / 1000).toFixed(1)}s`)
+    : kpi("Response time", lat.length ? `${(q(0.5) / 1000).toFixed(1)}s` : "—", lat.length ? `median · p95 ${(q(0.95) / 1000).toFixed(1)}s` : "not in the results");
+  const FIND = { bad: ["#dc2626", "#fef2f2"], warn: ["#f59e0b", "#fffbeb"], ok: ["#16a34a", "#f0fdf4"], info: ["#64748b", "#f8fafc"] };
+  const findings = (run.findings || []).length
+    ? `<div class="card" style="margin-top:14px"><h3>What the baseline found</h3><div class="grid g3">${run.findings.map((f) => `
+        <div class="finding" style="border-left-color:${(FIND[f.level] || FIND.info)[0]};background:${(FIND[f.level] || FIND.info)[1]}">
+          <b>${esc(f.title)}</b><div>${esc(f.text)}</div>
+          ${f.cases.length ? `<div class="tags">${f.cases.map((id) => `<span class="tag">${esc(id)}</span>`).join("")}</div>` : ""}
+        </div>`).join("")}</div></div>`
+    : "";
+  const runsCompare = D.testing.length > 1
+    ? `<div class="card"><h3>Pass rate by agent version</h3>${hbars(D.testing.map((r, i) => ({ label: `v${r.agentVersion} · ${String(r.runAt).slice(0, 10)}`, value: pct(r.totals.passed, r.totals.cases), color: PALETTE[i % PALETTE.length] })), { max: 100, suffix: "%" })}</div>`
+    : `<div class="card"><h3>Before / after</h3>${empty("One run so far", "Re-run the same suite on the next agent version to see what changed.")}</div>`;
+  const ok = (v) => v === true ? `<span class="tag ok">pass</span>` : v === false ? `<span class="tag bad">fail</span>` : `<span class="tag">—</span>`;
+  const rows = (filter) => run.cases.filter(filter).map((c) => `<tr>
+      <td><b>${esc(c.id)}</b><div style="color:var(--mute)">${esc(c.persona || "")}</div>${(c.tags || []).map((t) => `<span class="tag ${t.includes("not_in") ? "warn" : ""}">${esc(t)}</span>`).join(" ")}</td>
+      <td>${esc(c.utterance)}</td>
+      <td>${ok(c.topicPass)}<div style="color:var(--mute);font-size:12px">${esc(c.subagentExpected || "")} → ${esc(c.subagentActual || "")}</div></td>
+      <td>${ok(c.actionPass)}</td><td>${ok(c.outcomePass)}</td>
+      <td style="color:var(--mute)">${esc(c.responseExcerpt)}</td></tr>`).join("");
+  const filters = { All: () => true, Failed: failed, "In this version": (c) => !notInVersion(c), "Target not in this version": notInVersion };
+  $("tc").innerHTML = `
+    <div class="grid g5" style="margin-bottom:14px">
+      ${kpi("Suite", `<span style="font-size:18px">${esc(run.suite)}</span>`, `agent v${run.agentVersion} · ${String(run.runAt).slice(0, 16).replace("T", " ")}`)}
+      ${kpi("Cases", run.totals.cases, `${run.totals.passed} passed · ${run.totals.failed} failed${run.totals.error ? ` · ${run.totals.error} error` : ""}`)}
+      ${kpi("Pass rate, all", `${pct(run.totals.passed, run.totals.cases)}%`, "a case passes when every declared check passes")}
+      ${kpi("Pass rate, in scope", `${pct(inScopePassed, inScope.length)}%`, `${inScopePassed}/${inScope.length} · leaves out ${run.cases.length - inScope.length} cases for behavior v${run.agentVersion} does not have yet`)}
+      ${latKpi}
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>By check</h3>${hbars(metricRows)}<div class="legend"><span><i style="background:#16a34a"></i>passed</span><span><i style="background:#fca5a5"></i>failed</span></div>
+        <div class="note">Subagent and action checks count only where the case declared one. Coherence and completeness are scored by an LLM judge and do not decide pass or fail.</div></div>
+      <div class="card"><h3>By persona</h3>${hbars(personaRows)}</div>
+      ${runsCompare}
+    </div>
+    ${findings}
+    <div class="card" style="margin-top:14px"><h3>Every case</h3>
+      <div class="filters" id="tc-filters">${Object.keys(filters).map((k, i) => `<button class="${i ? "" : "on"}" data-k="${esc(k)}">${esc(k)} (${run.cases.filter(filters[k]).length})</button>`).join("")}</div>
+      <div class="scroll"><table><thead><tr><th>Case</th><th>Customer says</th><th>Subagent</th><th>Actions</th><th>Outcome</th><th>Agent replied</th></tr></thead><tbody id="tc-rows">${rows(filters.All)}</tbody></table></div>
+    </div>`;
+  $("tc-filters").addEventListener("click", (e) => {
+    const k = e.target.dataset?.k; if (!k) return;
+    [...e.currentTarget.children].forEach((b) => b.classList.toggle("on", b === e.target));
+    $("tc-rows").innerHTML = rows(filters[k]);
+  });
+})();
+
+// ---------- coverage ----------
+const sc = D.docs.scenarios;
+$("personas").innerHTML = hbars(objRows(sc.byPersona).sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true })).map((r) => ({ ...r, color: "#4f46e5" })));
+$("coverage-kpis").innerHTML = `<div class="grid" style="gap:10px">
+  ${kpi("Scenarios", sc.total, `${sc.p0} are P0`)}
+  ${kpi("Golden set", D.docs.goldenQuestions || "—", Object.entries(D.docs.goldenByKind || {}).map(([k, v]) => `${v} ${k}`).join(" · ") || "grounding questions")}
+  ${kpi("Executed", latest ? latest.totals.cases : 0, "in Testing Center (latest run)")}</div>`;
+
+// ---------- policy ----------
+if (!pol.rules) {
+  $("policy-bars").innerHTML = empty("No policy matrix in this checkout", "docs/POLICY_ALIGNMENT.md arrives with the grounding PR.");
+} else {
+  const order = ["✅", "🟡", "🔴", "⬜", "❓", "∅", "🚫", "?"];
+  const row = (label, o) => ({ label, display: `${aligned(o)} ✅`, parts: order.filter((k) => o[k]).map((k) => ({ label: POLICY[k][0], value: o[k], color: POLICY[k][1] })) });
+  $("policy-bars").innerHTML = hbars([row("v0 · before", pol.v0), row("v1 · after", pol.v1)], { max: pol.rules }) +
+    `<div style="margin-top:18px">${hbars(objRows(pol.bySource).map((r) => ({ ...r, label: ({ P: "Playbook (internal)", F: "Delivery FAQ", T: "Terms", M: "Merchant standards", N: "Numbers" })[r.label] || r.label })))}</div>`;
+  $("policy-legend").innerHTML = order.filter((k) => pol.v0[k] || pol.v1[k]).map((k) => `<span><i style="background:${POLICY[k][1]}"></i>${k} ${POLICY[k][0]}</span>`).join("");
+  $("policy-critical").innerHTML = pol.critical.length
+    ? pol.critical.map((c) => `<div class="hbar" style="grid-template-columns:1fr auto"><b>${esc(c.id)}</b><span>${c.v0} → ${c.v1}</span></div>`).join("") + `<div class="note">Food safety and allergens: missing before, built now. They count as aligned only after a live test.</div>`
+    : empty("None flagged", "");
+}
+
+// ---------- architecture ----------
+(function arch() {
+  const a = D.agent, cmp = D.agentCompare;
+  if (!a) { $("subagents").innerHTML = empty("No agent file", ""); return; }
+  const shown = cmp || a;
+  const base = new Set(a.subagents.map((s) => s.name));
+  const T = { flow: "#2563eb", apex: "#7c3aed", standard: "#0891b2" };
+  $("action-donut").innerHTML = donut(objRows(shown.actionsByType, (k, i) => T[k] || PALETTE[i]), shown.actionCount, "actions");
+  const delta = (k) => cmp && cmp[k] !== a[k] ? ` <span style="font-size:13px;color:var(--brand)">(${cmp[k] - a[k] > 0 ? "+" : ""}${cmp[k] - a[k]})</span>` : "";
+  $("arch-kpis").innerHTML = [
+    kpi("Subagents", shown.subagents.length + (cmp ? `<span style="font-size:13px;color:var(--brand)"> (+${cmp.subagents.length - a.subagents.length})</span>` : "")),
+    kpi("Actions", shown.actionCount + delta("actionCount")),
+    kpi("Variables", shown.variables + delta("variables")),
+    kpi("Hand-offs", shown.transitions + delta("transitions"), "transitions between subagents"),
+  ].join("");
+  $("arch-note").innerHTML = cmp ? `Showing <code>${esc(cmp.ref)}</code>; numbers in brackets are the change from the current checkout.` : `Showing the current checkout. Data Library grounding: ${a.hasKnowledge ? "yes" : "no"}.`;
+  $("subagents").innerHTML = shown.subagents.map((s) => `
+    <div class="sub-card ${cmp && !base.has(s.name) ? "new" : ""}">
+      <h4><span>${esc(s.label)}</span><span style="color:var(--mute);font-weight:500">${s.start ? "entry" : ""}</span></h4>
+      <div class="tags">${s.actions.map((x) => `<span class="tag ${x.type}">${esc(x.name)}</span>`).join("") || `<span class="tag">no own actions</span>`}</div>
+      ${s.goesTo.length ? `<div class="tags">${s.goesTo.map((g) => `<span class="tag go">→ ${esc((shown.subagents.find((t) => t.name === g) || {}).label || g)}</span>`).join("")}</div>` : ""}
+    </div>`).join("");
+})();
+
+// ---------- runtime ----------
+(function runtime() {
+  const o = D.org;
+  const none = (t) => empty("Not read", t || "Run the build without --offline to read the org.");
+  $("cases-day").innerHTML = o?.cases ? columns(o.cases.byDay) : none();
+  $("cases-priority").innerHTML = o?.cases ? hbars(objRows(o.cases.byPriority, (k) => ({ High: "#dc2626", Medium: "#f59e0b", Low: "#16a34a" })[k] || "#94a3b8")) : none();
+  const oneType = o?.cases && Object.keys(o.cases.byType).length === 1;
+  $("cases-type").innerHTML = o?.cases ? hbars(objRows(o.cases.byType)) + `<div class="note">${oneType
+    ? "Every case has the same Type, Reason and Priority: the org still runs the escalation Flow that fills fixed values. The new Flow sets them by category (see GAPS)."
+    : `"(none)" = cases logged before the escalation Flow sets a Type.`}</div>` : none();
+  $("sessions-day").innerHTML = o?.sessions ? columns(o.sessions.byDay) : none();
+  $("csat").innerHTML = !o?.csat ? none() : o.csat.total
+    ? hbars(Object.entries(o.csat.byScore).sort().map(([k, v]) => ({ label: k === "5" ? "👍 thumbs up (5)" : k === "2" ? "👎 thumbs down (2)" : k, value: v, color: k === "5" ? "#16a34a" : "#dc2626" })))
+    : empty("No ratings yet", "Experience Rating saves a rating only for an identified customer; none was saved so far.");
+  $("versions").innerHTML = o?.versions?.length
+    ? `<table><thead><tr><th>Version</th><th>Status</th><th>Last change</th></tr></thead><tbody>${o.versions.map((v) => `<tr><td><b>v${v.version}</b></td><td><span class="tag ${v.status === "Active" ? "ok" : ""}">${esc(v.status)}</span></td><td>${esc(v.date)}</td></tr>`).join("")}</tbody></table>`
+    : none();
+  const cv = o?.conversations;
+  if (!cv) {
+    $("conv-kpis").innerHTML = `<div class="card" style="grid-column:1/-1">${none("Conversation counts come from the org's session log.")}</div>`;
+    ["conv-version", "conv-mode", "conv-turns"].forEach((id) => ($(id).innerHTML = none()));
+    $("conv-note").remove();
+    return;
+  }
+  $("conv-kpis").innerHTML = [
+    kpi("Conversations", cv.sessions, `${cv.engaged} with a customer message`),
+    kpi("Sent to a person", `${pct(cv.escalated, cv.sessions)}%`, `${cv.escalated} conversations reached the hand-off`),
+    kpi("Transfers completed", cv.transferred, "a service rep picked it up"),
+    kpi("Messages per conversation", cv.customerMessages?.median ?? "—", cv.customerMessages ? `median · mean ${cv.customerMessages.mean} · max ${cv.customerMessages.max}` : ""),
+  ].join("");
+  const split = (g) => Object.entries(g).sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })).map(([k, v]) => ({
+    label: `${k} · ${v.sessions}`, display: `${pct(v.escalated, v.sessions)}%`,
+    parts: [{ label: "sent to a person", value: v.escalated, color: "#f59e0b" }, { label: "handled by the agent", value: v.sessions - v.escalated, color: "#4f46e5" }],
+  }));
+  const legend = `<div class="legend"><span><i style="background:#4f46e5"></i>handled by the agent</span><span><i style="background:#f59e0b"></i>sent to a person (the % on the right)</span></div>`;
+  $("conv-version").innerHTML = hbars(split(cv.byVersion)) + legend;
+  $("conv-mode").innerHTML = hbars(split(cv.byMode)) + legend;
+  $("conv-turns").innerHTML = hbars(Object.entries(cv.turnsHistogram).sort().map(([k, v]) => ({ label: k === "5" ? "5 or more" : k === "1" ? "1 message" : `${k} messages`, value: v, color: "#06b6d4" })));
+  $("conv-note").innerHTML = `<h3>What this does not show yet</h3><div class="note" style="margin:0">
+    Most conversations are our own tests in the builder preview, so read these as test traffic, not customers.
+    Which subagent ran, which actions fired and how long each turn took live in Session Tracing (Data Cloud), which is not turned on in the team org.
+    With it on, this page can show the same checks as Testing Center on real conversations.</div>`;
+})();
+
+// ---------- governance ----------
+const st = (o) => objRows(o, (k, i) => STATUS_COLOR[k] || PALETTE[i]);
+$("decisions").innerHTML = donut(st(D.docs.decisions.byStatus), D.docs.decisions.total, "decisions");
+$("gaps").innerHTML = donut(st(D.docs.gaps.byStatus), D.docs.gaps.total, "gaps");
+$("risks").innerHTML = donut(st(D.docs.risks.byStatus), D.docs.risks.total, "risks");
+$("runlog").innerHTML = donut(objRows(D.docs.runLog.byResult, (k) => ({ Pass: "#16a34a", Fail: "#dc2626", Open: "#f59e0b" })[k] || "#94a3b8"), D.docs.runLog.total, "checks logged");
+
+$("sources").innerHTML = `<b>Sources.</b> Repo: <code>CARES.agent</code>, DECISIONS, GAPS, RISKS, POLICY_ALIGNMENT, TEST_PLAN, the persona scenarios and the golden set.
+  Org: SOQL counts, read only (agent versions, the session log, cases, messaging sessions, CSAT). Testing Center: normalized results in <code>docs/metrics/data/testing-center/</code>, our reading in <code>findings.json</code>.
+  Rebuild: <code>node scripts/metrics/build-dashboard.mjs --target-org &lt;alias&gt;</code> (add <code>--offline</code> to skip the org).
+  A simulated or Testing Center pass shows routing and actions, not live behavior with real data.`;
+</script>
+</body>
+</html>

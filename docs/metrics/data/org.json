@@ -1,0 +1,155 @@
+{
+  "readAt": "2026-10-21T03:15:08.903Z",
+  "versions": [
+    {
+      "version": 1,
+      "status": "Inactive",
+      "date": "2026-10-20"
+    },
+    {
+      "version": 2,
+      "status": "Inactive",
+      "date": "2026-10-20"
+    },
+    {
+      "version": 3,
+      "status": "Active",
+      "date": "2026-10-20"
+    }
+  ],
+  "cases": {
+    "total": 64,
+    "byDay": {
+      "2026-10-20": 64
+    },
+    "byType": {
+      "Customer Order Issue": 64
+    },
+    "byReason": {
+      "Missing items": 64
+    },
+    "byPriority": {
+      "Medium": 64
+    },
+    "byStatus": {
+      "New": 64
+    },
+    "byOrigin": {
+      "Chat": 64
+    },
+    "byKind": {
+      "Escalation": 64
+    }
+  },
+  "sessions": {
+    "total": 6,
+    "byDay": {
+      "2026-10-20": 6
+    },
+    "byStatus": {
+      "Ended": 6
+    }
+  },
+  "csat": {
+    "total": 0,
+    "byScore": {}
+  },
+  "conversations": {
+    "sessions": 191,
+    "engaged": 151,
+    "escalated": 39,
+    "transferred": 2,
+    "customerMessages": {
+      "mean": 1.51,
+      "median": 1,
+      "max": 7
+    },
+    "byMode": {
+      "Builder preview": {
+        "sessions": 170,
+        "engaged": 131,
+        "escalated": 35,
+        "transferred": 0,
+        "customerMessages": {
+          "mean": 1.39,
+          "median": 1,
+          "max": 6
+        }
+      },
+      "Other (tests, API)": {
+        "sessions": 16,
+        "engaged": 16,
+        "escalated": 1,
+        "transferred": 0,
+        "customerMessages": {
+          "mean": 2.69,
+          "median": 2,
+          "max": 7
+        }
+      },
+      "Live chat (website)": {
+        "sessions": 5,
+        "engaged": 4,
+        "escalated": 3,
+        "transferred": 2,
+        "customerMessages": {
+          "mean": 1.8,
+          "median": 2,
+          "max": 2
+        }
+      }
+    },
+    "byVersion": {
+      "v1": {
+        "sessions": 94,
+        "engaged": 60,
+        "escalated": 26,
+        "transferred": 0,
+        "customerMessages": {
+          "mean": 1,
+          "median": 1,
+          "max": 2
+        }
+      },
+      "v2": {
+        "sessions": 16,
+        "engaged": 11,
+        "escalated": 8,
+        "transferred": 2,
+        "customerMessages": {
+          "mean": 2.31,
+          "median": 2,
+          "max": 7
+        }
+      },
+      "v3": {
+        "sessions": 81,
+        "engaged": 80,
+        "escalated": 5,
+        "transferred": 0,
+        "customerMessages": {
+          "mean": 1.95,
+          "median": 2,
+          "max": 3
+        }
+      }
+    },
+    "byEnd": {
+      "(still open)": 109,
+      "EndedByEndUser": 77,
+      "Action": 2,
+      "SessionTimedOut": 1,
+      "Transferred": 2
+    },
+    "byDay": {
+      "2026-10-20": 191
+    },
+    "turnsHistogram": {
+      "0": 3,
+      "1": 102,
+      "2": 81,
+      "3": 2,
+      "5": 3
+    }
+  }
+}
