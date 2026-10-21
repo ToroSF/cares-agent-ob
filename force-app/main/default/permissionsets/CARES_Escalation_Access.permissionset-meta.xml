@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <label>CARES Escalation Access</label>
-    <description>Lets the CARES agent user create the escalation Case (or comment on the open one) through the CARES_Create_Escalation_Case Flow. No Edit on Case. Assigning it is an explicit rollout step.</description>
+    <description>Lets the CARES agent user create the escalation Case (or comment on the open one) through the CARES_Create_Escalation_Case Flow, and read CARES_Escalation__c for Risk Detection. No Edit on Case. Assigning it is an explicit rollout step.</description>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.CARES_Escalation__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.CARES_Order_Ref__c</field>

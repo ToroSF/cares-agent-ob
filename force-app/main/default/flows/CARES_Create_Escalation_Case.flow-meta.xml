@@ -234,6 +234,12 @@
       </value>
     </inputAssignments>
     <inputAssignments>
+      <field>CARES_Escalation__c</field>
+      <value>
+        <booleanValue>true</booleanValue>
+      </value>
+    </inputAssignments>
+    <inputAssignments>
       <field>Origin</field>
       <value>
         <stringValue>Agentforce</stringValue>

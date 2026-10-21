@@ -279,6 +279,13 @@
         <stringValue>Refund / Compensation</stringValue>
       </value>
     </filters>
+    <filters>
+      <field>CARES_Escalation__c</field>
+      <operator>EqualTo</operator>
+      <value>
+        <booleanValue>false</booleanValue>
+      </value>
+    </filters>
     <getFirstRecordOnly>false</getFirstRecordOnly>
     <object>Case</object>
     <storeOutputAutomatically>false</storeOutputAutomatically>
@@ -384,6 +391,13 @@
       <operator>NotEqualTo</operator>
       <value>
         <stringValue>Refund / Compensation</stringValue>
+      </value>
+    </filters>
+    <filters>
+      <field>CARES_Escalation__c</field>
+      <operator>EqualTo</operator>
+      <value>
+        <booleanValue>false</booleanValue>
       </value>
     </filters>
     <getFirstRecordOnly>false</getFirstRecordOnly>
