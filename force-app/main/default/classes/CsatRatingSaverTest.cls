@@ -153,6 +153,22 @@ private class CsatRatingSaverTest {
     }
 
     @IsTest
+    static void agentProfileSavesLinkedToTheAccount() {
+        // G-089 fix: with Read on Account in the permission set, the agent profile saves the rating
+        // linked to the customer's account
+        Contact c = makeContact();
+        CsatRatingSaver.Result r;
+        System.runAs(agentUser()) {
+            r = save(c.Id, 5, 'Customer was happy with the refund.');
+        }
+        System.assert(r.isSuccess, r.errorMessage);
+        CSAT_Rating__c saved = [SELECT Contact__c, Account__c, Score__c FROM CSAT_Rating__c WHERE Id = :r.ratingId WITH SYSTEM_MODE];
+        System.assertEquals(c.Id, saved.Contact__c);
+        System.assertEquals(c.AccountId, saved.Account__c);
+        System.assertEquals(5, saved.Score__c);
+    }
+
+    @IsTest
     static void unknownContactIsAnErrorNotASave() {
         Contact c = makeContact();
         Id goneId = c.Id;
