@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Slack_Mode__c</fullName>
+    <description>OFF (default), BOT (a Slack app token posts with chat.postMessage) or WORKFLOW (a Slack Workflow Builder webhook). The CARES_Slack Named Credential must match the mode.</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Slack Mode</label>
+    <length>20</length>
+    <required>false</required>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

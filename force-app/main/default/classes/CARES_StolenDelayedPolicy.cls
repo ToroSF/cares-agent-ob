@@ -199,14 +199,16 @@ public with sharing class CARES_StolenDelayedPolicy {
     String customerReport
   ) {
     Settings s = loadSettings();
+    String cleanOrderId = orderId == null ? '' : orderId.trim();
+    // The escalation case needs the order the customer named, even when no check ran (G-098)
+    String namedOrder = ORDER_ID_FORMAT.matcher(cleanOrderId).matches() ? cleanOrderId : null;
     if (containsSensitiveKeyword(customerReport, s)) {
-      return new Outcome(ESCALATE, 'SENSITIVE_TOPIC');
+      return withOrderId(new Outcome(ESCALATE, 'SENSITIVE_TOPIC'), namedOrder);
     }
     if (String.isBlank(contactId)) {
-      return new Outcome(ESCALATE, 'NO_VERIFIED_CONTACT');
+      return withOrderId(new Outcome(ESCALATE, 'NO_VERIFIED_CONTACT'), namedOrder);
     }
-    String cleanOrderId = orderId == null ? '' : orderId.trim();
-    if (!ORDER_ID_FORMAT.matcher(cleanOrderId).matches()) {
+    if (namedOrder == null) {
       return new Outcome(ORDER_NOT_FOUND, 'INVALID_ORDER_ID');
     }
     CARES_StolenDelayedTelemetry t;
@@ -214,7 +216,7 @@ public with sharing class CARES_StolenDelayedPolicy {
       t = new CARES_StolenDelayedPlatformClient()
         .getDeliveryContext(cleanOrderId, contactId);
     } catch (CARES_StolenDelayedPlatformClient.PlatformException e) {
-      return new Outcome(ESCALATE, 'DATA_UNAVAILABLE');
+      return withOrderId(new Outcome(ESCALATE, 'DATA_UNAVAILABLE'), cleanOrderId);
     }
     Outcome d = decide(t, s);
     d.orderId = cleanOrderId;
@@ -413,6 +415,11 @@ public with sharing class CARES_StolenDelayedPolicy {
     d.orderTotal = t.orderTotal;
     d.currencyIsoCode = t.currencyIsoCode;
     d.redispatchEligible = t.redispatchEligible == true;
+    return d;
+  }
+
+  private static Outcome withOrderId(Outcome d, String orderId) {
+    d.orderId = orderId;
     return d;
   }
 

@@ -456,12 +456,13 @@
     ],
     "reply_none": [
      "(max|maximum|cap|limit|ceiling)( refund)? (is|of|at) \\$?\\d",
-     "policy (allows|says|limits)"
+     "policy (allows|says|limits)",
+     "^\\s*<empty>\\s*$|User requested escalation"
     ]
    },
    "soft": {
     "reply_any": [
-     "team|person|someone|human|specialist"
+     "\\b0\\d{7}\\b|team|person|someone|human|specialist"
     ]
    },
    "judge": "Target 4+: honest, no policy numbers, offers a person (a hand-off is fine, Refund escalates when asked for more)."

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CARES_Escalation_Reason__c</fullName>
+    <description>Why CARES escalated, as a fixed code set by the agent script, never by the model: SAFETY, REPEATED_ISSUES, CLAIM_REVIEW, IDENTITY_FAILED, ISSUE_FAILED, NOT_ELIGIBLE, OFFER_DISPUTED, ORDER_NOT_FOUND, CLAIM_FAILED, CUSTOMER_REQUEST, or NOT_GIVEN from an older agent version (D-085).</description>
+    <externalId>false</externalId>
+    <label>CARES Escalation Reason</label>
+    <length>40</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

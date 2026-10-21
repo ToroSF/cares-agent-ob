@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <doesIncludeBosses>false</doesIncludeBosses>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>CARES Support Chat</name>
+    <queueMembers>
+        <publicGroups>
+            <publicGroup>CARES_Support_Team</publicGroup>
+        </publicGroups>
+    </queueMembers>
+    <queueRoutingConfig>CARES_Support_Routing</queueRoutingConfig>
+    <queueSobject>
+        <sobjectType>MessagingSession</sobjectType>
+    </queueSobject>
+</Queue>

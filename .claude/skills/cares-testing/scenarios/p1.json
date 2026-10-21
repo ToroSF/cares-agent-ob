@@ -800,14 +800,52 @@
     ],
     "actions": [
      "create_escalation_case"
-    ]
-   },
-   "soft": {
+    ],
     "reply_any": [
-     "\\b0\\d{7}\\b|case (number|#)"
+     "\\b0\\d{7}\\b"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation"
+    ],
+    "inputs": {
+     "create_escalation_case.escalationReason": "CUSTOMER_REQUEST"
+    }
+   },
+   "judge": "Outside a live chat there is no transfer (D-084): the reply gives the case number and says the team will contact them."
+  },
+  {
+   "id": "B-ES-10",
+   "priority": "P1",
+   "mode": "live",
+   "fixture": "pool:ESC",
+   "burns": true,
+   "turns": [
+    "I don't want to talk to a bot. Get me a real person please."
+   ],
+   "expect": {
+    "path": [
+     "escalate_to_human"
+    ],
+    "actions": [
+     "create_escalation_case"
+    ],
+    "no_actions": [
+     "escalate_to_human_action"
+    ],
+    "inputs": {
+     "create_escalation_case.escalationReason": "CUSTOMER_REQUEST",
+     "create_escalation_case.sessionId": "^(None|null)?$"
+    },
+    "reply_any": [
+     "\\b0\\d{7}\\b",
+     "contact|reach out|get back|follow up"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation",
+     "(is|are) joining|joining (you|now|this chat)|stay in this chat"
     ]
    },
-   "judge": "Record what really happens with the transfer (Omni-Channel, G-007): the case number if a Case exists, never a claim of a case that is not there."
+   "judge": "Agent API session, no messaging session: no live transfer is offered or promised (D-084). The case is logged with no chat link and the customer gets its number. The case-not-logged branch (no number, no promise) is covered by the instructions only: the Flow does not fail on demand."
   },
   {
    "id": "B-ES-07",

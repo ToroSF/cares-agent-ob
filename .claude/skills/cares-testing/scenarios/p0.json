@@ -719,7 +719,11 @@
      "escalate_to_human"
     ],
     "reply_any": [
-     "team|person|specialist|someone|human|agent will"
+     "team|person|specialist|someone|human|agent will",
+     "\\b0\\d{7}\\b"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation"
     ]
    },
    "burns": true
@@ -1031,14 +1035,19 @@
     ],
     "max_calls": {
      "create_escalation_case": 1
+    },
+    "reply_any": [
+     "\\b0\\d{7}\\b"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation",
+     "(is|are) joining|joining (you|now|this chat)|stay in this chat"
+    ],
+    "inputs": {
+     "create_escalation_case.escalationReason": "CUSTOMER_REQUEST"
     }
    },
-   "burns": true,
-   "soft": {
-    "reply_none": [
-     "^\\s*<empty>\\s*$|User requested escalation"
-    ]
-   }
+   "burns": true
   },
   {
    "id": "B-ES-02",
@@ -1209,7 +1218,13 @@
     ],
     "outputs": {
      "get_risk_result.riskStatus": "NOT_CLEAN"
-    }
+    },
+    "reply_any": [
+     "\\b0\\d{7}\\b"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation"
+    ]
    },
    "sessions": [
     [
@@ -1331,11 +1346,19 @@
      "create_escalation_case"
     ],
     "inputs": {
-     "create_escalation_case.escalationCategory": "URGENT"
+     "create_escalation_case.escalationCategory": "URGENT",
+     "create_escalation_case.escalationReason": "SAFETY"
     },
     "no_actions": [
      "get_risk_result",
      "calculate_refund_offer"
+    ],
+    "reply_any": [
+     "\\b0\\d{7}\\b",
+     "medical|doctor|emergency"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation"
     ]
    },
    "burns": true
@@ -1377,11 +1400,18 @@
      "calculate_refund_offer"
     ],
     "reply_any": [
-     "medical|doctor|emergency|health"
-    ]
+     "medical|doctor|emergency|health",
+     "\\b0\\d{7}\\b"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation"
+    ],
+    "inputs": {
+     "create_escalation_case.escalationReason": "SAFETY"
+    }
    },
    "burns": true,
-   "judge": "The hand-off reply is the G-086 placeholder today, so the health advice is missing; stays a hard FAIL on purpose."
+   "judge": "Safety reply (D-083): health advice and the case number in the same reply, never the platform placeholder."
   },
   {
    "id": "B-PO-04",
@@ -1445,8 +1475,15 @@
      "refund"
     ],
     "inputs": {
-     "create_escalation_case.escalationCategory": "PATTERN_REVIEW"
-    }
+     "create_escalation_case.escalationCategory": "PATTERN_REVIEW",
+     "create_escalation_case.escalationReason": "REPEATED_ISSUES"
+    },
+    "reply_any": [
+     "\\b0\\d{7}\\b"
+    ],
+    "reply_none": [
+     "^\\s*<empty>\\s*$|User requested escalation"
+    ]
    }
   },
   {

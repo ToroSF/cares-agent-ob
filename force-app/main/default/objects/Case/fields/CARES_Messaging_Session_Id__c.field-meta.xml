@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CARES_Messaging_Session_Id__c</fullName>
+    <description>MessagingSession id of the live chat that escalated, blank for preview and API sessions. The CARES_Route_To_Support Flow finds the case by it and links it to the session, so the person who accepts the chat sees the case (D-084).</description>
+    <externalId>false</externalId>
+    <label>CARES Messaging Session Id</label>
+    <length>18</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
