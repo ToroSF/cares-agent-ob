@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Rank__c</fullName>
+    <label>Rank</label>
+    <description
+  >Lowest to highest. Used to find the lowest active tier when a Contact has no tier set.</description>
+    <type>Number</type>
+    <precision>4</precision>
+    <scale>0</scale>
+    <required>true</required>
+    <unique>false</unique>
+</CustomField>

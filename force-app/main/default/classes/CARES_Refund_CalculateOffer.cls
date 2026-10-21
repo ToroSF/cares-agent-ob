@@ -82,22 +82,151 @@ public with sharing class CARES_Refund_CalculateOffer {
         description='Calculates the refund and store credit offer from tier, order outcome and risk status'
     )
     public static List<Result> execute(List<Request> requests) {
-        // Stub — fixed 15.00 offer (or the approved full amount), capped at the order total, 20% credit bonus, order currency or USD
+        // The order VALUE (affectedValue, approvedFullAmount, orderTotalCap) still
+        // comes from the find_order/log_order_issue stubs (G-004: no real Order
+        // object). The POLICY/LIMIT logic below is real: it reads Contact.CARES_Tier__c
+        // and CARES_Refund_Policy__c (D-024, D-025, D-029) instead of the old
+        // hardcoded 15.00/18.00 values.
+        Set<Id> contactIds = new Set<Id>();
+        for (Request req : requests) {
+            Id contactId = toId(req.contactId);
+            if (contactId != null) {
+                contactIds.add(contactId);
+            }
+        }
+
+        Map<Id, Contact> contactsById = new Map<Id, Contact>();
+        if (!contactIds.isEmpty()) {
+            contactsById = new Map<Id, Contact>(
+                [
+                    SELECT Id, CARES_Tier__c, CARES_Tier__r.Name, CARES_Tier__r.Active__c
+                    FROM Contact
+                    WHERE Id IN :contactIds
+                    WITH USER_MODE
+                ]
+            );
+        }
+
+        CARES_Tier__c lowestActiveTier = lowestActiveTier();
+
+        Map<String, CARES_Refund_Policy__c> policiesByKey = policiesByTierAndOutcome();
+
         List<Result> results = new List<Result>();
         for (Request req : requests) {
-            Result r = new Result();
-            Decimal refund = req.approvedFullAmount != null && req.approvedFullAmount > 0 ? req.approvedFullAmount : 15.00;
-            if (req.orderTotalCap != null && req.orderTotalCap > 0 && refund > req.orderTotalCap) {
-                refund = req.orderTotalCap;
-            }
-            r.eligible = true;
-            r.ineligibleReason = '';
-            r.refundAmount = refund.setScale(2);
-            r.creditAmount = (refund * 1.20).setScale(2);
-            r.currencyCode = String.isBlank(req.orderCurrency) ? 'USD' : req.orderCurrency;
-            r.tierName = 'Gold';
-            results.add(r);
+            results.add(calculateOne(req, contactsById, lowestActiveTier, policiesByKey));
         }
         return results;
+    }
+
+    private static Result calculateOne(
+        Request req,
+        Map<Id, Contact> contactsById,
+        CARES_Tier__c lowestActiveTier,
+        Map<String, CARES_Refund_Policy__c> policiesByKey
+    ) {
+        Result r = new Result();
+        r.currencyCode = String.isBlank(req.orderCurrency) ? 'USD' : req.orderCurrency;
+
+        CARES_Tier__c tier = resolveTier(req.contactId, contactsById, lowestActiveTier);
+        r.tierName = tier == null ? '' : tier.Name;
+
+        Decimal approvedFullAmount = req.approvedFullAmount == null ? 0 : req.approvedFullAmount;
+        Boolean readyPath = approvedFullAmount > 0;
+
+        Decimal refund;
+        // Default bonus when the READY path skips the policy lookup (D-029: the
+        // Stolen & Delayed contract doesn't carry a tier, only an approved amount).
+        Decimal bonusPercent = 20;
+        if (readyPath) {
+            // READY path: refund = the approved full amount, no policy ceiling applied (per the node spec).
+            refund = approvedFullAmount;
+        } else {
+            if (tier == null) {
+                r.eligible = false;
+                r.ineligibleReason = 'We could not confirm your account tier, so we could not calculate an offer. A team member will take it from here.';
+                r.refundAmount = 0;
+                r.creditAmount = 0;
+                return r;
+            }
+            CARES_Refund_Policy__c policy = policiesByKey.get(policyKey(tier.Id, req.orderOutcome));
+            if (policy == null) {
+                r.eligible = false;
+                r.ineligibleReason = 'We do not have an active refund policy for this situation. A team member will take it from here.';
+                r.refundAmount = 0;
+                r.creditAmount = 0;
+                return r;
+            }
+            Decimal ceiling = req.riskStatus == 'CLEAN' ? policy.Clean_History_Max_Refund__c : policy.Max_Refund__c;
+            Decimal affectedValue = req.affectedValue == null ? 0 : req.affectedValue;
+            refund = affectedValue < ceiling ? affectedValue : ceiling;
+            bonusPercent = policy.Store_Credit_Bonus_Pct__c;
+        }
+
+        if (req.orderTotalCap != null && req.orderTotalCap > 0 && refund > req.orderTotalCap) {
+            refund = req.orderTotalCap;
+        }
+
+        r.eligible = true;
+        r.ineligibleReason = '';
+        r.refundAmount = refund.setScale(2);
+        r.creditAmount = (refund * (1 + bonusPercent / 100)).setScale(2);
+        return r;
+    }
+
+    private static CARES_Tier__c resolveTier(
+        String contactIdString,
+        Map<Id, Contact> contactsById,
+        CARES_Tier__c lowestActiveTier
+    ) {
+        Id contactId = toId(contactIdString);
+        Contact c = contactId == null ? null : contactsById.get(contactId);
+        if (c != null && c.CARES_Tier__c != null && c.CARES_Tier__r.Active__c == true) {
+            CARES_Tier__c t = new CARES_Tier__c(Id = c.CARES_Tier__c, Name = c.CARES_Tier__r.Name);
+            return t;
+        }
+        return lowestActiveTier;
+    }
+
+    private static CARES_Tier__c lowestActiveTier() {
+        List<CARES_Tier__c> tiers = [
+            SELECT Id, Name, Rank__c
+            FROM CARES_Tier__c
+            WHERE Active__c = true
+            WITH USER_MODE
+            ORDER BY Rank__c ASC
+            LIMIT 1
+        ];
+        return tiers.isEmpty() ? null : tiers[0];
+    }
+
+    private static Map<String, CARES_Refund_Policy__c> policiesByTierAndOutcome() {
+        Map<String, CARES_Refund_Policy__c> result = new Map<String, CARES_Refund_Policy__c>();
+        for (
+            CARES_Refund_Policy__c p : [
+                SELECT Tier__c, Order_Outcome__c, Max_Refund__c, Clean_History_Max_Refund__c, Store_Credit_Bonus_Pct__c
+                FROM CARES_Refund_Policy__c
+                WHERE Active__c = true
+                WITH USER_MODE
+            ]
+        ) {
+            result.put(policyKey(p.Tier__c, p.Order_Outcome__c), p);
+        }
+        return result;
+    }
+
+    private static String policyKey(Id tierId, String orderOutcome) {
+        return String.valueOf(tierId) + '::' + orderOutcome;
+    }
+
+    // Blank or malformed ids become null instead of throwing
+    private static Id toId(String value) {
+        if (String.isBlank(value)) {
+            return null;
+        }
+        try {
+            return Id.valueOf(value);
+        } catch (StringException e) {
+            return null;
+        }
     }
 }

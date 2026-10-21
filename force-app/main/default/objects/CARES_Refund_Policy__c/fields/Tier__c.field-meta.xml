@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tier__c</fullName>
+    <label>Tier</label>
+    <description>The loyalty tier this policy row applies to.</description>
+    <type>Lookup</type>
+    <referenceTo>CARES_Tier__c</referenceTo>
+    <relationshipLabel>CARES Refund Policies</relationshipLabel>
+    <relationshipName>CARES_Refund_Policies</relationshipName>
+    <required>true</required>
+    <deleteConstraint>Restrict</deleteConstraint>
+</CustomField>
