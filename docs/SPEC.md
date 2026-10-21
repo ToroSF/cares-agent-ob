@@ -2,6 +2,8 @@
 
 Status date: 2026-10-19. Source: the `CARES` authoring bundle in this repo (identical to the version in the shared team org on this date).
 
+> **Deploy status (2026-10-21): nothing new is deployed yet.** `main` now has PR #15 (policy alignment, Pronto Help, Urgent Escalation) and PR #18 (real Refund backend). Both passed a check-only deploy with tests (81/81), but the team org still runs the published v1 agent and the Refund stubs. Deploy steps and blockers: [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md).
+
 ## 1. Use case and business framing
 
 Status: `PROPOSAL` (draft for the team to edit). Numbers marked `[$]` need Pronto data; do not invent them.
@@ -63,17 +65,17 @@ Design principle `DECIDED` (proposal from one member, adopted as the working rul
 | Subagent                       | Owner                | Status                                                                                                                          | Doc                                                                                                     |
 | ------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Agent Router                   | `OPEN`               | Real, weak: no conditions, "best guess" when unclear                                                                            | n/a                                                                                                     |
-| Refund                         | Refund owner         | Built with stub actions on branch, validated, not deployed                                                                      | [node spec](subagents/refund.md)                                                                        |
+| Refund                         | Refund owner         | Real tier and policy offer and audit row since PR #18 (`find_order`, `apply_settlement` and order values still stubs, G-004). Check-only tests pass; not deployed; needs tier and policy rows (R-17) | [node spec](subagents/refund.md)                                                                        |
 | Stolen & Delayed Orders        | @rojasC10            | Built on branch (`feature/delivery-exceptions`), validated, not deployed                                                        | [design](subagents/stolen-delayed-orders.md)                                                            |
 | Risk Detection                 | Risk Detection owner | Built on branch, validated, not deployed                                                                                        | [node spec](subagents/risk-detection-node-spec.md), [design](subagents/risk-detection.md)               |
 | Experience Rating              | @ToroSF              | Built on branch (`feature/experience-rating-thumbs`), validated, not deployed. Thumbs up/down + model-generated summary (D-044) | [v1 baseline](subagents/experience-rating-v1.md), [changelog](subagents/experience-rating-changelog.md) |
 | Escalate to Human              | `OPEN`               | Real (needs Omni-Channel check)                                                                                                 | to add                                                                                                  |
 | Off Topic / Ambiguous Question | `OPEN`               | Real (template)                                                                                                                 | n/a                                                                                                     |
-| Urgent Escalation              | Team (router)        | Built on `feature/grounding-policy-alignment`, compiled locally, not deployed. Sets category URGENT, goes to Escalate (D-061)   | [POLICY_ALIGNMENT.md](POLICY_ALIGNMENT.md) POL-P13..P15                                                 |
-| Pronto Help                    | @Mateus-Goes         | Built on the same branch, not deployed. Data Library READY in the team org (3 files indexed) and wired (D-067)                       | [node spec](subagents/pronto-help.md), [golden set](grounding/golden-set.md)                            |
+| Urgent Escalation              | Team (router)        | In `main` (PR #15), compiled and validated, not deployed. Sets category URGENT, goes to Escalate (D-061) | [POLICY_ALIGNMENT.md](POLICY_ALIGNMENT.md) POL-P13..P15                                                 |
+| Pronto Help                    | @Mateus-Goes         | In `main` (PR #15), not deployed. Data Library READY in the team org (3 files indexed) and wired (D-067)                       | [node spec](subagents/pronto-help.md), [golden set](grounding/golden-set.md)                            |
 | Identify Customer              | @lucasmpalomanes     | Merged (PR #16). Reached from Refund and Stolen & Delayed when `customer_id` is blank; unverified identity (G-065), not used by Risk Detection (G-076) | [DECISIONS.md](DECISIONS.md) D-058 |
 
-On the same branch, Escalate to Human passes a category (URGENT, PATTERN_REVIEW, CLAIM_REVIEW or general) to its Flow, which sets Type, Reason, Priority, Status and the `CARES_Escalations` queue and reuses an open case for the same order (D-063). Risk Detection sends a customer at or above the review threshold to a person before any offer (D-062). Official sources: [sources/](sources/) (D-059).
+Since PR #15, Escalate to Human passes a category (URGENT, PATTERN_REVIEW, CLAIM_REVIEW or general) to its Flow, which sets Type, Reason, Priority, Status and the `CARES_Escalations` queue and reuses an open case for the same order (D-063). Risk Detection sends a customer at or above the review threshold to a person before any offer (D-062). Official sources: [sources/](sources/) (D-059).
 
 ## 4. Variables today
 

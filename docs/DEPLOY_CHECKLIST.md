@@ -1,4 +1,4 @@
-# Deploy checklist: `feature/grounding-policy-alignment`
+# Deploy checklist: `feature/grounding-policy-alignment` (PR #15) and PR #18
 
 What the person who deploys must do after this branch is merged into `main`. Follows the order in [CONTRIBUTING.md](CONTRIBUTING.md): merge → validate → one person deploys → tests → that person publishes and activates. Written 2026-10-20 by @Mateus-Goes. Nothing here has been deployed yet.
 

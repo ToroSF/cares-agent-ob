@@ -151,7 +151,7 @@ Reads, not owned: `ContactId` (channel), `risk_checked` and `risk_status` (Risk 
 | Agent Router | Send a reply to a Refund question (order number, affected items, choice, "yes") back to Refund | Not changed on this branch; proposal in G-025 |
 
 ## Tests
-`CARES_Refund_ActionsTest.cls` was updated for the real policy lookup and the real `CARES_Resolution__c` insert/duplicate-check (D-045 to D-048). These are a static review only in this pass: no org is available here, so the tests have not been run. They still need an actual `sf apex run test` pass before this branch is considered verified.
+`CARES_Refund_ActionsTest.cls` was updated for the real policy lookup and the real `CARES_Resolution__c` insert/duplicate-check (D-045 to D-048). They first ran in an org in a check-only deploy on 2026-10-21. 11 failed because of the test setup, not the actions; after the fix (G-078) all pass and `CARES_Refund_CalculateOffer` has 96% coverage. Not deployed yet.
 
 | ID | Case | Expected |
 |---|---|---|

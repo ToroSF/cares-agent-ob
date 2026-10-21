@@ -56,6 +56,8 @@ They prove a documented gap. A fail is recorded as `EXPECTED_FAIL`. A pass is re
 | B-FL-01                            | N/A: `main` was deployed before the baseline ran                                                                                               |              |
 | B-IN-07, B-IN-08, B-IN-09, B-FL-03 | Need a real order lookup or a mock platform with several orders and EUR                                                                        | D-038, SD-G1 |
 
+On 2026-10-21 the org still runs the Refund stubs, so the Refund rows above stay true for Tier L. After `main` with PR #18 is deployed, B-RF-08, B-RF-12 and B-RF-13 should pass, and B-RF-17 becomes reachable (with no tier or policy rows, every direct-path offer is ineligible: R-17). Check `expect_today` again after that deploy.
+
 ## Test data warning
 
 All cases in the shared org were created on 2026-09-28. They leave the 30-day window on **2026-10-28**, and the "not clean" contact becomes clean. Record the case dates in every run, or add dated data first (G-011).
