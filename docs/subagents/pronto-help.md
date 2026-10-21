@@ -1,8 +1,8 @@
 # Node spec: Pronto Help
 
-How the Pronto Help subagent works as built on `feature/grounding-policy-alignment`. For the why, read D-046, D-047 and D-051 in [../DECISIONS.md](../DECISIONS.md) and the library section of [../GROUNDING.md](../GROUNDING.md). Owner: @Mateus-Goes (grounding).
+How the Pronto Help subagent works as built on `feature/grounding-policy-alignment`. For the why, read D-059, D-060 and D-064 in [../DECISIONS.md](../DECISIONS.md) and the library section of [../GROUNDING.md](../GROUNDING.md). Owner: @Mateus-Goes (grounding).
 
-State: built, compiled locally with no errors, validated in the team org, **not deployed, not tested**. The Data Library `CARES_Customer_Policy` is READY in the team org with the 3 files indexed, and the `knowledge:` block points to it (D-054). The agent user's access to it is checked in the first live preview (G-057). Last updated: 2026-10-20.
+State: built, compiled locally with no errors, validated in the team org, **not deployed, not tested**. The Data Library `CARES_Customer_Policy` is READY in the team org with the 3 files indexed, and the `knowledge:` block points to it (D-067). The agent user's access to it is checked in the first live preview (G-069). Last updated: 2026-10-20.
 
 ## In one paragraph
 Customers ask "what does Picked Up mean?", "can I use two promo codes?", "is this nut-free?". Pronto answers these in three customer documents. Pronto Help searches those documents and answers in a few sentences with citations. It never decides money, eligibility or escalation: money goes to Risk Detection → Refund, a missing or stuck order goes to Stolen & Delayed, safety goes to Urgent Escalation (from the router), and anything it cannot answer goes to a person.
@@ -18,7 +18,7 @@ Customer -> Agent Router
               +--> Stolen & Delayed Orders       (missing, late, not moving)
               +--> Escalate to Human             (no answer, address change, asks for a person)
 ```
-Safety comes before Pronto Help: the router's first rule sends a food safety, harassment, fraud or legal message to Urgent Escalation, even mid-conversation (D-048).
+Safety comes before Pronto Help: the router's first rule sends a food safety, harassment, fraud or legal message to Urgent Escalation, even mid-conversation (D-061).
 
 ## Node card
 | Field | Value |
@@ -29,7 +29,7 @@ Safety comes before Pronto Help: the router's first rule sends a food safety, ha
 | Action | `search_pronto_policy` → `AnswerQuestionsWithKnowledge` (`standardInvocableAction://streamKnowledgeSearch`) |
 | Reads | `@knowledge.rag_feature_config_id`, `citations_enabled`, `citations_url` |
 | Writes | Nothing (no variables, no records) |
-| Library | `CARES_Customer_Policy`: FAQ (F), Terms (T), Merchant Standards (M). **Not the Playbook** (D-051) |
+| Library | `CARES_Customer_Policy`: FAQ (F), Terms (T), Merchant Standards (M). **Not the Playbook** (D-064) |
 | Failure behavior | Empty or error → "I couldn't find that in Pronto's customer policies" + offer a person |
 
 ## The rules in its instructions
@@ -50,8 +50,8 @@ Rules 4, 6 and the card rule are repeated in the global system instructions, so 
 |---|---|---|
 | RAG and not pasted text | Citations; a new PDF is a re-index, not a republish; the text does not compete with money rules in other subagents | +1–3 s on this path (estimate), one library to maintain |
 | A new library and not `Pronto_Policy_and_FAQ` | That one includes the internal Playbook and probably serves other agents | One more library |
-| Only customer documents | A customer must never be quoted "supervisor review" or abuse patterns | The Playbook rules must be written into the script by hand (D-051) |
-| Hand-offs as transitions, not answers | Eligibility and safety stay deterministic in other subagents (D-004, D-048) | The model must choose the hand-off; tested in P12 |
+| Only customer documents | A customer must never be quoted "supervisor review" or abuse patterns | The Playbook rules must be written into the script by hand (D-064) |
+| Hand-offs as transitions, not answers | Eligibility and safety stay deterministic in other subagents (D-004, D-061) | The model must choose the hand-off; tested in P12 |
 
 ## When data is missing or something fails
 | Situation | What happens | Status |
@@ -68,7 +68,7 @@ Rules 4, 6 and the card rule are repeated in the global system instructions, so 
 - Trace check: `search_pronto_policy` called before every answer; no answer without it.
 
 ## Before it can go live
-1. ~~Create the library with the three customer PDFs~~ Done 2026-10-20: READY, 3 files indexed (D-054).
-2. ~~Put `"ARFPC_" + libraryId` in `CARES.agent`~~ Done (D-053).
-3. In the first live preview, check that the search returns chunks (agent user's access, G-057).
+1. ~~Create the library with the three customer PDFs~~ Done 2026-10-20: READY, 3 files indexed (D-067).
+2. ~~Put `"ARFPC_" + libraryId` in `CARES.agent`~~ Done (D-066).
+3. In the first live preview, check that the search returns chunks (agent user's access, G-069).
 4. Follow [../DEPLOY_CHECKLIST.md](../DEPLOY_CHECKLIST.md): validate, deploy, preview, golden set. Publish only with the team's OK.

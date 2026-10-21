@@ -122,12 +122,12 @@ variables:
     risk_review_threshold: mutable number = 3
         description: "Risk Detection: issue count at which a person reviews before any automatic offer (Playbook: repeated failures). Team assumption [$], to be confirmed with Pronto."
     customer_id: mutable string = ""
-        description: "Customer Contact Id used by Refund, Stolen & Delayed, Experience Rating and Escalate. From ContactId, or from the email lookup when the chat has no contact (D-045). Never typed by the model."
+        description: "Customer Contact Id used by Refund, Stolen & Delayed, Experience Rating and Escalate. From ContactId, or from the email lookup when the chat has no contact (D-058). Never typed by the model."
     identify_attempts: mutable number = 0
         description: "Identify Customer: email lookups tried in this conversation. Capped at 2, then a person helps."
 
 knowledge:
-    # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-047, D-053, D-054)
+    # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-060, D-066, D-067)
     rag_feature_config_id: "ARFPC_1JDjV000001INDhWAO"
     citations_enabled: True
     citations_url: ""
@@ -712,7 +712,7 @@ subagent risk_detection:
                 set @variables.risk_status = @outputs.riskStatus
                 set @variables.risk_issue_count = @outputs.issueCount
             set @variables.risk_checked = True
-        # Playbook: repeated failures in a short time go to a person before any automatic offer (D-049)
+        # Playbook: repeated failures in a short time go to a person before any automatic offer (D-062)
         if @variables.risk_issue_count >= @variables.risk_review_threshold:
             set @variables.escalation_category = "PATTERN_REVIEW"
             transition to @subagent.escalate_to_human

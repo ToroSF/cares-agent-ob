@@ -51,7 +51,7 @@ Customer -> Agent Router
               |-- Escalate to Human        (real: platform transfer)
               |-- Urgent Escalation        (branch: safety first -> Escalate, category URGENT)
               |-- Pronto Help              (branch: Pronto's customer rules from a Data Library)
-              |-- Identify Customer        (real: email lookup when the chat has no contact, D-045)
+              |-- Identify Customer        (real: email lookup when the chat has no contact, D-058)
               |-- Off Topic                (real: standard guardrails)
               |-- Ambiguous Question       (real: standard guardrails)
 ```
@@ -69,11 +69,11 @@ Design principle `DECIDED` (proposal from one member, adopted as the working rul
 | Experience Rating              | @ToroSF              | Built on branch (`feature/experience-rating-thumbs`), validated, not deployed. Thumbs up/down + model-generated summary (D-044) | [v1 baseline](subagents/experience-rating-v1.md), [changelog](subagents/experience-rating-changelog.md) |
 | Escalate to Human              | `OPEN`               | Real (needs Omni-Channel check)                                                                                                 | to add                                                                                                  |
 | Off Topic / Ambiguous Question | `OPEN`               | Real (template)                                                                                                                 | n/a                                                                                                     |
-| Urgent Escalation              | Team (router)        | Built on `feature/grounding-policy-alignment`, compiled locally, not deployed. Sets category URGENT, goes to Escalate (D-048)   | [POLICY_ALIGNMENT.md](POLICY_ALIGNMENT.md) POL-P13..P15                                                 |
-| Pronto Help                    | @Mateus-Goes         | Built on the same branch, not deployed. Data Library READY in the team org (3 files indexed) and wired (D-054)                       | [node spec](subagents/pronto-help.md), [golden set](grounding/golden-set.md)                            |
-| Identify Customer              | @lucasmpalomanes     | Merged (PR #16). Reached from Refund and Stolen & Delayed when `customer_id` is blank; unverified identity (G-053), not used by Risk Detection (G-064) | [DECISIONS.md](DECISIONS.md) D-045 |
+| Urgent Escalation              | Team (router)        | Built on `feature/grounding-policy-alignment`, compiled locally, not deployed. Sets category URGENT, goes to Escalate (D-061)   | [POLICY_ALIGNMENT.md](POLICY_ALIGNMENT.md) POL-P13..P15                                                 |
+| Pronto Help                    | @Mateus-Goes         | Built on the same branch, not deployed. Data Library READY in the team org (3 files indexed) and wired (D-067)                       | [node spec](subagents/pronto-help.md), [golden set](grounding/golden-set.md)                            |
+| Identify Customer              | @lucasmpalomanes     | Merged (PR #16). Reached from Refund and Stolen & Delayed when `customer_id` is blank; unverified identity (G-065), not used by Risk Detection (G-076) | [DECISIONS.md](DECISIONS.md) D-058 |
 
-On the same branch, Escalate to Human passes a category (URGENT, PATTERN_REVIEW, CLAIM_REVIEW or general) to its Flow, which sets Type, Reason, Priority, Status and the `CARES_Escalations` queue and reuses an open case for the same order (D-050). Risk Detection sends a customer at or above the review threshold to a person before any offer (D-049). Official sources: [sources/](sources/) (D-046).
+On the same branch, Escalate to Human passes a category (URGENT, PATTERN_REVIEW, CLAIM_REVIEW or general) to its Flow, which sets Type, Reason, Priority, Status and the `CARES_Escalations` queue and reuses an open case for the same order (D-063). Risk Detection sends a customer at or above the review threshold to a person before any offer (D-062). Official sources: [sources/](sources/) (D-059).
 
 ## 4. Variables today
 
@@ -83,7 +83,7 @@ On the same branch, Escalate to Human passes a category (URGENT, PATTERN_REVIEW,
 | `ContactId`                                  | linked  | The contact of the messaging end user, set by the channel |
 | `VerifiedCustomerId`                         | mutable | Nothing sets it yet                                       |
 
-Rule `PROPOSAL`: the customer's identity comes only from `ContactId` (set by the channel) or a verification step, never from what the customer types. **Exception (D-045, demo):** when the channel gives no contact, the Identify Customer subagent looks the customer up by account email. That identity is unverified (G-053), so Risk Detection ignores it.
+Rule `PROPOSAL`: the customer's identity comes only from `ContactId` (set by the channel) or a verification step, never from what the customer types. **Exception (D-058, demo):** when the channel gives no contact, the Identify Customer subagent looks the customer up by account email. That identity is unverified (G-065), so Risk Detection ignores it.
 
 ## 5. Data
 

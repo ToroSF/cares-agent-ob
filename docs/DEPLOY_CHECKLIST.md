@@ -5,18 +5,18 @@ What the person who deploys must do after this branch is merged into `main`. Fol
 ## What this branch adds to the org
 | Component | Type | New or changed | Notes |
 |---|---|---|---|
-| `Case.CARES_Order_Ref__c` | Custom field (Text 80) | New | Used by the escalation Flow to find an open case for the same order (D-050) |
-| `CARES_Escalations` | Queue (Case) | New | Owner of escalation cases. **Has no members yet** (G-056) |
+| `Case.CARES_Order_Ref__c` | Custom field (Text 80) | New | Used by the escalation Flow to find an open case for the same order (D-063) |
+| `CARES_Escalations` | Queue (Case) | New | Owner of escalation cases. **Has no members yet** (G-068) |
 | `CARES_Escalation_Access` | Permission set | Changed | Read/edit on the new field, create on CaseComment |
 | `CARES_Create_Escalation_Case` | Flow | Changed | New input `escalationCategory`; Type, Reason, Priority, Status, queue, reuses an open case |
-| `CARES_Get_Risk_Result` | Flow | Changed | G-054 fix (unknown contact → `UNKNOWN`, account-only branch reachable) |
+| `CARES_Get_Risk_Result` | Flow | Changed | G-066 fix (unknown contact → `UNKNOWN`, account-only branch reachable) |
 | `CARES` | Authoring bundle | Changed | Urgent Escalation, Pronto Help, never-list, review threshold, `knowledge:` block. Includes Identify Customer from PR #16 (merged into this branch) |
 | `CARES_Identity_FindContactByEmail`, `CARES_Identity_Access` | Apex class, permission set | **Already in the org** (from PR #16) | The bundle calls this class from Identify Customer. The agent user needs `CARES_Identity_Access`, or the bundle fails its startup action check (same as G-050) |
-| `CARES_Customer_Policy` | Data Library | **Already in the org** (D-054) | Created 2026-10-20 in Setup; READY, 3 files indexed. Not used by any agent until the bundle above is deployed |
+| `CARES_Customer_Policy` | Data Library | **Already in the org** (D-067) | Created 2026-10-20 in Setup; READY, 3 files indexed. Not used by any agent until the bundle above is deployed |
 
 ## Before the deploy
-1. `sf agent adl get -i <libraryId> --target-org <team org> --json` still shows a `retrieverId`, and `sf agent adl file list` shows the 3 files `INDEXED` (both true on 2026-10-20). If not, Pronto Help declines every question (safe, but useless) and the golden set cannot run (G-057).
-2. Check the agent user can read the library: Data Cloud permission set and the Data Space scope (Setup UI only). Without them, search results are empty and **nothing shows an error** (G-057).
+1. `sf agent adl get -i <libraryId> --target-org <team org> --json` still shows a `retrieverId`, and `sf agent adl file list` shows the 3 files `INDEXED` (both true on 2026-10-20). If not, Pronto Help declines every question (safe, but useless) and the golden set cannot run (G-069).
+2. Check the agent user can read the library: Data Cloud permission set and the Data Space scope (Setup UI only). Without them, search results are empty and **nothing shows an error** (G-069).
 3. The agent user has `CARES_Identity_Access` (PR #16) and the four CARES permission sets (G-050). All true on 2026-10-20.
 4. `sf agent validate authoring-bundle --api-name CARES --target-org <team org> --json` on merged `main`.
 5. Check-only deploy of the metadata (`--dry-run`) on merged `main`.
@@ -24,10 +24,10 @@ What the person who deploys must do after this branch is merged into `main`. Fol
 ## Deploy order
 Field → queue → permission set → both Flows → authoring bundle. The Flows read the field and the queue, and the agent calls the Flows, so each step needs the one before it.
 
-## ⚠️ Flow versions: decide before the deploy (G-063)
+## ⚠️ Flow versions: decide before the deploy (G-075)
 Both Flow files have `<status>Draft</status>`, the same as on `main`. In the org, version 1 of each Flow is **Active**. Deploying a Draft Flow adds a new **inactive** version, and the agent keeps calling the old active one. Result if nobody acts:
-- the escalation case gets no Type, Reason, Priority or queue, and is never reused (D-050 does not take effect);
-- the G-054 fix does not take effect (an unknown contact still comes back `CLEAN`).
+- the escalation case gets no Type, Reason, Priority or queue, and is never reused (D-063 does not take effect);
+- the G-066 fix does not take effect (an unknown contact still comes back `CLEAN`).
 
 The new versions are backward compatible: a blank category becomes `GENERAL`, so activating them does not break the v1 agent.
 
@@ -38,7 +38,7 @@ Two options, **the team decides** (owner: whoever deploys):
 Not done on this branch on purpose: activating a Flow changes what the live agent runs, so it is a team decision, not a grounding one.
 
 ## After the deploy
-1. Add members to the `CARES_Escalations` queue (G-056). Without members, escalation cases sit in a queue nobody watches.
+1. Add members to the `CARES_Escalations` queue (G-068). Without members, escalation cases sit in a queue nobody watches.
 2. Live preview: new session, ask Q-01 from the golden set. In the trace, `search_pronto_policy` is called and returns a chunk with a citation. Empty results → go back to "Before the deploy" step 2.
 3. Run the golden set ([grounding/golden-set.md](grounding/golden-set.md)). Targets: ≥ 13/15, 5/5, 5/5, **0 amounts, 0 allergen guarantees**.
 4. Run P12 Pronto policy (B-PO-01 to B-PO-16) Tier S, then the P0 scenarios ([BASELINE_BATCH_TEST.md](BASELINE_BATCH_TEST.md)).
