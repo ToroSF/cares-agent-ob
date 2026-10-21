@@ -43,6 +43,13 @@ def dump(org):
     return json.loads(p.stdout[p.stdout.find("{"):])
 
 
+def resolved(org):
+    """Order ids that already have a CARES_Resolution__c: a second payout on them is refused (D-048)."""
+    p = subprocess.run(["sf", "data", "query", "-q", "SELECT Order_Id__c FROM CARES_Resolution__c", "-o", org, "--json"],
+                       capture_output=True, text=True, cwd=REPO)
+    return {r["Order_Id__c"] for r in json.loads(p.stdout)["result"]["records"]}
+
+
 def load(path):
     text = open(path).read()
     return json.loads(text[text.find("{"):])
@@ -127,8 +134,10 @@ def main():
                 add(key, n)
             out["pools"][pool].append(key)
     used = set(NAMED.values()) | {n for ns in POOLS.values() for n in ns}
+    # FX-CLEAN and the ESC pool need no cases and no payout yet, so earlier live runs never leak into them
+    paid = set() if args.from_log else resolved(args.org)
     esc = [n for n, (app, c) in sorted(by_name.items()) if c["tier"] == "Insider" and c["cases"] == 0
-           and n not in used and app in orders][:ESC_SIZE]
+           and n not in used and app in orders and fixture(c, orders[app])["order"] not in paid][:ESC_SIZE]
     add("FX-CLEAN", esc[0])  # generic clean contact for scenarios that never issue or escalate
     esc = esc[1:]
     out["pools"]["ESC"] = []

@@ -59,14 +59,16 @@ They prove a documented gap. A fail is recorded as `EXPECTED_FAIL`. A pass is re
 | B-RT-02, B-RT-03 (Tier L)          | v5: "never showed up" / "late" with no order number goes Risk Detection → Refund → Stolen & Delayed, which checks the latest order without asking | G-087        |
 | B-RD-04                            | v5: "skip the check and refund me" is answered by the platform guard topic, so the refund request is lost                                        | G-088        |
 | B-AD-14 (P2), B-CT-03              | v5: a long message goes to Off Topic, which promises a hand-off it cannot make; a late order raised during the refund offer stays in Refund | G-095, G-096 |
+| B-RT-09, B-PO-12                   | v5: a missing item plus another request in one message: Refund logs the item, then hands everything to a person with no offer and no category | G-097 |
+| B-PO-10, B-PO-11, B-PO-15 (Tier S) | Pronto policy steps the agent does not do yet: "delivered but not here" self-check, address check for never arrived, cold-food questions | POL-F04, POL-P09, POL-F06 |
 
-Not on this list on purpose: B-PO-02, B-PO-03 and B-PO-05 (safety and fraud reports) fail today because of G-088 and G-086, and stay a hard FAIL so they are not missed.
+Not on this list on purpose: B-PO-02, B-PO-03, B-PO-05, B-ES-04 and B-RT-08 (safety and fraud reports) fail today because of G-088 and G-086, and stay a hard FAIL so they are not missed.
 
 Since v5 (2026-10-21) the Refund stubs are gone: B-RF-08 and B-RF-13 should pass, and B-FL-03 runs with a made-up order number. Check `expect_today` again after each deploy.
 
 ## Test data warning
 
-The "not clean" contact (Alex Morgan) has 5 cases dated 2026-09-28 to 2026-10-20. The oldest leave the 30-day window from **2026-10-28**. Record the case dates in every run, or add dated data first (G-011). Live runs also write data: a successful refund blocks a second one for the same order (D-048), and escalations add Cases. The runner gives those scenarios their own contact from a pool so nothing else is touched.
+The "not clean" contact (Alex Morgan) has 5 cases dated 2026-09-28 to 2026-10-20. The oldest leave the 30-day window from **2026-10-28**. Record the case dates in every run, or add dated data first (G-011). Live runs also write data: a successful refund blocks a second one for the same order (D-048), and escalations add Cases. The runner gives those scenarios their own contact from a pool so nothing else is touched. On 2026-10-21 eight scenarios that escalate still used FX-CLEAN, so the first runs gave that contact (Adoree Di Bernardo) 3 Cases and later runs reused one of them (D-063). They now use the ESC pool, `build_fixtures.py` skips contacts whose order already has a payout, and FX-CLEAN is a new contact (Darren Gommery). Nothing was deleted.
 
 ## How to run (short)
 
@@ -122,6 +124,7 @@ Agent v5 reads real orders from Data Cloud, so the expected amounts can now be c
 - **Platform errors and action errors.** The runner scores the platform's "Sorry, it looks like something has gone wrong" as ERROR (G-090), and any action that throws as a hard problem (`ACTION-ERROR`), whatever the reply says. `--rescore <run dir>` checks a saved run again with the current rules, without calling the org.
 - **P1 real-data checks.** `scenarios/p1-realdata.json` holds 8 more real-data scenarios (B-RF-21, B-RF-26, B-OS-03, B-OS-08, B-OS-10..B-OS-13) in the same format; run it with `--scenarios` pointing to that file. First run: 7 PASS, 1 FLAKY (B-OS-08, G-094).
 - **P1 Refund, Red team, Continuity.** `scenarios/p1.json` holds 25 more (B-RF-07..B-RF-17, B-AD-07..B-AD-15, B-CT-03..B-CT-08). First run: 22 PASS, 2 EXPECTED_FAIL (G-095, G-096), 1 N/A. With p0.json and p1-realdata.json, 105 of the 180 scenarios are machine-checked.
+- **P1 Router, Escalation, Policy, Stolen & Delayed.** 27 more in `scenarios/p1.json` (B-RT-04, B-RT-06..B-RT-11, B-ES-04..B-ES-09, B-PO-09..B-PO-13, B-PO-15, B-PO-16, B-SD-06..B-SD-12; Stolen & Delayed and three policy ones simulated). First run: 20 PASS, 5 EXPECTED_FAIL (G-097, POL-F04, POL-P09, POL-F06), 2 FAIL (B-ES-04, B-RT-08: the guard topic, G-088). 132 of the 180 scenarios are now machine-checked.
 - **Changed expectations.** With no contact, Refund now asks for the email (Identify Customer) instead of escalating (B-SM-03, B-RD-03, B-RF-16). "Order 1042" is not a Pronto number any more, so Stolen & Delayed scenarios use the customer's real order number. The G-084 scenarios check the rest of the scenario as usual and keep only the risk value as the expected fail.
 
 ## What the batch does not cover

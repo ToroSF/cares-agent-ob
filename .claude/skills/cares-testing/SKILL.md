@@ -100,10 +100,10 @@ Use sub-agents, at most 3 concurrent sessions (limit set to avoid org API thrott
 - One preview session per scenario run (two for `sessions` scenarios), always ended. Results go to `.sfdx/cares-batch/<stamp>/` (gitignored): one JSON per run plus `summary.json` with the fixture each run used.
 - Checks from the trace: path, actions, action inputs and outputs, amounts said, reply patterns, plus INV-1, INV-2, INV-3 (per session), INV-4, INV-9 and the Risk gate on every scenario. INV-6 is a note.
 - `expect` must pass. `expect_known` holds the checks of a documented gap: EXPECTED_FAIL while they fail, UNEXPECTED_PASS when they pass. `soft` checks become `FINDING` notes. `judge` says what a person still reads.
-- Pools: `burns: true` takes an exclusive contact per run, so a payout (D-048) or an escalation Case never touches another scenario. Pass `--burned` with the `Order_Id__c` values already in `CARES_Resolution__c` so those contacts are skipped.
+- Pools: `burns: true` takes an exclusive contact per run, so a payout (D-048) or an escalation Case never touches another scenario. Pass `--burned` with the `Order_Id__c` values already in `CARES_Resolution__c` so those contacts are skipped. Run `build_fixtures.py` again before each live run: it drops contacts that got a Case or a payout in earlier runs, so FX-CLEAN and the ESC pool stay clean.
 - Simulated scenarios (`mode: sim`) write nothing; they are the ones whose result depends on an invented Stolen & Delayed decision.
 - The platform's "Sorry, it looks like something has gone wrong" reply is `ERROR`, not a result: run that scenario again (G-090). An action that throws is a hard problem (`ACTION-ERROR`), whatever the agent says.
-- `scenarios/p1-realdata.json` (8 real-data scenarios) and `scenarios/p1.json` (25 Refund, Red team and Continuity scenarios) use the same format; pass one to `--scenarios` instead of `p0.json`.
+- `scenarios/p1-realdata.json` (8 real-data scenarios) and `scenarios/p1.json` (52 Refund, Red team, Continuity, Router, Escalation, Policy and Stolen & Delayed scenarios) use the same format; pass one to `--scenarios` instead of `p0.json`.
 - `--rescore <run dir>` checks a saved run again with the current `p0.json` and rules, without calling the org, and writes `summary-rescored.json`.
 
 ### Flakiness
