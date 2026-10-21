@@ -62,7 +62,7 @@ public with sharing class CARES_StolenDelayedEvaluateAction {
 
   @InvocableMethod(
     label='CARES Stolen & Delayed: Evaluate Delivery Exception'
-    description='Read-only. Checks GPS at delivery, driver wait and contact attempts, photo evidence, customer claim rate, driver non-delivery rate, fraud signals and order value. Returns the decision.'
+    description='Read-only. Checks the delivery evidence for the order. Returns the decision.'
   )
   public static List<Result> evaluate(List<Request> requests) {
     List<Result> results = new List<Result>();

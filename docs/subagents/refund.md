@@ -1,8 +1,8 @@
 # Node spec: Refund
 
-How the Refund subagent works as built on branch `feature/refund-subagent`. Owner: @lucasmpalomanes (D-027). Decisions: D-019 to D-032 in [../DECISIONS.md](../DECISIONS.md). Gaps: G-023 to G-033 in [../GAPS.md](../GAPS.md). Replaces the hand-off brief that was here; its contract is in "Stolen & Delayed hand-off" below.
+How the Refund subagent works as built on branch `feature/refund-subagent`, with its backend rebuilt on `audit/fix-refund-backend`. Owner: @lucasmpalomanes (D-027). Decisions: D-019 to D-032, D-045 to D-048 in [../DECISIONS.md](../DECISIONS.md). Gaps: G-023 to G-033 in [../GAPS.md](../GAPS.md). Replaces the hand-off brief that was here; its contract is in "Stolen & Delayed hand-off" below.
 
-State: built with **stub actions** (hardcoded values, no data read or written). Compiled, dry-run deployed, agent validated. **Not deployed.** Last updated: 2026-10-19.
+State: `find_order` and the order VALUE inputs (`affectedValue`, `approvedFullAmount`, `orderTotalCap`) are still **stubs** (G-004: no real Order/line-item object in this org). `log_order_issue` now validates affected items against `find_order`'s explicit line-item list. `calculate_refund_offer` now reads real `CARES_Tier__c` / `CARES_Refund_Policy__c` rows for the policy ceiling. `issue_resolution` now inserts a real `CARES_Resolution__c` row and enforces one-per-order via a unique field (D-045 to D-048). Compiled, dry-run deployed, agent validated. **Not deployed.** Last updated: 2026-10-20.
 
 ## In one paragraph
 Refund resolves an economic order complaint. It finds the order, records what went wrong, and then the script calculates two options: a fixed refund to the original payment method, or store credit worth more. The customer picks one and confirms the exact amount, and only then is it issued, once per order. Every amount comes from an action. The model never chooses or types an amount, and never mentions the history check or any limit.
@@ -57,23 +57,25 @@ Each step is a branch in the instructions. Only one is shown to the model at a t
 At any step: rejects both options, asks for more, or disputes → hand off to a person. No negotiation, no counter-offer.
 
 ## Offer rule (owned by `calculate_refund_offer`)
-READY path: `refund = approved full amount`. Otherwise `refund = min(affected value, ceiling, order total cap)`, where the ceiling is the higher limit if `risk_status` is `CLEAN`, and the standard limit for `NOT_CLEAN` or `UNKNOWN` (D-008). Then `credit = refund × (1 + bonus %)`. If no active policy row matches, or the order already has a resolution, the offer is not eligible.
+READY path: `refund = approved full amount`. Otherwise `refund = min(affected value, ceiling, order total cap)`, where the ceiling is the higher limit if `risk_status` is `CLEAN`, and the standard limit for `NOT_CLEAN` or `UNKNOWN` (D-008). Then `credit = refund × (1 + bonus %)`. If no active tier can be resolved, or no active policy row matches, the offer is not eligible.
 
-**Stub today:** always eligible. Refund is 15.00 (or the approved full amount), capped at the order total; credit is refund + 20%. USD only.
+**Real today (D-046, D-047):** the ceiling, and the credit bonus percent, come from the Contact's `CARES_Tier__c` and a matching active `CARES_Refund_Policy__c` row for that tier × `orderOutcome`. A Contact with no tier, or an inactive one, falls back to the lowest-ranked active `CARES_Tier__c`; no active tier at all makes the offer ineligible. The READY path skips the policy lookup (the Stolen & Delayed contract carries an approved amount, not a tier) and uses a 20% bonus.
 
-## Planned data model (not built, D-024)
+**Still a stub (G-004):** the order VALUE inputs — `affectedValue` (from `log_order_issue`), `approvedFullAmount` and `orderTotalCap` (from Stolen & Delayed) — because there is no real Order object in this org. The limit logic is real; what it's applied *to* is still fake.
+
+## Data model (D-024; objects real, order data still a stub per G-004)
 CRM users manage the limits in two objects, so tiers and limits change without code.
 
-`CARES_Tier__c`: one row per tier (Bronze, Silver, Gold, Platinum to start; users add or remove).
+`CARES_Tier__c`: one row per tier (Bronze, Silver, Gold, Platinum to start; users add or remove). **Built.**
 | Field | Type | Notes |
 |---|---|---|
 | `Name` | Text | Tier name |
 | `Rank__c` | Number | Lowest to highest |
 | `Active__c` | Checkbox | Inactive tiers are ignored |
 
-Customer to tier: `Contact.CARES_Tier__c` (lookup). Blank → lowest active tier. Closes G-003 when built.
+Customer to tier: `Contact.CARES_Tier__c` (lookup). Blank, or an inactive tier, → lowest active tier. Closes the limit-application part of G-003; no org process populates this field yet, so every Contact resolves to the lowest active tier until one does.
 
-`CARES_Refund_Policy__c`: one row per tier × outcome.
+`CARES_Refund_Policy__c`: one row per tier × outcome. **Built.** No rows are seeded by this change: an org with an empty policy table makes every offer ineligible until CRM users add rows.
 | Field | Type | Notes |
 |---|---|---|
 | `Tier__c` | Lookup(`CARES_Tier__c`) | |
@@ -83,32 +85,33 @@ Customer to tier: `Contact.CARES_Tier__c` (lookup). Blank → lowest active tier
 | `Store_Credit_Bonus_Pct__c` | Percent | Extra value for credit; the diagram suggests 20-25% |
 | `Active__c` | Checkbox | |
 
-`CARES_Resolution__c`: one row per issued refund or credit. Written by `issue_resolution`. Closes the Refund part of G-008.
+`CARES_Resolution__c`: one row per issued refund or credit. Written by `issue_resolution`. **Built.** Closes the Refund part of G-008.
 | Field | Type | Notes |
 |---|---|---|
 | `Name` | Auto Number | Reference shown to the customer |
 | `Contact__c` | Lookup(Contact) | |
-| `Order_Id__c` | Text, External Id, **Unique** | One resolution per order, enforced by the database |
-| `Order_Outcome__c` | Picklist | Same values as the policy |
+| `Order_Id__c` | Text, External Id, **Unique** | One resolution per order, enforced by the database. `issue_resolution` also pre-checks it so a duplicate returns a clean `success = false`, not a DML exception |
+| `Order_Outcome__c` | Picklist | Same values as the policy. Left blank: `issue_resolution`'s fixed contract (D-020) doesn't pass the outcome |
 | `Resolution_Type__c` | Picklist | `Refund`, `Store_Credit` |
 | `Amount__c` | Currency | Amount issued |
-| `Tier__c` | Lookup(`CARES_Tier__c`) | Tier at time of issue |
-| `Risk_Status__c` | Text | Risk result used |
-| `Messaging_Session__c` | Lookup(MessagingSession) | From `RoutableId`, for audit |
-| `Status__c` | Picklist | `Issued`, `Failed` |
+| `Tier__c` | Lookup(`CARES_Tier__c`) | Not yet populated: same contract gap as `Order_Outcome__c` |
+| `Risk_Status__c` | Text | Risk result used. Not yet populated, same reason |
+| `Status__c` | Picklist | `Issued`, `Failed`. Only `Issued` rows are written today: a rejected duplicate gets no row at all, not a `Failed` one |
+
+`Messaging_Session__c` (the planned audit link to `RoutableId`) was dropped from this build: it isn't in `issue_resolution`'s fixed contract either, and adding it needs a contract change out of scope here (see Gaps).
 
 Why a new object, not the existing `Refund__c` / `Gift_Certificate__c`: in the shared org both have no custom fields and no refund records, and they belong to the Pronto demo. One CARES object covers refund and credit and makes "one per order" a single unique field.
 
 ## Actions
-All five are invocable Apex **stubs** (D-020). Names match the `@InvocableVariable` fields.
+All five are invocable Apex, with the fixed contract (inputs, outputs) from D-020. `find_order` and `apply_settlement` are still **stubs**. `log_order_issue`, `calculate_refund_offer` and `issue_resolution` now read or write real data where G-004 allows it (D-045 to D-048); see "State" above and "Offer rule" / "Data model" for exactly what's real. Names match the `@InvocableVariable` fields.
 
 | Action | Target | Inputs (source) | Outputs (shown to customer?) |
 |---|---|---|---|
-| `find_order` | `apex://CARES_Refund_FindOrder` | `contactId` (`ContactId`), `orderNumber` (chat, optional) | `orderId` (no), `orderSummary` (yes), `lineItems` (yes), `found` (no) |
-| `log_order_issue` | `apex://CARES_Refund_LogOrderIssue` | `orderId`, `deliveryPath` (variables), `issueType`, `issueDescription`, `affectedItems` (chat) | `orderOutcome` (no), `affectedValue` (no), `accepted` (no) |
-| `calculate_refund_offer` | `apex://CARES_Refund_CalculateOffer` | `contactId`, `orderId`, `orderOutcome`, `riskStatus`, `affectedValue`, `approvedFullAmount`, `orderTotalCap`, `orderCurrency` (all variables) | `eligible` (no), `ineligibleReason`, `refundAmount`, `creditAmount`, `currencyCode` (yes), `tierName` (no) |
-| `issue_resolution` | `apex://CARES_Refund_IssueResolution` | `contactId`, `orderId`, `resolutionType`, `refundAmount`, `creditAmount` (all variables) | `success` (no), `referenceNumber` (yes), `message` (yes) |
-| `apply_settlement` | `apex://CARES_Refund_ApplySettlement` | `orderId`, `driverCompensation`, `restaurantReimbursement`, `lossAbsorption` (all variables) | `success` (no) |
+| `find_order` (stub) | `apex://CARES_Refund_FindOrder` | `contactId` (`ContactId`), `orderNumber` (chat, optional) | `orderId` (no), `orderSummary` (yes), `lineItems` (yes), `found` (no) |
+| `log_order_issue` (item-matching real) | `apex://CARES_Refund_LogOrderIssue` | `orderId`, `deliveryPath` (variables), `issueType`, `issueDescription`, `affectedItems` (chat) | `orderOutcome` (no), `affectedValue` (no), `accepted` (no) |
+| `calculate_refund_offer` (policy real, order value still stub) | `apex://CARES_Refund_CalculateOffer` | `contactId`, `orderId`, `orderOutcome`, `riskStatus`, `affectedValue`, `approvedFullAmount`, `orderTotalCap`, `orderCurrency` (all variables) | `eligible` (no), `ineligibleReason`, `refundAmount`, `creditAmount`, `currencyCode` (yes), `tierName` (no) |
+| `issue_resolution` (real insert) | `apex://CARES_Refund_IssueResolution` | `contactId`, `orderId`, `resolutionType`, `refundAmount`, `creditAmount` (all variables) | `success` (no), `referenceNumber` (yes, now the `CARES_Resolution__c` record id), `message` (yes) |
+| `apply_settlement` (stub) | `apex://CARES_Refund_ApplySettlement` | `orderId`, `driverCompensation`, `restaurantReimbursement`, `lossAbsorption` (all variables) | `success` (no) |
 
 | Action | How it's called | Why |
 |---|---|---|
@@ -119,7 +122,7 @@ All five are invocable Apex **stubs** (D-020). Names match the `@InvocableVariab
 | `issue_resolution` | Model, every input bound to a variable | Customer-initiated; the model can't change any input |
 | `apply_settlement` | Script (`run` in `after_reasoning`), READY path only, after a successful issue | Driver pay and restaurant reimbursement depend on the refund actually happening (SD-D2) |
 
-Access: permission set `CARES_Refund_Access` gives the agent user access to the five classes. Not assigned. Assigning it is a rollout step.
+Access: permission set `CARES_Refund_Access` gives the agent user access to the five classes, read on `CARES_Tier__c` and `CARES_Refund_Policy__c`, and create/read on `CARES_Resolution__c` (D-045 to D-048). Not assigned. Assigning it is a rollout step.
 
 ## Variables
 All new variables have the `refund_` prefix and are at the end of the `variables:` list.
@@ -148,6 +151,8 @@ Reads, not owned: `ContactId` (channel), `risk_checked` and `risk_status` (Risk 
 | Agent Router | Send a reply to a Refund question (order number, affected items, choice, "yes") back to Refund | Not changed on this branch; proposal in G-025 |
 
 ## Tests
+`CARES_Refund_ActionsTest.cls` was updated for the real policy lookup and the real `CARES_Resolution__c` insert/duplicate-check (D-045 to D-048). They first ran in an org in a check-only deploy on 2026-10-21. 11 failed because of the test setup, not the actions; after the fix (G-078) all pass and `CARES_Refund_CalculateOffer` has 96% coverage. Not deployed yet.
+
 | ID | Case | Expected |
 |---|---|---|
 | R-01 | Wrong item, credit chosen | Find order → log `Wrong_Missing_Items` → offer → credit → read-back → yes → issued with reference → state cleared |

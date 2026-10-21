@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description
+  >One row per issued refund or store credit. Written by CARES_Refund_IssueResolution. Order_Id__c is unique, so the database enforces one resolution per order (D-024, closes the Refund part of G-024/G-008).</description>
+    <label>CARES Resolution</label>
+    <pluralLabel>CARES Resolutions</pluralLabel>
+    <nameField>
+        <label>CARES Resolution Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>CARES-RES-{00000}</displayFormat>
+    </nameField>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>
