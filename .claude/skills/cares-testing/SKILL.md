@@ -103,6 +103,7 @@ Use sub-agents, at most 3 concurrent sessions (limit set to avoid org API thrott
 - Pools: `burns: true` takes an exclusive contact per run, so a payout (D-048) or an escalation Case never touches another scenario. Pass `--burned` with the `Order_Id__c` values already in `CARES_Resolution__c` so those contacts are skipped.
 - Simulated scenarios (`mode: sim`) write nothing; they are the ones whose result depends on an invented Stolen & Delayed decision.
 - The platform's "Sorry, it looks like something has gone wrong" reply is `ERROR`, not a result: run that scenario again (G-090). An action that throws is a hard problem (`ACTION-ERROR`), whatever the agent says.
+- `scenarios/p1-realdata.json` has 8 P1/P2 real-data scenarios in the same format; pass it to `--scenarios` instead of `p0.json`.
 - `--rescore <run dir>` checks a saved run again with the current `p0.json` and rules, without calling the org, and writes `summary-rescored.json`.
 
 ### Flakiness

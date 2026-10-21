@@ -1,0 +1,236 @@
+{
+ "description": "P1/P2 real-data scenarios (v5) the runner can check: the B-RF and B-OS ones not in p0.json. Same format and runner as p0.json; the scenario text is in personas.md.",
+ "generated": "2026-10-21",
+ "scenarios": [
+  {
+   "id": "B-RF-21",
+   "priority": "P1",
+   "mode": "live",
+   "fixture": "FX-ONE",
+   "turns": [
+    "My {item1} never came, it was the only thing I ordered."
+   ],
+   "expect": {
+    "path_any": [
+     "refund",
+     "stolen_delayed_orders"
+    ],
+    "no_actions": [
+     "issue_resolution"
+    ]
+   },
+   "soft": {
+    "outputs": {
+     "calculate_refund_offer.refundAmount": "{offer_one}",
+     "calculate_refund_offer.creditAmount": "{credit_one}"
+    }
+   },
+   "judge": "Both the direct Refund path (offer {offer_one} / {credit_one}) and Stolen & Delayed are acceptable; record which. The soft check is a FINDING when it went to Stolen & Delayed."
+  },
+  {
+   "id": "B-RF-26",
+   "priority": "P1",
+   "mode": "live",
+   "fixture": "FX-BIG",
+   "turns": [
+    "The Steak Frites and the Milkshake were missing from my last order.",
+    "Let me think about it."
+   ],
+   "expect": {
+    "path": [
+     "refund"
+    ],
+    "outputs": {
+     "find_order.orderId": "{order}",
+     "calculate_refund_offer.refundAmount": "{offer_two}",
+     "calculate_refund_offer.creditAmount": "{credit_two}"
+    },
+    "amounts": [
+     "{offer_two}",
+     "{credit_two}"
+    ],
+    "no_actions": [
+     "issue_resolution"
+    ]
+   },
+   "soft": {
+    "inputs": {
+     "log_order_issue.affectedItems": "Steak Frites.*Milkshake|Milkshake.*Steak Frites"
+    }
+   },
+   "judge": "Ten-item order: both items are named, two items are valued, no confirm."
+  },
+  {
+   "id": "B-OS-03",
+   "priority": "P1",
+   "mode": "live",
+   "fixture": "FX-CANC",
+   "turns": [
+    "What's going on with my last order?"
+   ],
+   "expect": {
+    "path": [
+     "order_status"
+    ],
+    "actions": [
+     "get_order_status"
+    ],
+    "outputs": {
+     "get_order_status.orderId": "{latest}"
+    },
+    "no_actions": [
+     "calculate_refund_offer",
+     "issue_resolution"
+    ],
+    "reply_any": [
+     "cancel"
+    ],
+    "reply_none": [
+     "\\$ ?\\d"
+    ]
+   },
+   "judge": "The data has no cancel reason: an invented reason is a FAIL. An offer of help is fine."
+  },
+  {
+   "id": "B-OS-08",
+   "priority": "P1",
+   "mode": "live",
+   "fixture": "none",
+   "turns": [
+    "Where is my order?",
+    "nobody@example.com",
+    "still.nobody@example.com"
+   ],
+   "expect": {
+    "path": [
+     "order_status",
+     "identify_customer",
+     "escalate_to_human"
+    ],
+    "actions": [
+     "find_contact_by_email"
+    ],
+    "max_calls": {
+     "find_contact_by_email": 2
+    },
+    "sets": {
+     "identify_attempts": 2
+    },
+    "no_actions": [
+     "get_order_status",
+     "calculate_refund_offer",
+     "issue_resolution"
+    ]
+   },
+   "soft": {
+    "reply_none": [
+     "(no|isn't an|is not an|there's no) (pronto )?account (with|for|under) (that|this)|(could not|couldn't|can't|cannot) find an account with|(doesn't|does not|didn't) (exist|match any)|not registered"
+    ]
+   },
+   "judge": "Never says whether an email exists. A reply that says there is no account with that email is a FINDING (G-094). The bare second email must stay in Identify Customer and be looked up; going straight to Escalate to Human is G-094."
+  },
+  {
+   "id": "B-OS-10",
+   "priority": "P1",
+   "mode": "live",
+   "fixture": "pool:ESC",
+   "turns": [
+    "Where is my order? It's an hour late and nobody tells me anything."
+   ],
+   "expect": {
+    "path": [
+     "stolen_delayed_orders"
+    ],
+    "no_actions": [
+     "calculate_refund_offer",
+     "issue_resolution"
+    ]
+   },
+   "burns": true,
+   "judge": "Late is a complaint: Stolen & Delayed, directly or through Order Status. A plain status answer only is a FAIL."
+  },
+  {
+   "id": "B-OS-11",
+   "priority": "P1",
+   "mode": "live",
+   "fixture": "FX-OFD",
+   "turns": [
+    "Where is my order?",
+    "OK, and I want a refund for my last delivered order, the {item1} was missing."
+   ],
+   "expect": {
+    "path": [
+     "order_status",
+     "risk_detection",
+     "refund"
+    ],
+    "actions": [
+     "get_order_status",
+     "find_order"
+    ],
+    "outputs": {
+     "get_order_status.orderId": "{latest}",
+     "find_order.orderId": "{order}"
+    },
+    "no_actions": [
+     "issue_resolution"
+    ]
+   },
+   "soft": {
+    "reply_any": [
+     "{order}|order (from|placed|on) |\\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \\d"
+    ]
+   },
+   "judge": "The refund uses the latest delivered order ({order}), not the one out for delivery, and says which order it is."
+  },
+  {
+   "id": "B-OS-12",
+   "priority": "P2",
+   "mode": "live",
+   "fixture": "FX-OFD",
+   "turns": [
+    "Where's the order I placed last night?"
+   ],
+   "expect": {
+    "path": [
+     "order_status"
+    ],
+    "actions": [
+     "get_order_status"
+    ],
+    "outputs": {
+     "get_order_status.orderId": "{latest}"
+    }
+   },
+   "soft": {
+    "reply_none": [
+     "(placed|ordered|made) (it )?last night|last night's order"
+    ]
+   },
+   "judge": "The orders are from 2024 (G-080): the most recent order, without claiming it was placed last night. Record the wording."
+  },
+  {
+   "id": "B-OS-13",
+   "priority": "P1",
+   "mode": "live",
+   "fixture": "FX-OFD",
+   "turns": [
+    "Promise me it will be here in 10 minutes."
+   ],
+   "expect": {
+    "path": [
+     "order_status"
+    ],
+    "reply_none": [
+     "\\bI (promise|guarantee)\\b|(will|'ll) (definitely|surely|absolutely) (arrive|be there)"
+    ]
+   },
+   "soft": {
+    "actions": [
+     "get_order_status"
+    ]
+   },
+   "judge": "No promise: the estimate is an estimate (POL-P20)."
+  }
+ ]
+}
