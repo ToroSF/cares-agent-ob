@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Max_Refund__c</fullName>
+    <label>Max Refund</label>
+    <description
+  >Standard ceiling for this tier x outcome, used when risk_status is NOT_CLEAN or UNKNOWN (D-025).</description>
+    <type>Currency</type>
+    <precision>12</precision>
+    <scale>2</scale>
+    <required>true</required>
+</CustomField>

@@ -2,6 +2,8 @@
 
 Status date: 2026-10-19. Source: the `CARES` authoring bundle in this repo (identical to the version in the shared team org on this date).
 
+> **Deploy status (2026-10-21):** `main` is deployed to the team org. Agent v4 (PR #15, #18, #19, #20) was published and activated on 2026-10-21. v5 adds real orders from Data Cloud (D-071) and the Order Status sub-agent (D-075). Deploy steps: [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md).
+
 ## 1. Use case and business framing
 
 Status: `PROPOSAL` (draft for the team to edit). Numbers marked `[$]` need Pronto data; do not invent them.
@@ -44,11 +46,14 @@ Inputs we still need from Pronto `[$]`: average order value, orders per customer
 
 ```
 Customer -> Agent Router
-              |-- Refund                   (placeholder)
-              |-- Stolen & Delayed Orders  (placeholder) -> Refund
-              |-- Risk Detection           (placeholder) -> Refund
-              |-- Experience Rating        (placeholder)
+              |-- Refund                   (built, not deployed)
+              |-- Stolen & Delayed Orders  (built, not deployed) -> Refund
+              |-- Risk Detection           (built, not deployed) -> Refund
+              |-- Experience Rating        (built, not deployed)
               |-- Escalate to Human        (real: platform transfer)
+              |-- Urgent Escalation        (branch: safety first -> Escalate, category URGENT)
+              |-- Pronto Help              (branch: Pronto's customer rules from a Data Library)
+              |-- Identify Customer        (real: email lookup when the chat has no contact, D-058)
               |-- Off Topic                (real: standard guardrails)
               |-- Ambiguous Question       (real: standard guardrails)
 ```
@@ -60,12 +65,17 @@ Design principle `DECIDED` (proposal from one member, adopted as the working rul
 | Subagent                       | Owner                | Status                                                                                                                          | Doc                                                                                                     |
 | ------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Agent Router                   | `OPEN`               | Real, weak: no conditions, "best guess" when unclear                                                                            | n/a                                                                                                     |
-| Refund                         | Refund owner         | Built with stub actions on branch, validated, not deployed                                                                      | [node spec](subagents/refund.md)                                                                        |
-| Stolen & Delayed Orders        | `OPEN`               | Placeholder                                                                                                                     | to add                                                                                                  |
+| Refund                         | Refund owner         | Real tier and policy offer and audit row since PR #18; real orders and item values from Data Cloud since v5 (D-071, D-072). `apply_settlement` is still a stub. Tier and policy rows seeded (R-17 closed) | [node spec](subagents/refund.md)                                                                        |
+| Stolen & Delayed Orders        | @rojasC10            | Built on branch (`feature/delivery-exceptions`), validated, not deployed                                                        | [design](subagents/stolen-delayed-orders.md)                                                            |
 | Risk Detection                 | Risk Detection owner | Built on branch, validated, not deployed                                                                                        | [node spec](subagents/risk-detection-node-spec.md), [design](subagents/risk-detection.md)               |
 | Experience Rating              | @ToroSF              | Built on branch (`feature/experience-rating-thumbs`), validated, not deployed. Thumbs up/down + model-generated summary (D-044) | [v1 baseline](subagents/experience-rating-v1.md), [changelog](subagents/experience-rating-changelog.md) |
 | Escalate to Human              | `OPEN`               | Real (needs Omni-Channel check)                                                                                                 | to add                                                                                                  |
 | Off Topic / Ambiguous Question | `OPEN`               | Real (template)                                                                                                                 | n/a                                                                                                     |
+| Urgent Escalation              | Team (router)        | In `main` (PR #15), compiled and validated, not deployed. Sets category URGENT, goes to Escalate (D-061) | [POLICY_ALIGNMENT.md](POLICY_ALIGNMENT.md) POL-P13..P15                                                 |
+| Pronto Help                    | @Mateus-Goes         | In `main` (PR #15), not deployed. Data Library READY in the team org (3 files indexed) and wired (D-067)                       | [node spec](subagents/pronto-help.md), [golden set](grounding/golden-set.md)                            |
+| Identify Customer              | @lucasmpalomanes     | Merged (PR #16). Reached from Refund and Stolen & Delayed when `customer_id` is blank; unverified identity (G-065), not used by Risk Detection (G-076) | [DECISIONS.md](DECISIONS.md) D-058 |
+
+Since PR #15, Escalate to Human passes a category (URGENT, PATTERN_REVIEW, CLAIM_REVIEW or general) to its Flow, which sets Type, Reason, Priority, Status and the `CARES_Escalations` queue and reuses an open case for the same order (D-063). Risk Detection sends a customer at or above the review threshold to a person before any offer (D-062). Official sources: [sources/](sources/) (D-059).
 
 ## 4. Variables today
 
@@ -75,7 +85,7 @@ Design principle `DECIDED` (proposal from one member, adopted as the working rul
 | `ContactId`                                  | linked  | The contact of the messaging end user, set by the channel |
 | `VerifiedCustomerId`                         | mutable | Nothing sets it yet                                       |
 
-Rule `PROPOSAL`: the customer's identity comes only from `ContactId` (set by the channel) or a verification step, never from what the customer types. **Exception (D-045, demo):** when the channel gives no contact, the Identify Customer subagent looks the customer up by account email. That identity is unverified (G-053), so Risk Detection ignores it.
+Rule `PROPOSAL`: the customer's identity comes only from `ContactId` (set by the channel) or a verification step, never from what the customer types. **Exception (D-058, demo):** when the channel gives no contact, the Identify Customer subagent looks the customer up by account email. That identity is unverified (G-065), so Risk Detection ignores it.
 
 ## 5. Data
 
