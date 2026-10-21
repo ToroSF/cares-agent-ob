@@ -23,6 +23,14 @@ public with sharing class CARES_StolenDelayedTelemetry {
   public Integer driverCallsToCustomer;
   public Integer driverChatsToCustomer;
 
+  // Trip geofence (D-097): restaurant, drop-off, and the driver when the order was marked delivered
+  public Decimal restaurantLatitude;
+  public Decimal restaurantLongitude;
+  public Decimal dropoffLatitude;
+  public Decimal dropoffLongitude;
+  public Decimal driverLatitude;
+  public Decimal driverLongitude;
+
   // History
   public Decimal customerClaimRate; // 0..1
   public Integer customerOrderCount;
@@ -36,6 +44,15 @@ public with sharing class CARES_StolenDelayedTelemetry {
 
   public Boolean hasPhotoEvidence() {
     return customerPhotoProvided == true || driverPhotoProvided == true;
+  }
+
+  public Boolean hasGeofenceCoordinates() {
+    return restaurantLatitude != null &&
+      restaurantLongitude != null &&
+      dropoffLatitude != null &&
+      dropoffLongitude != null &&
+      driverLatitude != null &&
+      driverLongitude != null;
   }
 
   public Integer contactAttempts() {

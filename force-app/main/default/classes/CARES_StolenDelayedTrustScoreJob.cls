@@ -1,7 +1,8 @@
 /**
  * Stolen & Delayed Orders: flags the claim on both profiles in the background so
  * the conversation does not wait on it. Each event is sent on its own; one
- * failing does not stop the other.
+ * failing does not stop the other. With mock telemetry on, the events are saved as
+ * CARES_Trust_Event__c records instead (D-096).
  */
 public with sharing class CARES_StolenDelayedTrustScoreJob implements Queueable, Database.AllowsCallouts {
   public static final String CUSTOMER = 'CUSTOMER';
@@ -18,6 +19,9 @@ public with sharing class CARES_StolenDelayedTrustScoreJob implements Queueable,
   private final String customerEvent;
   @TestVisible
   private final String driverEvent;
+  // Decided when queued, so the job writes where the hand-off read from (D-096)
+  @TestVisible
+  private final Boolean useMock;
 
   public CARES_StolenDelayedTrustScoreJob(
     String orderId,
@@ -26,6 +30,7 @@ public with sharing class CARES_StolenDelayedTrustScoreJob implements Queueable,
   ) {
     this.orderId = orderId;
     this.contactId = contactId;
+    this.useMock = CARES_StolenDelayedPolicy.loadSettings().mockTelemetryEnabled;
     this.customerEvent = d.decision == CARES_StolenDelayedPolicy.LOSS_ABSORPTION
       ? CUSTOMER_LOSS_ABSORBED
       : CUSTOMER_REFUNDED_NO_EVIDENCE;
@@ -36,6 +41,10 @@ public with sharing class CARES_StolenDelayedTrustScoreJob implements Queueable,
   }
 
   public void execute(QueueableContext context) {
+    if (useMock) {
+      CARES_StolenDelayedMockTelemetry.recordTrustEvents(orderId, contactId, customerEvent, driverEvent);
+      return;
+    }
     CARES_StolenDelayedPlatformClient client = new CARES_StolenDelayedPlatformClient();
     send(client, CUSTOMER, customerEvent);
     send(client, DRIVER, driverEvent);

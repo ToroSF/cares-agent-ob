@@ -48,7 +48,8 @@ Definitions (defaults in brackets, all in custom metadata `CARES_Stolen_Delayed_
 
 | Term                             | Rule                                                                           |
 | -------------------------------- | ------------------------------------------------------------------------------ |
-| GPS match / ambiguous / mismatch | Distance at "delivered" <= 50 m / 50-100 m / > 100 m. Missing = unknown        |
+| GPS match / mismatch (trip geofence, D-097) | With the restaurant, drop-off and driver locations: driver inside the trip geofence when marked delivered = match, outside = mismatch (see "Trip geofence" below). No ambiguous band |
+| GPS match / ambiguous / mismatch (fallback) | Only when the locations are missing: distance from the drop-off at "delivered" <= 50 m / 50-100 m / > 100 m. Missing = unknown |
 | Driver diligent                  | Waited >= 180 s `[$]`, or >= 1 call or chat to the customer before completing  |
 | High-trust customer              | Claim rate <= 5% `[$]` and >= 5 orders `[$]`                                   |
 | Low-trust customer               | Claim rate >= 20% `[$]`                                                        |
@@ -61,9 +62,9 @@ Driver and restaurant recommendations (passed to Refund, not executed here):
 | ----------------- | -------------------------------- | ----------------------- | ----------- |
 | `LOSS_ABSORPTION` | match                            | `PAY_IN_FULL`           | `REIMBURSE` |
 | `FULL_REFUND`     | mismatch                         | `WITHHOLD_DELIVERY_PAY` | `NO_CHANGE` |
-| `FULL_REFUND`     | ambiguous, not diligent          | `WITHHOLD_DELIVERY_PAY` | `NO_CHANGE` |
+| `FULL_REFUND`     | ambiguous, not diligent (fallback only) | `WITHHOLD_DELIVERY_PAY` | `NO_CHANGE` |
 | `FULL_REFUND`     | unknown                          | `HOLD_FOR_REVIEW`       | `NO_CHANGE` |
-| `FULL_REFUND`     | match, or ambiguous and diligent | `PAY_IN_FULL`           | `NO_CHANGE` |
+| `FULL_REFUND`     | match, or ambiguous and diligent (fallback only) | `PAY_IN_FULL`           | `NO_CHANGE` |
 
 ## Contract for Refund (context variables)
 
@@ -94,6 +95,9 @@ Refund owner: when `stolen_delayed_handoff_status == "READY_FOR_REFUND"`, refund
 | `classes/CARES_StolenDelayedPlatformClient.cls`                                                                          | Delivery platform calls: delivery context, re-dispatch, trust events. No money endpoints |
 | `classes/CARES_StolenDelayedTrustScoreJob.cls`                                                                           | Queueable that flags both profiles in the background                                     |
 | `classes/CARES_StolenDelayedTelemetry.cls`                                                                               | Delivery context data                                                                    |
+| `classes/CARES_StolenDelayedMockTelemetry.cls`, `CARES_StolenDelayedMockTelemetryTest.cls` | Mock telemetry read, re-dispatch request and trust event records (D-096), and its tests |
+| `objects/CARES_Delivery_Telemetry__c/**`, `objects/CARES_Redispatch__c/**`, `objects/CARES_Trust_Event__c/**` | Mock telemetry per order; re-dispatch requests (`RD-…`); trust events (D-096) |
+| `scripts/apex/seed-delivery-telemetry.apex` | Seeds the mock telemetry demo rows (`DRY_RUN` first) |
 | `classes/CARES_StolenDelayedPolicyTest.cls`, `CARES_StolenDelayedActionsTest.cls`, `CARES_StolenDelayedPlatformMock.cls` | Unit tests and callout mock                                                              |
 | `objects/CARES_Stolen_Delayed_Policy__mdt/**`, `customMetadata/CARES_Stolen_Delayed_Policy.Default.md-meta.xml`          | Thresholds and keyword list                                                              |
 
@@ -105,9 +109,71 @@ Refund owner: when `stolen_delayed_handoff_status == "READY_FOR_REFUND"`, refund
 | Currency | The org default currency (`Order__dlm` has no currency column) |
 | Duplicate claim | A `CARES_Resolution__c` row for the order |
 | Customer trust | Claim rate = the customer's `CARES_Resolution__c` rows ÷ their non-canceled orders (D-090) |
-| Photos, GPS, driver, fraud, re-dispatch | The delivery platform, only when `CARES_Stolen_Delayed_Policy__mdt.Platform_Enabled__c` is on; otherwise unknown |
+| GPS, wait time, calls and chats, driver history, fraud flags, re-dispatch eligibility | **Mock telemetry** (`CARES_Delivery_Telemetry__c`) when `Mock_Telemetry_Enabled__c` is on (D-096, see below); else the delivery platform when `Platform_Enabled__c` is on; else unknown |
+| Photos | Out of scope (D-096): no source, always unknown, so the photo rule never fires |
 
 A canceled order goes to a person (`ORDER_CANCELED`, D-091). A customer with no app account link escalates as `NO_ACCOUNT_LINK`.
+
+## Mock delivery telemetry (D-096, `feature/sd-mock-telemetry`)
+
+There is no delivery platform, so the matrix rules that need driver data could not fire. Mock records in Salesforce stand in for it. **These values are mock data, not real driver data** (G-110). Pictures are out of scope.
+
+**Switch.** `CARES_Stolen_Delayed_Policy__mdt.Default.Mock_Telemetry_Enabled__c` (on in this branch). Mock wins over `Platform_Enabled__c`: with both on, no platform call is made. With it off, nothing below runs and the subagent behaves as in D-089.
+
+**Read** (in `CARES_StolenDelayedPolicy.evaluate`, through the existing `enrich()`). One `CARES_Delivery_Telemetry__c` row per order, matched on `Order_ID__c` = the real order number. It adds only what the order data lacks; order status, total, currency, duplicate claim and customer trust still come from `Order__dlm` and `CARES_Resolution__c`.
+
+| Field | Policy input | Rule it feeds |
+|---|---|---|
+| `Restaurant_Location__c`, `Dropoff_Location__c`, `Driver_Location__c` (Geolocation) | restaurant, drop-off, driver latitude and longitude | Trip geofence: inside = GPS match, outside = mismatch (D-097) |
+| `Driver_Distance_Meters__c` | `driverDistanceMeters` | Fallback only, when a location is blank: match (≤ 50 m), ambiguous, mismatch (> 100 m) |
+| `Driver_Wait_Seconds__c`, `Driver_Calls__c`, `Driver_Chats__c` | wait, calls, chats | Driver diligent (≥ 180 s wait, or ≥ 1 call or chat) |
+| `Driver_NonDelivery_Rate__c` (Percent), `Driver_Delivery_Count__c` | driver rate, deliveries | Excellent driver (≤ 1%, ≥ 50 deliveries) → loss absorption |
+| `Fraud_Pattern__c`, `Device_Duplication__c`, `Address_Duplication__c` | fraud flags | `ESCALATE` / `FRAUD_SIGNAL` |
+| `Redispatch_Eligible__c` | `redispatchEligible` | Re-dispatch offered |
+| `Driver_ID__c` | (not in the policy) | Copied to the driver trust event |
+
+No row for the order: everything above stays unknown, same as before (driver pay `HOLD_FOR_REVIEW`, no re-dispatch).
+
+### Trip geofence (D-097)
+
+How the GPS check works when the three locations are known (mock rows always have them; the platform may send them too):
+
+1. **Trip distance** `d` = distance from the restaurant to the customer's drop-off (Apex `Location.getDistance`, great-circle).
+2. **Center** = the midpoint of that trip (great-circle midpoint). **Radius** = `d / 2` + the GPS tolerance `GPS_Match_Max_Meters__c` (50 m, `Default`).
+3. **Geofence** = the circle with that center and radius. The driver's location when the order was marked delivered is **inside → GPS match**, **outside → GPS mismatch**. There is no ambiguous band, so wait time, calls and chats no longer change driver pay when the locations are known.
+
+Example (the seed script's trip): restaurant to drop-off is 1,025 m, so the radius is 512 m + 50 m = 562 m around the midpoint. A driver at the door is about 500 m from the center (inside); 15 m past the door is about 527 m (inside); 2.2 km away is outside.
+
+Why the 50 m tolerance (team decision, 2026-10-21): without it the restaurant and the customer's door sit exactly **on** the circle, so a driver a few meters past the door, or ordinary GPS drift, would count as outside and withhold driver pay. It also keeps a very short trip from having a near-zero radius.
+
+Known consequence (G-111): the whole trip is inside, including the restaurant end. A driver who marks the order delivered while still near the restaurant is a GPS match.
+
+Code: `CARES_StolenDelayedPolicy.gpsResult()` → `insideTripGeofence()`, `geofenceRadiusMeters()`, `midpoint()`. When any location is blank, the older distance rule runs instead (fallback).
+
+**Write** (in `CARES_StolenDelayedHandoffAction` and `CARES_StolenDelayedTrustScoreJob`, instead of the platform calls):
+- Re-dispatch: a `CARES_Redispatch__c` row (Status `Requested`); its Name `RD-00001` is the reference the agent gives. One per order: asking again returns the same reference. Sending the order again happens outside Salesforce.
+- Trust events: two `CARES_Trust_Event__c` rows per approved claim (CUSTOMER, DRIVER), written in the background, keyed like the platform's Idempotency-Key so a retry adds nothing.
+
+**No agent change.** The same `stolen_delayed_*` variables and action outputs; the agent already offers re-dispatch when `redispatchEligible` is true.
+
+**Demo rows** (`scripts/apex/seed-delivery-telemetry.apex`, high-trust customers from `scripts/testing/fixtures.json`, each total under 100 USD):
+
+| Profile | Order (fixture) | Values | Expected |
+|---|---|---|---|
+| `LOSS_ABSORPTION` | `PR-240826-YLNU39N` (P-MARTA-BASSINDALE) | Driver at the door (inside); 240 s, 1 call; driver 0.2%, 900 | `LOSS_ABSORPTION`: refund, driver paid, restaurant reimbursed |
+| `GPS_MISMATCH` | `PR-240829-5WE179W` (P-ROZANNE-DEVEREUX) | Driver 2.2 km from the center (outside) | `FULL_REFUND`, driver pay withheld |
+| `INSIDE_NEAR_RESTAURANT` | `PR-240826-AL2NKVM` (P-PEYTON-BATRICK) | Driver 30 m from the restaurant (inside); excellent driver | `LOSS_ABSORPTION` (known consequence, G-111) |
+| `AVERAGE_DRIVER` | `PR-240827-L9KMKYL` (P-DORE-BRIANT) | Driver at the door (inside); driver 4%, 300 | `FULL_REFUND`, driver paid |
+| `FRAUD` | `PR-240827-HQ2DT25` (P-BRUCE-CLEMENDOT) | fraud flag | `ESCALATE` / `FRAUD_SIGNAL` |
+| `DEVICE_DUP` | `PR-240822-GY8RVKV` (P-BEATRIX-SHOOTER) | device flag | `ESCALATE` / `FRAUD_SIGNAL` |
+| `ADDRESS_DUP` | `PR-240828-ZO28CZ7` (P-PENNY-DANFORTH) | address flag | `ESCALATE` / `FRAUD_SIGNAL` |
+| `REDISPATCH` | `PR-240816-CSQI55B` (P-HUMFRID-JENDRUSCH) | like loss absorption, re-dispatch eligible | Re-dispatch offered; `RD-…` reference |
+
+These customers are also in Refund's test pools (`R-INS`, `R-PP`, `R-ONE`). Once Refund pays one of these orders, a new claim on it is a duplicate claim (`ESCALATE`), the same problem as G-108. And any refund to the same customer, on any order, lifts their claim rate above 5% (1 of 6 orders is about 17%), so they are no longer high trust and the demo ends in `MANUAL_REVIEW`. Then move the profile to another customer's delivered order in the script and run it again. On 2026-10-21 none of the 8 customers had a refund.
+
+**Access.** `CARES_Stolen_Delayed_Access` (agent user): read telemetry, create re-dispatch requests and trust events, with field access (the queries and writes run in user mode; missing access is logged, not silent). `CARES_Delivery_Mock_Admin` (people staging demos): full access and the three tabs in the CARES Admin app. Running the seed script needs it.
+
+**Changed files on this branch.** Trip geofence (D-097): the 3 Geolocation fields on `CARES_Delivery_Telemetry__c`, the 6 coordinates on `CARES_StolenDelayedTelemetry` (copied by `enrich()`), the geofence in `CARES_StolenDelayedPolicy`, its tests in `CARES_StolenDelayedPolicyTest`, the seed profiles. Mock telemetry (D-096): new: the 3 objects, `Mock_Telemetry_Enabled__c`, `CARES_StolenDelayedMockTelemetry(.Test)`, tabs, layouts, `CARES_Delivery_Mock_Admin`, the seed script. Changed: `CARES_StolenDelayedPolicy` (setting + read), `CARES_StolenDelayedHandoffAction` (re-dispatch and trust events with the mock), `CARES_StolenDelayedTrustScoreJob` (records instead of the call), `CARES_Stolen_Delayed_Access`, the `CARES_Admin` app, the `Default` CMDT record, and `CARES_StolenDelayedActionsTest` (pins the settings so its "platform off" tests don't depend on the org's record).
 
 ## Delivery platform API expected (Named Credential `CARES_Delivery_Platform`, optional since D-089)
 

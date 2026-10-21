@@ -38,6 +38,8 @@ private class CARES_StolenDelayedActionsTest {
       rows.add(row('PR-2409' + String.valueOf(10 + i) + '-OLDER0' + String.valueOf(i).right(1), 'Delivered', '20.00'));
     }
     CARES_OrderData.mockRows = rows;
+    // Platform and mock telemetry off, whatever the org's Default record says (D-096)
+    CARES_StolenDelayedPolicy.settingsOverride = new CARES_StolenDelayedPolicy.Settings();
     sdUser = makeUser();
   }
 
@@ -411,6 +413,7 @@ private class CARES_StolenDelayedActionsTest {
 
   @IsTest
   static void trustJobSurvivesPlatformErrors() {
+    CARES_StolenDelayedPolicy.settingsOverride = new CARES_StolenDelayedPolicy.Settings();
     CARES_StolenDelayedPlatformMock mock = new CARES_StolenDelayedPlatformMock()
       .respondWith('POST', '/trust-events', 500, '');
     Test.setMock(HttpCalloutMock.class, mock);

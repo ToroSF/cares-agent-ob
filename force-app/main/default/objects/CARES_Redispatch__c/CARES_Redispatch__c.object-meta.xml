@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>A request to send an order again, made by Stolen &amp; Delayed when the customer chooses a re-dispatch and mock telemetry is on (D-096). The Name is the reference the customer is given. Fulfilment is outside Salesforce.</description>
+    <label>CARES Redispatch</label>
+    <pluralLabel>CARES Redispatches</pluralLabel>
+    <nameField>
+        <label>CARES Redispatch Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>RD-{00000}</displayFormat>
+    </nameField>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

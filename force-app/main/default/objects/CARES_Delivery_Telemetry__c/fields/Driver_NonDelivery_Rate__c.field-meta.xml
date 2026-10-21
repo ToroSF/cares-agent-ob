@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Driver_NonDelivery_Rate__c</fullName>
+    <label>Driver Non-Delivery Rate</label>
+    <description>Share of the driver's deliveries reported as not delivered.</description>
+    <type>Percent</type>
+    <precision>5</precision>
+    <scale>2</scale>
+    <required>false</required>
+</CustomField>

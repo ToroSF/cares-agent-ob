@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Event_Type__c</fullName>
+    <label>Event Type</label>
+    <description>CLAIM_APPROVED_NO_EVIDENCE or CLAIM_LOSS_ABSORBED for the customer; NON_DELIVERY_SUSPECTED or CLAIM_RECORDED_NO_FAULT for the driver (CARES_StolenDelayedTrustScoreJob).</description>
+    <type>Text</type>
+    <length>40</length>
+    <required>true</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+</CustomField>

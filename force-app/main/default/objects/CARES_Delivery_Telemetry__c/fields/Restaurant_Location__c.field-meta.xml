@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Restaurant_Location__c</fullName>
+    <label>Restaurant Location</label>
+    <description>Where the order was picked up. One end of the trip geofence (D-097).</description>
+    <displayLocationInDecimal>true</displayLocationInDecimal>
+    <required>false</required>
+    <scale>6</scale>
+    <type>Location</type>
+</CustomField>

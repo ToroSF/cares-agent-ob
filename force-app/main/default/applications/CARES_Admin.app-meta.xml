@@ -4,7 +4,7 @@
         <headerColor>#0070D2</headerColor>
         <shouldOverrideOrgTheme>false</shouldOverrideOrgTheme>
     </brand>
-    <description>Refund tiers, policy limits and payouts that drive the CARES agent's offers (D-093).</description>
+    <description>Refund tiers, policy limits and payouts that drive the CARES agent's offers (D-093), and the mock delivery telemetry, re-dispatch requests and trust events of Stolen &amp; Delayed (D-096).</description>
     <formFactors>Large</formFactors>
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
@@ -14,5 +14,8 @@
     <tabs>CARES_Refund_Policy__c</tabs>
     <tabs>CARES_Tier__c</tabs>
     <tabs>CARES_Resolution__c</tabs>
+    <tabs>CARES_Delivery_Telemetry__c</tabs>
+    <tabs>CARES_Trust_Event__c</tabs>
+    <tabs>CARES_Redispatch__c</tabs>
     <uiType>Lightning</uiType>
 </CustomApplication>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Order_ID__c</fullName>
+    <label>Order ID</label>
+    <description>Pronto order number, the same as Order__dlm.Order_ID__c. Unique: one telemetry row per order.</description>
+    <type>Text</type>
+    <length>40</length>
+    <required>true</required>
+    <unique>true</unique>
+    <externalId>true</externalId>
+</CustomField>

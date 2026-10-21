@@ -136,6 +136,14 @@ Decisions D-083 to D-087, gaps G-086, G-082, G-068. Design: [subagents/escalate-
 - `CARES_Alert_Setting.Default` Mode set to `WORKFLOW` (deploy `0AfjV000004b7ZlSAI`, only this record).
 - Test: B-ES-01 once on the draft with live actions, PASS. Case 00001271 has `Bell: Sent | Slack: Sent`.
 - To stop Slack alerts: set Mode `OFF` on `Default`. The bell keeps working.
+## Mock delivery telemetry (`feature/sd-mock-telemetry`, D-096)
+Mock data, not a live feed. No agent change: the active agent version picks it up as soon as the Apex and the `Default` record are deployed.
+1. Check-only with the Stolen & Delayed tests (the shared order-data tests ride along): `sf project deploy start --dry-run --test-level RunSpecifiedTests --tests CARES_StolenDelayedMockTelemetryTest --tests CARES_StolenDelayedActionsTest --tests CARES_StolenDelayedPolicyTest -o <team org>`.
+2. Deploy the 3 objects, the CMDT field and `Default` record, the Apex, `CARES_Stolen_Delayed_Access`, `CARES_Delivery_Mock_Admin`, tabs, layouts and the `CARES_Admin` app together. **This changes the active agent:** with `Mock_Telemetry_Enabled__c` on, claims on orders that have a telemetry row follow it at once. Orders without a row behave as before.
+3. The agent user already has `CARES_Stolen_Delayed_Access`; assign it again if the permission set changed. Give `CARES_Delivery_Mock_Admin` to whoever stages demos or runs the seed.
+4. Run `scripts/apex/seed-delivery-telemetry.apex` with `DRY_RUN = true`, check the 8 orders, then with `false`. Before a demo, check none of the 8 customers has a `CARES_Resolution__c` (a paid order is a duplicate claim; any refund lowers their trust).
+5. Run the five mock telemetry rows in [TEST_PLAN.md](TEST_PLAN.md) on the web chat, and write the results there.
+6. Rollback without a deploy: set `Mock_Telemetry_Enabled__c` false on `Default`. The rows can stay; nothing reads them then.
 
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.

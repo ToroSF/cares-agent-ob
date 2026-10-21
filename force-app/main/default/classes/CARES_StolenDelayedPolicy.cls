@@ -96,6 +96,8 @@ public with sharing class CARES_StolenDelayedPolicy {
     public Decimal escalationAmountUsd = 100;
     // The delivery platform only enriches the real order data when it is switched on (D-089)
     public Boolean platformEnabled = false;
+    // Mock telemetry records stand in for the platform, and win over it (D-096)
+    public Boolean mockTelemetryEnabled = false;
     public List<String> sensitiveKeywords = new List<String>{
       'assault',
       'assaulted',
@@ -181,6 +183,7 @@ public with sharing class CARES_StolenDelayedPolicy {
       s.escalationAmountUsd
     );
     s.platformEnabled = r.Platform_Enabled__c == true;
+    s.mockTelemetryEnabled = r.Mock_Telemetry_Enabled__c == true;
     if (String.isNotBlank(r.Sensitive_Keywords__c)) {
       s.sensitiveKeywords = new List<String>();
       for (String k : r.Sensitive_Keywords__c.split('[,\\n]')) {
@@ -194,8 +197,9 @@ public with sharing class CARES_StolenDelayedPolicy {
 
   /**
    * Full evaluation: local checks first (no query), then the real order and the
-   * customer's claims (D-089, D-090), then, when it is switched on, the delivery
-   * platform for what the order data lacks, then the matrix.
+   * customer's claims (D-089, D-090), then, when it is switched on, the mock
+   * telemetry records (D-096) or the delivery platform for what the order data
+   * lacks, then the matrix.
    */
   public static Outcome evaluate(
     String contactId,
@@ -223,7 +227,10 @@ public with sharing class CARES_StolenDelayedPolicy {
       return withOrderId(new Outcome(src.decision, src.reasonCode), namedOrder);
     }
     CARES_StolenDelayedTelemetry t = src.telemetry;
-    if (s.platformEnabled) {
+    if (s.mockTelemetryEnabled) {
+      // No row for the order leaves what the platform would add unknown (D-096)
+      enrich(t, CARES_StolenDelayedMockTelemetry.forOrder(src.orderId));
+    } else if (s.platformEnabled) {
       try {
         enrich(
           t,
@@ -325,6 +332,11 @@ public with sharing class CARES_StolenDelayedPolicy {
 
   @TestVisible
   private static String gpsResult(CARES_StolenDelayedTelemetry t, Settings s) {
+    // With coordinates, the trip geofence decides: inside = match, outside = mismatch (D-097)
+    if (t.hasGeofenceCoordinates()) {
+      return insideTripGeofence(t, s) ? GPS_MATCH : GPS_MISMATCH;
+    }
+    // Without them, the older distance-from-drop-off rule (platform data)
     if (t.driverDistanceMeters == null) {
       return GPS_UNKNOWN;
     }
@@ -335,6 +347,47 @@ public with sharing class CARES_StolenDelayedPolicy {
       return GPS_MISMATCH;
     }
     return GPS_AMBIGUOUS;
+  }
+
+  /**
+   * Trip geofence (D-097): a circle centered on the midpoint of the trip from the
+   * restaurant to the drop-off, with radius = half the trip distance plus the GPS
+   * tolerance (GPS_Match_Max_Meters__c). Restaurant and drop-off sit on the circle
+   * without the tolerance, so it keeps a driver at the door, or a few meters past it,
+   * inside. True when the driver was inside when the order was marked delivered.
+   */
+  @TestVisible
+  private static Boolean insideTripGeofence(CARES_StolenDelayedTelemetry t, Settings s) {
+    Location restaurant = Location.newInstance(t.restaurantLatitude, t.restaurantLongitude);
+    Location dropoff = Location.newInstance(t.dropoffLatitude, t.dropoffLongitude);
+    Location driver = Location.newInstance(t.driverLatitude, t.driverLongitude);
+    return meters(midpoint(restaurant, dropoff), driver) <= geofenceRadiusMeters(restaurant, dropoff, s);
+  }
+
+  @TestVisible
+  private static Decimal geofenceRadiusMeters(Location restaurant, Location dropoff, Settings s) {
+    return meters(restaurant, dropoff) / 2 + s.gpsMatchMaxMeters;
+  }
+
+  // Great-circle midpoint of two points
+  @TestVisible
+  private static Location midpoint(Location a, Location b) {
+    Double lat1 = a.getLatitude() * Math.PI / 180;
+    Double lon1 = a.getLongitude() * Math.PI / 180;
+    Double lat2 = b.getLatitude() * Math.PI / 180;
+    Double lon2 = b.getLongitude() * Math.PI / 180;
+    Double x = Math.cos(lat2) * Math.cos(lon2 - lon1);
+    Double y = Math.cos(lat2) * Math.sin(lon2 - lon1);
+    Double lat = Math.atan2(
+      Math.sin(lat1) + Math.sin(lat2),
+      Math.sqrt((Math.cos(lat1) + x) * (Math.cos(lat1) + x) + y * y)
+    );
+    Double lon = lon1 + Math.atan2(y, Math.cos(lat1) + x);
+    return Location.newInstance(lat * 180 / Math.PI, lon * 180 / Math.PI);
+  }
+
+  private static Decimal meters(Location a, Location b) {
+    return Location.getDistance(a, b, 'km') * 1000;
   }
 
   @TestVisible
@@ -455,6 +508,12 @@ public with sharing class CARES_StolenDelayedPolicy {
     t.customerPhotoProvided = platform.customerPhotoProvided;
     t.driverPhotoProvided = platform.driverPhotoProvided;
     t.driverDistanceMeters = platform.driverDistanceMeters;
+    t.restaurantLatitude = platform.restaurantLatitude;
+    t.restaurantLongitude = platform.restaurantLongitude;
+    t.dropoffLatitude = platform.dropoffLatitude;
+    t.dropoffLongitude = platform.dropoffLongitude;
+    t.driverLatitude = platform.driverLatitude;
+    t.driverLongitude = platform.driverLongitude;
     t.driverWaitSeconds = platform.driverWaitSeconds;
     t.driverCallsToCustomer = platform.driverCallsToCustomer;
     t.driverChatsToCustomer = platform.driverChatsToCustomer;

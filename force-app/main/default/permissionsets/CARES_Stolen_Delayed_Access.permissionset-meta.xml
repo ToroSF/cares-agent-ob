@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <label>CARES Stolen Delayed Access</label>
-    <description>Lets the CARES agent user run the Stolen &amp; Delayed Orders actions and read the order link and resolutions they check (D-089). Assigning it is an explicit rollout step.</description>
+    <description>Lets the CARES agent user run the Stolen &amp; Delayed actions, read the order link and resolutions (D-089), and read mock telemetry and write re-dispatch requests and trust events (D-096). Assigning it is an explicit rollout step.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <classAccesses>
         <apexClass>CARES_StolenDelayedEvaluateAction</apexClass>
@@ -16,6 +16,123 @@
         <readable>true</readable>
         <editable>false</editable>
     </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Address_Duplication__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Restaurant_Location__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Dropoff_Location__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Driver_Location__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Device_Duplication__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Driver_Calls__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Driver_Chats__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Driver_Delivery_Count__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Driver_Distance_Meters__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Driver_ID__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Driver_NonDelivery_Rate__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Driver_Wait_Seconds__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Fraud_Pattern__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Redispatch_Eligible__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Scenario__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Redispatch__c.Contact__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Trust_Event__c.Contact__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CARES_Trust_Event__c.Driver_ID__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <objectPermissions>
+        <object>CARES_Delivery_Telemetry__c</object>
+        <allowCreate>false</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>false</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <object>CARES_Redispatch__c</object>
+        <allowCreate>true</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>false</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <object>CARES_Trust_Event__c</object>
+        <allowCreate>true</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>true</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>false</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
     <objectPermissions>
         <object>CARES_Resolution__c</object>
         <allowCreate>false</allowCreate>

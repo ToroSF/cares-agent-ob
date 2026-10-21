@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Fraud_Pattern__c</fullName>
+    <label>Fraud Pattern</label>
+    <defaultValue>false</defaultValue>
+    <description>A fraud pattern was detected for this order. Sends the claim to a person.</description>
+    <type>Checkbox</type>
+</CustomField>
