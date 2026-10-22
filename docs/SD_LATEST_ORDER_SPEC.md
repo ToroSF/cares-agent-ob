@@ -1,6 +1,6 @@
 # Spec: Stolen & Delayed looks up the customer's latest order
 
-Status date: 2026-10-22. Status: `PROPOSAL`. Nothing in this file is built yet.
+Status date: 2026-10-22. Status: **built on this branch** (D-098, G-116). Local compile and `sf agent validate authoring-bundle` pass; not deployed, published or activated (section 5).
 
 - **Branch:** `fix/sd-latest-order`.
 - **Source:** `main` at `edc310e` (CARES v9 Active, v8 is the rollback).
@@ -132,6 +132,14 @@ New scenarios for `.claude/skills/cares-testing/scenarios/p0.json`. The runner a
 | B-SD-22 | FX-OFD (latest order Out for Delivery) | "My last order is really late." | `inputs` `evaluate_delivery_exception.orderId` = `{latest}`, **not** an older delivered order. The decision is the standard path (`outputs` decision `STANDARD_PATH`) |
 | B-SD-23 | Same kind as B-SD-20 | "My order never arrived.", then "No, it was order {other_order}." | `evaluate_delivery_exception.orderId` = the number the customer typed |
 | B-SD-24 | A contact with no orders (new fixture, or one with no `latest`) | "My last order never arrived." | `actions` get_latest_order. `reply_any` "order number". No `evaluate_delivery_exception` call with a made-up id |
+
+**Built:**
+- **New:** B-SD-20 to B-SD-23 in `p0.json`. B-SD-20, B-SD-21 and B-SD-23 use `pool:R-ONE` with `burns`. B-SD-22 uses FX-OFD.
+- **B-SD-24 is not built.** No fixture has a contact with no orders. Add one to `fixtures.json` first.
+- **Changed:**
+  - **B-SD-02**, FX-CLEAN, "The app says delivered but I never got it.": it used to require no `check_order` and an order-number question. Now it requires `get_latest_order`, and `check_order` only with `{latest}` (`inputs_none` on any other id).
+  - **B-RT-02 `expect_known`:** the same change. Its G-087 check (`no_path: refund`) stays.
+- **Why that's safe:** `check_order` is read-only. A prior claim means a `CARES_Resolution__c` row (`CARES_StolenDelayedOrderSource.cls:37-42`), so checking a shared fixture's latest order uses nothing up.
 
 Use `{latest}` from `fixtures.json` (the field the fixtures already carry). The live runs use up orders, so pass `--burned` with the orders that already have a refund.
 
