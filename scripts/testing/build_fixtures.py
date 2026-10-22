@@ -39,6 +39,8 @@ POOLS = {
 # Pool each named fixture comes from, to swap it when its order is already paid (G-108)
 NAMED_POOL = {"FX-EXP": "R-EXP", "FX-EXP-2": "R-EXP", "FX-INS": "R-INS", "FX-INS-2": "R-INS", "FX-PP": "R-PP",
               "FX-PP-2": "R-PP", "FX-ONE": "R-ONE", "FX-OFD": "R-OFD", "FX-PREP": "R-PREP", "FX-CANC": "R-CANC"}
+# Named fixtures that only need a tier: with no unpaid spare in their pool, any clean contact of that tier will do
+TIER_ONLY = {"FX-EXP", "FX-EXP-2", "FX-INS", "FX-INS-2", "FX-PP", "FX-PP-2"}
 REVIEW_AT = 3  # risk_review_threshold: this many issue cases go to PATTERN_REVIEW (D-062)
 RETENTION_BONUS_PCT = 5  # Retention_Bonus_Pct__c seeded by seed-refund-tiers.apex (D-083, mock data, [$])
 # Mock sentiment context (D-083): contact name => Has_Open_Context__c is true. These are the two
@@ -55,6 +57,14 @@ HIGH_TRUST_MAX_CLAIM_RATE = Decimal("0.05")
 # The Stolen & Delayed demo orders (mock telemetry, D-096; timing demo clock, D-100) live in this seed. Their
 # customers are reserved for the demo: a test that pays or escalates on them spends the demo order (G-108)
 DEMO_SEED = os.path.join(REPO, "scripts", "apex", "seed-delivery-telemetry.apex")
+# Delivery timing (D-100): the customer who owns each order, found by the order id. Delivered in 43 and 58 min
+# (promise 40: minor and severe delay), delivered on time, and a demo order still within its time (demo clock,
+# 20 min). The not-late-yet path offers no money and logs nothing, so it does not spend the demo order
+TIMING = {"FX-LATE-MINOR": "PR-240831-SO0F85U", "FX-LATE-SEVERE": "PR-240819-E6PVNNW",
+          "FX-ONTIME": "PR-240817-Q4ZTFF0", "FX-NOTLATE": "PR-240614-8T45OO8"}
+# Minor_Delay_Pct__c and Severe_Delay_Pct__c on CARES_Stolen_Delayed_Policy.Default: the delay value is the order total
+# times this, and Refund caps it with the tier's Delayed row (D-100)
+DELAY_PCT = {"FX-LATE-MINOR": 15, "FX-LATE-SEVERE": 50}
 
 
 def demo_orders():
@@ -140,7 +150,8 @@ def fixture(c, orders):
     names = [n for n, _ in it]
     fx = {"cid": c["cid"], "name": c["name"], "email": c["email"], "tier": c["tier"], "cases": c["cases"],
           "issues": c["issues"], "risk": risk(c["issues"]),
-          "latest": latest["id"], "latest_status": latest["st"], "order": dl["id"], "total": str(total),
+          "latest": latest["id"], "latest_status": latest["st"],
+          "latest_total": str(Decimal(latest["tot"]).quantize(Decimal("0.01"))), "order": dl["id"], "total": str(total),
           "orders_ok": sum(1 for o in orders if o["st"] != "Canceled"),
           "item_count": len(it), "items_all": ", ".join(names[:-1]) + (" and " if len(names) > 1 else "") + names[-1]}
     for i, (n, p) in enumerate(it[:3], 1):
@@ -179,6 +190,11 @@ def main():
     paid, claims = (set(), {}) if args.from_log else resolved(args.org)
     demo = demo_orders()
     reserved = {n for n, (app, c) in by_name.items() if any(o["id"] in demo for o in orders.get(app, []))}
+    # The timing fixtures' owners stay out of every pool too: a payout on their order would turn the timing
+    # check into DUPLICATE_CLAIM
+    timing_owners = {c["name"] for app, c in contacts.items() if any(o["id"] in TIMING.values() for o in orders.get(app, []))}
+    reserved |= timing_owners
+    pooled = {n for ns in POOLS.values() for n in ns}
     # G-108: a named fixture whose latest delivered order was already paid gets "already has a refund";
     # swap it for a clean contact of the same pool whose order is still unpaid
     named = dict(NAMED)
@@ -190,6 +206,12 @@ def main():
                  and c["tier"] == by_name[n][1]["tier"] and by_name[n][1]["issues"] == 0
                  and not by_name[n][1].get("open_ctx")
                  and fixture(by_name[n][1], orders[by_name[n][0]])["order"] not in paid]
+        if not spare and key in TIER_ONLY:
+            spare = [n for n, (a2, c2) in sorted(by_name.items()) if n not in named.values() and n not in pooled
+                     and n not in reserved and a2 in orders and c2["tier"] == c["tier"] and c2["cases"] == 0
+                     and not c2.get("open_ctx") and fixture(c2, orders[a2])["order"] not in paid
+                     and fixture(c2, orders[a2])["latest_status"] == "Delivered"
+                     and fixture(c2, orders[a2])["item_count"] >= 2]
         if spare:
             print(f"{key}: {named[key]}'s order is paid, using {spare[0]}")
             named[key] = spare[0]
@@ -206,7 +228,7 @@ def main():
             if key not in out["fixtures"]:
                 add(key, n)
             out["pools"][pool].append(key)
-    used = set(named.values()) | {n for ns in POOLS.values() for n in ns}
+    used = set(named.values()) | pooled
     # FX-CLEAN and the ESC pool need no cases and no payout yet, so earlier live runs never leak into them
     def low_trust(app, c):
         ok = fixture(c, orders[app])["orders_ok"]
@@ -241,11 +263,25 @@ def main():
         for n in names:
             add(key_for("E", n), n)
             out["pools"][pool].append(key_for("E", n))
+    for key, oid in TIMING.items():
+        app = next((app for app, os_ in orders.items() if any(o["id"] == oid for o in os_)), None)
+        if app not in contacts:
+            print(f"WARNING: {key}: no contact owns {oid}; its scenarios will have no fixture")
+            continue
+        out["fixtures"][key] = fixture(contacts[app], orders[app])
+        o = next(o for o in orders[app] if o["id"] == oid)
+        fx, claim_total = out["fixtures"][key], Decimal(o["tot"]).quantize(Decimal("0.01"))
+        fx.update({"claim_order": oid, "claim_status": o["st"], "claim_total": str(claim_total)})
+        if key in DELAY_PCT:
+            value = (claim_total * DELAY_PCT[key] / 100).quantize(Decimal("0.01"))
+            fx["delay_value"] = str(value)
+            fx["delay_offer"], fx["delay_credit"] = offer(fx["tier"], value, claim_total, fx["issues"] == 0,
+                                                          fx["retention_eligible"])
     other = out["fixtures"]["FX-OTHER"]
     out["globals"] = {"other_order": other["latest"], "other_email": other["email"], "other_name": other["name"]}
     path = os.path.join(REPO, "scripts", "testing", "fixtures.json")
     json.dump(out, open(path, "w"), indent=1, ensure_ascii=False)
-    print("wrote", path, len(out["fixtures"]), "fixtures;", len(reserved), "demo customers reserved:",
+    print("wrote", path, len(out["fixtures"]), "fixtures;", len(reserved), "customers reserved (demo and timing):",
           ", ".join(sorted(reserved)))
 
 

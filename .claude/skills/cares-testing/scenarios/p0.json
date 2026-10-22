@@ -782,26 +782,31 @@
      "risk_detection",
      "identify_customer",
      "risk_detection",
-     "stolen_delayed_orders",
-     "refund"
+     "stolen_delayed_orders"
     ],
     "actions": [
      "get_latest_order",
-     "check_order",
-     "log_order_issue",
-     "calculate_refund_offer"
+     "check_order"
+    ],
+    "no_actions": [
+     "resolve_claim",
+     "issue_resolution"
     ],
     "inputs": {
-     "log_order_issue.issueType": "Delayed"
+     "check_order.orderId": "{latest}"
     },
-    "outputs_none": {
-     "calculate_refund_offer.refundAmount": 0
+    "outputs": {
+     "check_order.timing": "LIKELY_LOST",
+     "check_order.decision": "FULL_REFUND"
     },
+    "amounts": [
+     "{latest_total}"
+    ],
     "reply_none": [
      "\\b0\\.00\\b"
     ]
    },
-   "judge": "The G-117 conversation: email only, latest order Out for Delivery. After the email the customer gets a real offer or the plain no-offer reply in the same turn, never 0.00 and no stolen-or-late question."
+   "judge": "Email only, latest order Out for Delivery since 2024. After the email Stolen & Delayed checks that order: on the real clock it is far past any normal time, so it is treated as lost (D-100, POL-P09). FX-OFD is a trusted customer, so the full order value is offered as a refund or a slightly larger credit, and the customer is asked to choose. Never 0.00 (G-117), nothing recorded before the customer chooses."
   },
   {
    "id": "B-SD-01",
@@ -920,26 +925,30 @@
     ],
     "actions": [
      "get_latest_order",
-     "check_order",
-     "log_order_issue",
+     "check_order"
+    ],
+    "no_actions": [
+     "resolve_claim",
+     "issue_resolution",
      "calculate_refund_offer"
     ],
     "inputs": {
-     "check_order.orderId": "{latest}",
-     "log_order_issue.issueType": "Delayed"
+     "check_order.orderId": "{latest}"
     },
     "outputs": {
-     "check_order.decision": "STANDARD_PATH"
+     "check_order.timing": "LIKELY_LOST",
+     "check_order.decision": "FULL_REFUND",
+     "check_order.reasonCode": "LOST_IN_TRANSIT"
     },
-    "outputs_none": {
-     "calculate_refund_offer.refundAmount": 0
-    },
+    "amounts": [
+     "{latest_total}"
+    ],
     "reply_none": [
      "\\b0\\.00\\b",
      "stolen"
     ]
    },
-   "judge": "The latest order is Out for Delivery: S&D checks that order, not an older delivered one (Refund's find_order would have picked one). Then Refund logs it as Delayed without asking stolen-or-late and offers a real amount (G-117), never 0.00."
+   "judge": "The latest order is Out for Delivery: S&D checks that order, not an older delivered one (G-116). Far past its time on the real clock, so it is lost in transit (D-100): the full order value as a refund or credit. 'Yes, that one.' is not a choice between refund and credit, so the agent asks again and records nothing. No stolen-or-late question, never 0.00."
   },
   {
    "id": "B-SD-23",
@@ -961,6 +970,157 @@
     }
    },
    "judge": "The customer means another order: S&D uses the number they typed. {other_order} is not theirs, so ORDER_NOT_FOUND and a request to double-check is fine."
+  },
+  {
+   "id": "B-SD-24",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "FX-LATE-MINOR",
+   "turns": [
+    "My order {claim_order} arrived really late, I waited forever."
+   ],
+   "expect": {
+    "path": [
+     "stolen_delayed_orders",
+     "refund"
+    ],
+    "actions": [
+     "check_order",
+     "calculate_refund_offer"
+    ],
+    "no_actions": [
+     "issue_resolution"
+    ],
+    "inputs": {
+     "check_order.orderId": "{claim_order}",
+     "check_order.claimType": "LATE"
+    },
+    "outputs": {
+     "check_order.decision": "DELAY",
+     "check_order.delaySeverity": "MINOR",
+     "check_order.delayValue": "{delay_value}",
+     "calculate_refund_offer.refundAmount": "{delay_offer}"
+    },
+    "amounts": [
+     "{delay_offer}"
+    ],
+    "reply_none": [
+     "\\b0\\.00\\b",
+     "stolen"
+    ]
+   },
+   "judge": "Delivered in 43 min against the 40 min promise: a minor delay (D-100). Refund offers the delay value (15% of the order total, capped by the tier's Delayed row, plus the retention bonus when the fixture has one), never the whole order and never 0.00. One turn, no choice made, so nothing is paid."
+  },
+  {
+   "id": "B-SD-25",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "FX-LATE-SEVERE",
+   "turns": [
+    "Order {claim_order} came way too late, the food was sitting somewhere for ages."
+   ],
+   "expect": {
+    "path": [
+     "stolen_delayed_orders",
+     "refund"
+    ],
+    "actions": [
+     "check_order",
+     "calculate_refund_offer"
+    ],
+    "no_actions": [
+     "issue_resolution"
+    ],
+    "inputs": {
+     "check_order.orderId": "{claim_order}",
+     "check_order.claimType": "LATE"
+    },
+    "outputs": {
+     "check_order.decision": "DELAY",
+     "check_order.delaySeverity": "SEVERE",
+     "check_order.delayValue": "{delay_value}",
+     "calculate_refund_offer.refundAmount": "{delay_offer}"
+    },
+    "amounts": [
+     "{delay_offer}"
+    ],
+    "reply_none": [
+     "\\b0\\.00\\b"
+    ]
+   },
+   "judge": "Delivered in 58 min, 18 past the promise: a severe delay (D-100), 50% of the order total, capped by the tier's Delayed row."
+  },
+  {
+   "id": "B-SD-26",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "FX-ONTIME",
+   "turns": [
+    "My order {claim_order} was late, I want something for the wait."
+   ],
+   "expect": {
+    "path": [
+     "stolen_delayed_orders"
+    ],
+    "actions": [
+     "check_order"
+    ],
+    "no_actions": [
+     "calculate_refund_offer",
+     "issue_resolution",
+     "log_order_issue"
+    ],
+    "inputs": {
+     "check_order.orderId": "{claim_order}",
+     "check_order.claimType": "LATE"
+    },
+    "outputs": {
+     "check_order.decision": "DELIVERED_ON_TIME"
+    },
+    "reply_any": [
+     "\\bminutes?\\b|on time|within"
+    ]
+   },
+   "judge": "The order was delivered within the 40 min promise, so no money for a delay (D-100). The agent says so kindly with the real delivery time and asks whether something else went wrong (missing item, cold food)."
+  },
+  {
+   "id": "B-SD-27",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "FX-NOTLATE",
+   "turns": [
+    "My order {claim_order} is late, it still hasn't come."
+   ],
+   "expect": {
+    "path": [
+     "stolen_delayed_orders"
+    ],
+    "actions": [
+     "check_order"
+    ],
+    "no_path": [
+     "refund"
+    ],
+    "no_actions": [
+     "calculate_refund_offer",
+     "issue_resolution",
+     "log_order_issue"
+    ],
+    "inputs": {
+     "check_order.orderId": "{claim_order}"
+    },
+    "outputs": {
+     "check_order.decision": "NOT_LATE_YET",
+     "check_order.timing": "NOT_LATE_YET"
+    },
+    "reply_any": [
+     "\\bminutes?\\b"
+    ],
+    "reply_none": [
+     "\\$\\s?\\d|refund of|credit of"
+    ]
+   },
+   "judge": "A demo order 20 min in (demo clock, D-100), still within its 40 min promise: the agent says it should arrive in about 20 minutes and offers no money. This path writes nothing, so it does not spend the demo order."
   },
   {
    "id": "B-SD-03",
