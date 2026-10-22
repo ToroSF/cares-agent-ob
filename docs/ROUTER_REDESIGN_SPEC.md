@@ -5,6 +5,7 @@ Status date: 2026-10-22. Status: `PROPOSAL`. Decisions R-D1 to R-D9 are `DECIDED
 - Branch: `fix/router-redesign`.
 - Source: `main` at `c83591b` (after PRs #43-#47).
 - **Build:** Parts A-E are built in a separate **test agent bundle**, `force-app/main/default/aiAuthoringBundles/CARES_Router_V2/` (developer name `CARES_Router_V2`, label "CARES Router V2 (test)"). `CARES.agent` is unchanged. The bundle compiles locally (`@sf-agentscript/agentforce` 2.9.27) with no errors. It is not deployed, published or validated in an org. Part F is not started.
+- **Port to CARES:** see [ROUTER_CARES_PORT_SPEC.md](ROUTER_CARES_PORT_SPEC.md) (PROPOSAL). The live agent is CARES v8.
 - **Test bundle notes:**
   - It keeps the `connection messaging` block, because `@utils.escalate` needs one to compile. It only routes in a real messaging session, and the test agent is not attached to any channel.
   - Agent user, Data Library and every Flow and Apex action are shared with CARES. Live actions write to the same org records, so test with the fixture contacts.
@@ -179,8 +180,8 @@ identify_pending: mutable boolean = False
 
 Notes:
 - D-083 still holds: the context lookup is never read for a pattern case.
-- **G-112 is fixed in the test bundle.** In `CARES.agent` the `risk_status == "NOT_CLEAN"` override (L880) is a nested `if` under `else`. The local compiler rejects it (severity 1, `unsupported-nested-if`) and `sf agent validate` fails on `main` (G-112). In the test bundle it is a top-level `if`. `main` still needs its own fix from the Risk Detection owner.
-- **G-113 is fixed in the test bundle** too: `get_customer_context` takes `customer_id`.
+- **G-112:** fixed in the test bundle, and also on `main` by PR #49 (flat `if`s that repeat the threshold check). Live in CARES v8.
+- **G-113:** fixed in the test bundle, and also on `main` by PR #49. On `main`, the identify-first step sets the task to `REFUND` and returns through Refund. The port replaces that routing with this gate and keeps the outcome (ROUTER_CARES_PORT_SPEC section 2).
 - **Action input descriptions** for `get_risk_result.contactId` and `get_customer_context.contactId` change from "The contact id from the channel, never from the chat" to "The customer's contact id: from the channel, or from the email lookup (R-D7). Never typed by the model."
 - **No Flow change.** `CARES_Get_Risk_Result` and `CARES_Get_Customer_Context` already take a contact id.
 
