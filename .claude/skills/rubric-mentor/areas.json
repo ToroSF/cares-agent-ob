@@ -1,0 +1,123 @@
+{
+  "_about": "Focus areas for rubric-mentor (--focus). 'paths' are path prefixes for git evidence; 'block' is the CARES.agent block; 'keywords' find rows in DECISIONS/GAPS/RISKS/TEST_PLAN; 'owner' is how the Owner column names the area; 'rubric' lists the rubric lines the area feeds. See areas.md.",
+  "subagents": {
+    "router": {
+      "label": "Agent Router",
+      "block": "agent_router",
+      "paths": ["docs/ROUTER_AUDIT.md", "docs/ROUTER_REDESIGN_SPEC.md", "docs/ROUTER_CARES_PORT_SPEC.md", "force-app/main/default/aiAuthoringBundles/CARES_Router_V2/"],
+      "keywords": ["router", "HyperClassifier", "routing", "misroute"],
+      "owner": ["Router owner"],
+      "rubric": ["configure", "risks", "approach"]
+    },
+    "refund": {
+      "label": "Refund",
+      "block": "refund",
+      "paths": ["force-app/main/default/classes/CARES_Refund_", "force-app/main/default/objects/CARES_Refund_Policy__c/", "force-app/main/default/objects/CARES_Tier__c/", "force-app/main/default/objects/CARES_Resolution__c/", "docs/subagents/refund.md", "docs/REFUND_", "scripts/apex/seed-refund-tiers.apex"],
+      "keywords": ["Refund", "refund", "offer", "ceiling", "credit", "tier"],
+      "owner": ["Refund owner"],
+      "rubric": ["usecase", "configure", "ground", "risks", "justification"]
+    },
+    "stolen-delayed": {
+      "label": "Stolen & Delayed Orders",
+      "block": "stolen_delayed_orders",
+      "paths": ["force-app/main/default/classes/CARES_StolenDelayed", "force-app/main/default/objects/CARES_Delivery_Telemetry__c/", "force-app/main/default/objects/CARES_Trust_Event__c/", "force-app/main/default/objects/CARES_Redispatch__c/", "force-app/main/default/objects/CARES_Stolen_Delayed_Policy__mdt/", "docs/subagents/stolen-delayed-orders.md", "docs/SD_", "docs/REFUND_SD_", "scripts/apex/seed-delivery-telemetry.apex"],
+      "keywords": ["Stolen & Delayed", "S&D", "stolen_delayed", "stolen", "never arrived", "geofence", "telemetry", "delay", "re-dispatch"],
+      "owner": ["Stolen & Delayed owner"],
+      "rubric": ["configure", "ground", "risks", "approach", "justification"]
+    },
+    "risk-detection": {
+      "label": "Risk Detection",
+      "block": "risk_detection",
+      "paths": ["force-app/main/default/flows/CARES_Get_Risk_Result", "force-app/main/default/flows/CARES_Get_Customer_Context", "force-app/main/default/objects/CARES_Customer_Context__c/", "docs/subagents/risk-detection", "scripts/apex/backfill-cares-escalation-flag.apex"],
+      "keywords": ["Risk Detection", "risk_", "PATTERN_REVIEW", "CLEAN", "retention bonus"],
+      "owner": ["Risk Detection owner"],
+      "rubric": ["configure", "ground", "risks", "justification"]
+    },
+    "experience-rating": {
+      "label": "Experience Rating",
+      "block": "experience_rating",
+      "paths": ["force-app/main/default/classes/CsatRatingSaver", "force-app/main/default/objects/CSAT_Rating__c/", "docs/subagents/experience-rating"],
+      "keywords": ["Experience Rating", "CSAT", "rating", "thumbs"],
+      "owner": ["Experience Rating owner"],
+      "rubric": ["usecase", "configure", "approach"]
+    },
+    "escalation": {
+      "label": "Escalate to Human / Urgent Escalation",
+      "block": "escalate_to_human",
+      "paths": ["force-app/main/default/classes/CARES_Escalation", "force-app/main/default/flows/CARES_Create_Escalation_Case", "force-app/main/default/flows/CARES_Route_To_Support", "docs/subagents/escalate-to-human.md", "docs/DEMO_ESCALATION.md", "scripts/apex/setup-escalation-team.apex"],
+      "keywords": ["Escalat", "escalat", "hand-off", "handoff", "Omni-Channel", "urgent", "Slack alert"],
+      "owner": ["Escalate owner"],
+      "rubric": ["configure", "risks", "approach"]
+    },
+    "pronto-help": {
+      "label": "Pronto Help (policy RAG)",
+      "block": "pronto_help",
+      "paths": ["docs/subagents/pronto-help.md", "docs/grounding/", "docs/sources/", "docs/POLICY_ALIGNMENT.md"],
+      "keywords": ["Pronto Help", "Data Library", "RAG", "retrieval", "golden set", "POL-"],
+      "owner": ["Pronto Help owner"],
+      "rubric": ["ground", "risks", "justification"]
+    },
+    "order-status": {
+      "label": "Order Status",
+      "block": "order_status",
+      "paths": ["force-app/main/default/classes/CARES_Order_GetStatus", "force-app/main/default/classes/CARES_OrderData"],
+      "keywords": ["Order Status", "get_order_status", "ETA", "Order__dlm"],
+      "owner": ["Order Status owner"],
+      "rubric": ["ground", "configure"]
+    },
+    "identify-customer": {
+      "label": "Identify Customer",
+      "block": "identify_customer",
+      "paths": ["force-app/main/default/classes/CARES_Identity_"],
+      "keywords": ["Identify Customer", "identity", "email lookup", "customer_id", "ContactId"],
+      "owner": ["Identify Customer owner"],
+      "rubric": ["risks", "configure"]
+    }
+  },
+  "sections": {
+    "roi": {
+      "label": "ROI & cost",
+      "paths": ["docs/MARKET_BENCHMARKS.md", "docs/metrics/data/value.json", "docs/PANEL_QA.md"],
+      "keywords": ["ROI", "cost", "US$", "margin", "Flex Credits", "consumption", "[$]"],
+      "rubric": ["usecase", "justification"]
+    },
+    "retention": {
+      "label": "Retention & KPIs",
+      "paths": ["docs/SPEC.md", "docs/metrics/", "docs/MARKET_BENCHMARKS.md"],
+      "keywords": ["retention", "KPI", "churn", "reorder", "CSAT", "resolved without a person"],
+      "rubric": ["usecase", "justification"]
+    },
+    "security": {
+      "label": "Security & governance",
+      "paths": ["docs/RISKS.md", "force-app/main/default/permissionsets/", "CLAUDE.md", "docs/CONTRIBUTING.md"],
+      "keywords": ["permission", "access", "USER_MODE", "privacy", "public", "identifier", "fraud", "verified"],
+      "rubric": ["risks", "configure"]
+    },
+    "data": {
+      "label": "Data & grounding",
+      "paths": ["docs/GROUNDING.md", "docs/grounding/", "force-app/main/default/classes/CARES_OrderData", "docs/POLICY_ALIGNMENT.md"],
+      "keywords": ["Data Cloud", "Order__dlm", "audit", "grounding", "source", "golden set", "RAG"],
+      "rubric": ["ground"]
+    },
+    "quality": {
+      "label": "Quality & testing",
+      "paths": ["docs/TEST_PLAN.md", "docs/BASELINE_BATCH_TEST.md", "scripts/testing/", ".claude/skills/cares-testing/", "docs/metrics/"],
+      "keywords": ["test", "Testing Center", "batch", "PASS", "FAIL", "dry-run", "validate", "coverage"],
+      "rubric": ["approach"]
+    },
+    "roadmap": {
+      "label": "Roadmap & trade-offs",
+      "paths": ["docs/ARCHITECTURE_NOTES.md", "docs/OPEN_ITEMS.md", "docs/V6_FOCUS.md", "docs/GAPS.md", "docs/DECISIONS.md"],
+      "keywords": ["gave up", "trade-off", "OPEN", "next", "pilot", "roadmap", "rebuild"],
+      "rubric": ["approach", "justification"]
+    }
+  },
+  "rubric_paths": {
+    "usecase": ["docs/SPEC.md", "docs/MARKET_BENCHMARKS.md", "docs/metrics/data/value.json", "docs/PANEL_QA.md", "docs/JOURNEY.md"],
+    "configure": ["force-app/main/default/aiAuthoringBundles/", "force-app/main/default/classes/", "force-app/main/default/flows/", "force-app/main/default/objects/", "docs/ARCHITECTURE_NOTES.md", "docs/ROUTER_"],
+    "ground": ["docs/GROUNDING.md", "docs/grounding/", "docs/sources/", "docs/POLICY_ALIGNMENT.md", "force-app/main/default/classes/CARES_OrderData"],
+    "risks": ["docs/RISKS.md", "docs/GAPS.md", "force-app/main/default/permissionsets/"],
+    "approach": ["docs/TEST_PLAN.md", "docs/BASELINE_BATCH_TEST.md", "scripts/testing/", ".claude/skills/cares-testing/", "docs/DEPLOY_CHECKLIST.md", "docs/metrics/"],
+    "justification": ["docs/DECISIONS.md", "docs/PANEL_QA.md", "docs/subagents/", "docs/README.md"]
+  }
+}

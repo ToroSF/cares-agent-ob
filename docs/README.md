@@ -25,6 +25,7 @@ CARES is the Pronto customer care agent. A router sends each customer to one spe
 | [BASELINE_BATCH_TEST.md](BASELINE_BATCH_TEST.md) | The whole-agent baseline batch test: personas, tiers, invariants, scenarios that fail on purpose, how to run and record |
 | [JOURNEY.md](JOURNEY.md) | Dated log of how we got here |
 | [PANEL_QA.md](PANEL_QA.md) | Team answers to expected panel questions |
+| [../.claude/skills/rubric-mentor/](../.claude/skills/rubric-mentor/SKILL.md) | Presentation coaching: `/rubric-mentor` scores each member on the Capstone rubric from repo evidence, asks Socratic questions by Slack DM, gives tips, can focus on one subagent or business area, and role-plays the Pronto C-suite (D-101). Scores stay local and private |
 
 Reading order for a new teammate or assistant: this file -> SPEC.md -> your subagent doc -> DECISIONS.md.
 
