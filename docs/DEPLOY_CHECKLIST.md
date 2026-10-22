@@ -141,10 +141,17 @@ Decisions D-083 to D-087, gaps G-086, G-082, G-068. Design: [subagents/escalate-
 - Check-only `0AfjV000004gCqUSAU`, then quick deploy `0AfjV000004gV0ISAU`: 160 components, 182/182 tests (`CARES_EscalationAlertsTest`, `CARES_EscalationCaseFlowTest`, `CARES_Identity_FindContactByEmailTest`, `CARES_OrderDataTest`, `CARES_Refund_ActionsTest`, `CARES_StolenDelayedActionsTest`, `CARES_StolenDelayedMockTelemetryTest`, `CARES_StolenDelayedPolicyTest`, `CsatRatingSaverTest`).
 - Agent: v7 stays Active; the fixed `CARES.agent` is the draft only. The Apex, Flow and record changes of PR #45 and #47 reach v7 at once: mock telemetry is on (`Mock_Telemetry_Enabled__c`), and the retention bonus logic in `Refund_CalculateOffer`.
 - Not run yet: `seed-delivery-telemetry.apex` and `seed-customer-context.apex` (data writes). Without the rows, Stolen & Delayed and the retention bonus behave as before.
-- `CARES_Get_Risk_Result` v3 is still a Draft: activate it in Setup.
+- `CARES_Get_Risk_Result` v3 was still a Draft; activated later the same day (see the v8 record below).
 - The draft would not start a preview: `CARES_Get_Customer_Context` (new in PR #47) was in the repo as `Draft`, so the platform refused `get_customer_context` and, with it, `create_escalation_case` and `create_settlement_review_case` ("invalid attribute value for 'target'"). Set to `Active` in the repo and deployed alone (`0AfjV000004gbCCSAY`); the draft starts again. v7 was never affected: it does not call that Flow.
 - First batch on the draft found that Risk Detection got a blank contact when the router sent the customer straight to it (`customer_id` not copied from `ContactId`): `UNKNOWN` for everyone. Fixed in the agent (G-113 row), draft deployed `0AfjV000004gfPSSAY`.
 - 1 run each, live actions. Before the fix: B-SD-01, B-SD-02, B-ES-01 PASS (they do not depend on the risk result). After the fix: B-RD-01, B-RD-02, B-RD-03, B-RD-05, B-RD-06 (new: email only), B-RF-03 PASS; B-RD-04 UNEXPECTED_PASS. B-RF-01 and B-RF-02 FAIL: the fixture order already has a refund (`alreadyResolved`), the open G-108, not this change.
+
+**Done 2026-10-22 (agent v8 Active, v7 Inactive):**
+- `CARES_Get_Risk_Result` v3 activated (the existing org version, no new deploy; v2 Obsolete). Its interface did not change (`contactId`, `lookbackDays` in; `riskStatus`, `issueCount` out). The repo file now says `Active`, so a later deploy keeps it active (G-075).
+- v8 published from `main` (`05f6d5b`, PR #49 included) and activated. It carries G-112 and G-113: customers identified by email now get a real risk check.
+- Smoke test on v8 (`--api-name`): "Hi" got the welcome. No live-action batch on v8 itself, by choice (no test data written to the org that day); the draft batch above ran on the same `CARES.agent`.
+- Publish brought about 20 org files into the tree (format changes plus `aiAgents/` and `aiAgentDefinitionVersions/`): kept outside the repo, tree restored.
+- To roll back: `sf agent activate --api-name CARES --version 7`.
 
 ## Mock delivery telemetry (`feature/sd-mock-telemetry`, D-096)
 Mock data, not a live feed. No agent change: the active agent version picks it up as soon as the Apex and the `Default` record are deployed.

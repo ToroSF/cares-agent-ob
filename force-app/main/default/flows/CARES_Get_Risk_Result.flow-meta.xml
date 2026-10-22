@@ -414,7 +414,7 @@
       <targetReference>Has_Contact</targetReference>
     </connector>
   </start>
-  <status>Draft</status>
+  <status>Active</status>
   <variables>
     <name>contactRecord</name>
     <dataType>SObject</dataType>
