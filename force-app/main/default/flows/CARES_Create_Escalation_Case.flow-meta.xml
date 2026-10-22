@@ -227,7 +227,13 @@ IF({!contactId} = {!channelContactId}, &quot;Verified (signed in to the chat)&qu
     <name>sentimentLabel</name>
     <dataType>String</dataType>
     <expression
-    >BLANKVALUE({!customerSentiment}, &quot;none on file&quot;)</expression>
+    >BLANKVALUE({!customerSentiment}, &quot;not assessed&quot;)</expression>
+  </formulas>
+  <formulas>
+    <name>customerSummaryLabel</name>
+    <dataType>String</dataType>
+    <expression
+    >BLANKVALUE({!customerSummary}, &quot;not recorded&quot;)</expression>
   </formulas>
   <formulas>
     <name>offerLabel</name>
@@ -546,11 +552,12 @@ IF({!contactId} = {!channelContactId}, &quot;Verified (signed in to the chat)&qu
 Category: {!categoryLabel}
 Priority: {!casePriority}
 Why: {!reasonText}
+Customer said: {!customerSummaryLabel}
 Customer: {!customerCheck}
 Order: {!orderLabel}
 Stolen &amp; Delayed check: {!stolenDelayedLabel}
 Risk status (internal): {!riskLabel}
-Customer sentiment (internal, mock data): {!sentimentLabel}
+Customer sentiment (internal, as perceived by CARES): {!sentimentLabel}
 Offer: {!offerLabel}
 Customer chose: {!choiceLabel}
 Chat: {!sessionLabel}
@@ -627,7 +634,16 @@ Next step: {!nextStep}</text>
   </variables>
   <variables>
     <description
-    >POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED or blank, from Risk Detection's customer context check (D-083, mock data). Internal only, never shown to the customer.</description>
+    >One or two sentences on what the customer reported, written by the agent from the conversation (D-101). Internal only.</description>
+    <name>customerSummary</name>
+    <dataType>String</dataType>
+    <isCollection>false</isCollection>
+    <isInput>true</isInput>
+    <isOutput>false</isOutput>
+  </variables>
+  <variables>
+    <description
+    >POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED or blank: the agent's own read of the conversation (D-101). Internal only, never shown to the customer.</description>
     <name>customerSentiment</name>
     <dataType>String</dataType>
     <isCollection>false</isCollection>

@@ -170,6 +170,8 @@ variables:
         description: "Stolen & Delayed: NOT_LATE_YET only, minutes until the order's expected time (D-100)."
     stolen_delayed_delivery_minutes: mutable number = 0
         description: "Stolen & Delayed: delivered orders, the minutes the delivery took (D-100)."
+    escalation_details_added: mutable boolean = False
+        description: "Escalate to Human: True once the agent added what the customer said and its sentiment read to the case (D-101). Set by the script."
 
 knowledge:
     # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-060, D-066, D-067)
@@ -1354,7 +1356,7 @@ subagent escalate_to_human:
                 with stolenDelayedDecision = @variables.stolen_delayed_decision
                 with stolenDelayedReason = @variables.stolen_delayed_reason
                 with riskStatus = @variables.risk_status
-                with customerSentiment = @variables.risk_customer_sentiment
+                with customerSentiment = ""
                 with offerAmount = @variables.refund_offer_amount
                 with creditAmount = @variables.refund_credit_amount
                 with currencyCode = @variables.refund_currency if @variables.refund_currency != "" else @variables.stolen_delayed_currency
@@ -1375,7 +1377,8 @@ subagent escalate_to_human:
             if @variables.escalation_category == "URGENT":
                 | The customer reported something serious. Thank them for telling you and do not ask them to repeat details. If anyone feels unwell or is having an allergic reaction, tell them to get medical help now and to call the local emergency number if it is serious. Say the team is treating this as urgent.
             if @variables.escalation_case_created == True:
-                | Tell the customer their support case number is {!@variables.escalation_case_number} and that the support team already has the details, so they will not need to repeat them.
+                | First, if you haven't yet, call {!@actions.add_case_details} once: a one- or two-sentence summary of what the customer reported, in plain words, and your own read of their sentiment.
+                  Tell the customer their support case number is {!@variables.escalation_case_number} and that the support team already has the details, so they will not need to repeat them.
             else:
                 | The support case could not be logged. Apologize and say the support team could not be reached from this chat right now. Never give or invent a case number and never say that a case was logged.
             # Live transfer only in a real chat, where Omni-Channel has a session to route (D-084)
@@ -1395,6 +1398,26 @@ subagent escalate_to_human:
                 description: "Transfer this chat to a member of the Pronto support team."
                 available when @variables.escalation_attempted == False and @variables.RoutableId is not None and @variables.RoutableId != ""
                 set @variables.escalation_attempted = True
+            # Same Flow as the first log: it finds the open case and adds the summary as a comment (D-063, D-101)
+            add_case_details: @actions.create_escalation_case
+                description: "Add what the customer reported and your sentiment read to their open support case."
+                available when @variables.escalation_case_created == True and @variables.escalation_details_added == False
+                with contactId = @variables.customer_id
+                with channelContactId = @variables.customer_id
+                with escalationCategory = @variables.escalation_logged_category
+                with escalationReason = @variables.escalation_reason
+                with sessionId = @variables.RoutableId if @variables.RoutableId is not None else ""
+                with orderId = @variables.refund_order_id if @variables.refund_order_id != "" else @variables.stolen_delayed_order_id
+                with stolenDelayedDecision = @variables.stolen_delayed_decision
+                with stolenDelayedReason = @variables.stolen_delayed_reason
+                with riskStatus = @variables.risk_status
+                with customerSummary = ...
+                with customerSentiment = ...
+                with offerAmount = @variables.refund_offer_amount
+                with creditAmount = @variables.refund_credit_amount
+                with currencyCode = @variables.refund_currency if @variables.refund_currency != "" else @variables.stolen_delayed_currency
+                with chosenResolution = @variables.refund_chosen_resolution
+                set @variables.escalation_details_added = True
 
     actions:
         create_escalation_case:
@@ -1419,8 +1442,10 @@ subagent escalate_to_human:
                     description: "Stolen & Delayed internal reason code, blank when none."
                 riskStatus: string
                     description: "CLEAN, NOT_CLEAN or UNKNOWN. Internal only."
+                customerSummary: string
+                    description: "One or two sentences on what the customer reported, in plain words. Never internal checks or amounts."
                 customerSentiment: string
-                    description: "POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED or blank, from the customer context check (D-083, mock data). Internal only."
+                    description: "Your read of the customer's sentiment in this conversation: POSITIVE, NEUTRAL, NEGATIVE or FRUSTRATED. Internal only."
                 offerAmount: number
                     description: "Refund amount offered, 0 when none."
                 creditAmount: number

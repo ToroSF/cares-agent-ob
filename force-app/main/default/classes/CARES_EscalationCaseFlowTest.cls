@@ -78,7 +78,7 @@ private class CARES_EscalationCaseFlowTest {
     Assert.areEqual(SESSION_ID, k.CARES_Messaging_Session_Id__c);
 
     List<String> lines = k.Description.split('\\r?\\n');
-    Assert.areEqual(13, lines.size(), 'One fact per line: ' + k.Description);
+    Assert.areEqual(14, lines.size(), 'One fact per line: ' + k.Description);
     Assert.isTrue(lines[0].startsWith('Escalated by CARES. Internal only'));
     Assert.areEqual('Category: URGENT', lines[1]);
     Assert.areEqual('Priority: High', lines[2]);
@@ -86,18 +86,19 @@ private class CARES_EscalationCaseFlowTest {
       'Why: Safety, health, fraud or legal report (SAFETY)',
       lines[3]
     );
-    Assert.areEqual('Customer: Verified (signed in to the chat)', lines[4]);
-    Assert.areEqual('Order: PR-1001', lines[5]);
-    Assert.areEqual('Stolen & Delayed check: not run', lines[6]);
-    Assert.areEqual('Risk status (internal): CLEAN', lines[7]);
+    Assert.areEqual('Customer said: not recorded', lines[4]);
+    Assert.areEqual('Customer: Verified (signed in to the chat)', lines[5]);
+    Assert.areEqual('Order: PR-1001', lines[6]);
+    Assert.areEqual('Stolen & Delayed check: not run', lines[7]);
+    Assert.areEqual('Risk status (internal): CLEAN', lines[8]);
     Assert.areEqual(
-      'Customer sentiment (internal, mock data): none on file',
-      lines[8]
+      'Customer sentiment (internal, as perceived by CARES): not assessed',
+      lines[9]
     );
-    Assert.areEqual('Offer: none made', lines[9]);
-    Assert.areEqual('Customer chose: nothing confirmed', lines[10]);
-    Assert.isTrue(lines[11].contains(SESSION_ID));
-    Assert.isTrue(lines[12].startsWith('Next step: Contact the customer now'));
+    Assert.areEqual('Offer: none made', lines[10]);
+    Assert.areEqual('Customer chose: nothing confirmed', lines[11]);
+    Assert.isTrue(lines[12].contains(SESSION_ID));
+    Assert.isTrue(lines[13].startsWith('Next step: Contact the customer now'));
   }
 
   @IsTest
@@ -172,6 +173,7 @@ private class CARES_EscalationCaseFlowTest {
     Contact c = customer();
     Map<String, Object> inputs = urgentFor(c.Id);
     inputs.put('customerSentiment', 'FRUSTRATED');
+    inputs.put('customerSummary', 'Found a piece of glass in their burger.');
     Flow.Interview f = run(inputs);
     String d = [
       SELECT Description
@@ -181,7 +183,11 @@ private class CARES_EscalationCaseFlowTest {
     ]
     .Description;
     Assert.isTrue(
-      d.contains('Customer sentiment (internal, mock data): FRUSTRATED')
+      d.contains('Customer sentiment (internal, as perceived by CARES): FRUSTRATED')
+    );
+    Assert.isTrue(
+      d.contains('Customer said: Found a piece of glass in their burger.'),
+      'The agent\'s summary of what the customer reported is on the case (D-101)'
     );
   }
 
