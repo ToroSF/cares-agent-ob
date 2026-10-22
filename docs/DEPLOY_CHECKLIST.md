@@ -195,6 +195,13 @@ Mock data for this project, not a real Pronto signal (same disclosure as the moc
 
 **Done 2026-10-22:** steps 1 to 4 with `main` after PRs #57 to #59: deploy `0AfjV000004hSmlSAE`, CARES v11 published and active, timing rows seeded (the CLI user was given `CARES_Delivery_Mock_Admin` for the seed). Then PR #60 (G-125, G-126): check-only `0AfjV000004hNjwSAE` (200/200 tests), quick deploy `0AfjV000004hy0ESAQ`, **CARES v12 published and active**; v11 is the rollback. Step 5: B-SD-24 to B-SD-27 in `p0.json` pass on v12.
 
+## v13: router safety, typed rating, a different order (G-127, G-128, G-131) and View All again (G-129)
+
+1. Merge `test/v8-behavior-bonus-fixtures` into `main`. It carries the `CARES.agent` fixes and the View All line of `CARES_Risk_Context_Access`.
+2. Deploy `main` check-only with `RunSpecifiedTests` (the nine `CARES_*Test` and `CsatRatingSaverTest` classes), then quick deploy. **The deploy must include `CARES_Risk_Context_Access`**: a deploy of a `main` without View All turned it off on 2026-10-22 (G-129). Check: `SELECT PermissionsViewAllRecords FROM ObjectPermissions WHERE SobjectType = 'CARES_Customer_Context__c' AND Parent.Name = 'CARES_Risk_Context_Access'` returns `true`.
+3. Publish and activate v13 (v12 = rollback). No Apex, Flow or data change: only the agent and the permission set.
+4. Run B-PO-01, B-ER-01, B-ER-02, B-ER-14, B-SD-23, B-RF-12b, B-RD-15 and B-RD-16 live. The first five passed on the draft before the publish (2026-10-22); the last three need step 2.
+
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).
