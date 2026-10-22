@@ -89,7 +89,9 @@ def preview(mode, contact, turns, org):
         start += ["--context-variables", f"$Context.ContactId={contact}"]
     r = sf(start, org)
     if r.get("status") != 0:
-        return {"error": "start failed", "raw": json.dumps(r)[:800]}
+        # Same shape as a real session, so the checks report ERROR instead of crashing the batch
+        return {"error": "start failed: " + str(r.get("message", ""))[:300], "raw": json.dumps(r)[:800],
+                "convo": [], "trace": {"path": [], "actions": [], "sets": [], "replies": []}}
     sid = r["result"]["sessionId"]
     convo = [("agent", m.get("message", "")) for m in r["result"].get("messages", [])]
     err = None

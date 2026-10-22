@@ -142,6 +142,7 @@ Decisions D-083 to D-087, gaps G-086, G-082, G-068. Design: [subagents/escalate-
 - Agent: v7 stays Active; the fixed `CARES.agent` is the draft only. The Apex, Flow and record changes of PR #45 and #47 reach v7 at once: mock telemetry is on (`Mock_Telemetry_Enabled__c`), and the retention bonus logic in `Refund_CalculateOffer`.
 - Not run yet: `seed-delivery-telemetry.apex` and `seed-customer-context.apex` (data writes). Without the rows, Stolen & Delayed and the retention bonus behave as before.
 - `CARES_Get_Risk_Result` v3 is still a Draft: activate it in Setup.
+- The draft would not start a preview: `CARES_Get_Customer_Context` (new in PR #47) was in the repo as `Draft`, so the platform refused `get_customer_context` and, with it, `create_escalation_case` and `create_settlement_review_case` ("invalid attribute value for 'target'"). Set to `Active` in the repo and deployed alone (`0AfjV000004gbCCSAY`); the draft starts again. v7 was never affected: it does not call that Flow.
 
 ## Mock delivery telemetry (`feature/sd-mock-telemetry`, D-096)
 Mock data, not a live feed. No agent change: the active agent version picks it up as soon as the Apex and the `Default` record are deployed.
