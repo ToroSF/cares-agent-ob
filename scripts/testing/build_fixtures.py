@@ -12,6 +12,7 @@ import argparse
 import html
 import json
 import os
+import re
 import subprocess
 from decimal import Decimal, ROUND_DOWN, ROUND_HALF_EVEN
 
@@ -51,6 +52,14 @@ ESC_LOW_SIZE = 8  # contacts Stolen & Delayed does not trust, for the "never arr
 # Anyone else gets MANUAL_REVIEW. Tier does not count
 HIGH_TRUST_MIN_ORDERS = 5
 HIGH_TRUST_MAX_CLAIM_RATE = Decimal("0.05")
+# The Stolen & Delayed demo orders (mock telemetry, D-096; timing demo clock, D-100) live in this seed. Their
+# customers are reserved for the demo: a test that pays or escalates on them spends the demo order (G-108)
+DEMO_SEED = os.path.join(REPO, "scripts", "apex", "seed-delivery-telemetry.apex")
+
+
+def demo_orders():
+    code = "\n".join(l.split("//", 1)[0] for l in open(DEMO_SEED).read().splitlines())
+    return set(re.findall(r"'(PR-\d{6}-[A-Z0-9]+)'", code))
 
 
 def dump(org):
@@ -168,6 +177,8 @@ def main():
         out["fixtures"][key] = fixture(c, orders[app])
 
     paid, claims = (set(), {}) if args.from_log else resolved(args.org)
+    demo = demo_orders()
+    reserved = {n for n, (app, c) in by_name.items() if any(o["id"] in demo for o in orders.get(app, []))}
     # G-108: a named fixture whose latest delivered order was already paid gets "already has a refund";
     # swap it for a clean contact of the same pool whose order is still unpaid
     named = dict(NAMED)
@@ -175,7 +186,7 @@ def main():
         app, c = by_name[named[key]]
         if fixture(c, orders[app])["order"] not in paid:
             continue
-        spare = [n for n in POOLS[pool] if n not in named.values() and n in by_name and by_name[n][0] in orders
+        spare = [n for n in POOLS[pool] if n not in named.values() and n not in reserved and n in by_name and by_name[n][0] in orders
                  and c["tier"] == by_name[n][1]["tier"] and by_name[n][1]["issues"] == 0
                  and not by_name[n][1].get("open_ctx")
                  and fixture(by_name[n][1], orders[by_name[n][0]])["order"] not in paid]
@@ -189,6 +200,8 @@ def main():
     for pool, names in POOLS.items():
         out["pools"][pool] = []
         for n in names:
+            if n in reserved and n not in named.values():
+                continue
             key = next((k for k, v in named.items() if v == n), key_for("P", n))
             if key not in out["fixtures"]:
                 add(key, n)
@@ -200,6 +213,7 @@ def main():
         return ok < HIGH_TRUST_MIN_ORDERS or Decimal(claims.get(c["cid"], 0)) / ok > HIGH_TRUST_MAX_CLAIM_RATE
 
     fresh = [(n, app, c) for n, (app, c) in sorted(by_name.items()) if c["cases"] == 0 and n not in used
+             and n not in reserved
              and app in orders and fixture(c, orders[app])["order"] not in paid]
     # ESC: trusted contacts, so a "never arrived" claim is not sent to a person for lack of trust. Any tier:
     # the offers are computed per tier. FX-CLEAN stays an Insider
@@ -231,7 +245,8 @@ def main():
     out["globals"] = {"other_order": other["latest"], "other_email": other["email"], "other_name": other["name"]}
     path = os.path.join(REPO, "scripts", "testing", "fixtures.json")
     json.dump(out, open(path, "w"), indent=1, ensure_ascii=False)
-    print("wrote", path, len(out["fixtures"]), "fixtures")
+    print("wrote", path, len(out["fixtures"]), "fixtures;", len(reserved), "demo customers reserved:",
+          ", ".join(sorted(reserved)))
 
 
 if __name__ == "__main__":
