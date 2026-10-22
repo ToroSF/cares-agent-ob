@@ -117,7 +117,7 @@ variables:
     refund_tier_name: mutable string = ""
         description: "Refund: tier name used for the offer, from the calculate offer action. Context for an escalation case, not shown to the customer."
     router_active_task: mutable string = ""
-        description: "Router: REFUND, STOLEN_DELAYED or ORDER_STATUS while that sub-agent is mid-task; WRAP_UP once an issue is finished; RATING while Experience Rating waits for the thumbs choice; else blank. Set by scripts only. The router sends a message to Experience Rating only when it is WRAP_UP or RATING."
+        description: "Router: REFUND, STOLEN_DELAYED or ORDER_STATUS mid-task; WRAP_UP when an issue is done; RATING while Experience Rating waits for thumbs; else blank. Set by scripts. Experience Rating is routable only on WRAP_UP or RATING."
     escalation_case_attempted: mutable boolean = False
         description: "Escalate to Human: True once the escalation case action has run in this conversation. Set by the script."
     escalation_attempted: mutable boolean = False
