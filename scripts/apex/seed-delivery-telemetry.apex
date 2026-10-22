@@ -47,14 +47,14 @@ Map<String, List<Object>> PROFILES = new Map<String, List<Object>>{
 
 // Order number => profile. Fixture in brackets.
 Map<String, String> ORDERS = new Map<String, String>{
-    'PR-240826-YLNU39N' => 'LOSS_ABSORPTION', // P-MARTA-BASSINDALE
+    'PR-240815-23HWUID' => 'LOSS_ABSORPTION', // E-DELMOR-HEART (moved 2026-10-22: Marta's order was refunded)
     'PR-240829-5WE179W' => 'GPS_MISMATCH', // P-ROZANNE-DEVEREUX
     'PR-240826-AL2NKVM' => 'INSIDE_NEAR_RESTAURANT', // P-PEYTON-BATRICK
     'PR-240827-L9KMKYL' => 'AVERAGE_DRIVER', // P-DORE-BRIANT
     'PR-240827-HQ2DT25' => 'FRAUD', // P-BRUCE-CLEMENDOT
     'PR-240822-GY8RVKV' => 'DEVICE_DUP', // P-BEATRIX-SHOOTER
     'PR-240828-ZO28CZ7' => 'ADDRESS_DUP', // P-PENNY-DANFORTH
-    'PR-240816-CSQI55B' => 'REDISPATCH' // P-HUMFRID-JENDRUSCH
+    'PR-240822-P7LB1WC' => 'REDISPATCH' // E-CATRIONA-SHERGILL (moved 2026-10-22: Humfrid's order was refunded)
 };
 
 List<CARES_Delivery_Telemetry__c> rows = new List<CARES_Delivery_Telemetry__c>();

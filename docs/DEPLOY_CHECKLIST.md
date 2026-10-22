@@ -162,6 +162,8 @@ Mock data, not a live feed. No agent change: the active agent version picks it u
 5. Run the five mock telemetry rows in [TEST_PLAN.md](TEST_PLAN.md) on the web chat, and write the results there.
 6. Rollback without a deploy: set `Mock_Telemetry_Enabled__c` false on `Default`. The rows can stay; nothing reads them then.
 
+**Done 2026-10-22:** Apex deployed (2026-10-22 15:05). Seed run: 8 rows. `LOSS_ABSORPTION` and `REDISPATCH` moved to unused orders because their first orders were refunded by a test run; old rows relabeled `RETIRED_…`. 10 rows in total, 8 active profiles. The CLI user holds `CARES_Delivery_Mock_Admin`.
+
 ## Experience Rating sentiment context → Risk Detection retention bonus (`feature/experience-rating-learning`, D-095)
 
 Mock data for this project, not a real Pronto signal (same disclosure as the mock delivery telemetry above).
