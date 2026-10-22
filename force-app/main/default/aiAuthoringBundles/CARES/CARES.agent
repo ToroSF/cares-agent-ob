@@ -858,9 +858,17 @@ subagent risk_detection:
     description: "Silent internal check of the customer's recent history (default 30 days). Runs once, stores CLEAN, NOT_CLEAN or UNKNOWN, then hands over to Refund, or to a person when issues reach the review threshold. Never talks to the customer about it."
 
     before_reasoning:
+        # customer_id is the verified contact: from the channel or from the email lookup (G-113)
+        if @variables.customer_id == "" and @variables.ContactId is not None and @variables.ContactId != "":
+            set @variables.customer_id = @variables.ContactId
+        # No contact yet (web chat): find the customer first, so the check counts the right one. Identify
+        # Customer returns through Refund, which sends the customer back here
+        if @variables.risk_checked == False and @variables.customer_id == "" and @variables.identify_attempts < 2:
+            set @variables.router_active_task = "REFUND"
+            transition to @subagent.identify_customer
         if @variables.risk_checked == False:
             run @actions.get_risk_result
-                with contactId = @variables.ContactId
+                with contactId = @variables.customer_id
                 with lookbackDays = @variables.risk_lookback_days
                 set @variables.risk_status = @outputs.riskStatus
                 set @variables.risk_issue_count = @outputs.issueCount
@@ -871,14 +879,16 @@ subagent risk_detection:
         if @variables.risk_issue_count >= @variables.risk_review_threshold:
             set @variables.escalation_category = "PATTERN_REVIEW"
             transition to @subagent.escalate_to_human
-        else:
+        # Flat checks, no nested if (G-112): each one repeats the gate condition
+        if @variables.risk_issue_count < @variables.risk_review_threshold:
             run @actions.get_customer_context
-                with contactId = @variables.ContactId
+                with contactId = @variables.customer_id
                 with lookbackDays = @variables.risk_lookback_days
                 set @variables.risk_customer_sentiment = @outputs.sentiment
                 set @variables.risk_retention_eligible = @outputs.hasOpenContext
-            if @variables.risk_status == "NOT_CLEAN":
-                set @variables.risk_retention_eligible = False
+        if @variables.risk_issue_count < @variables.risk_review_threshold and @variables.risk_status == "NOT_CLEAN":
+            set @variables.risk_retention_eligible = False
+        if @variables.risk_issue_count < @variables.risk_review_threshold:
             transition to @subagent.refund
 
     reasoning:

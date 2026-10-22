@@ -342,12 +342,12 @@ private class CsatRatingSaverTest {
         'Still waiting on a refund',
         'FRUSTRATED'
       );
-      System.assertEquals(true, r.isSuccess, r.errorMessage);
+      System.assertEquals(true, r.isSuccess, 'Save failed: ' + r.errorMessage);
     }
     CARES_Customer_Context__c ctx = [
       SELECT Contact__c, Sentiment__c, Has_Open_Context__c, Source_Rating__c
       FROM CARES_Customer_Context__c
-      WHERE Contact__c = :c.Id
+      WHERE Contact__c = :c.Id WITH SYSTEM_MODE
     ];
     System.assertEquals('FRUSTRATED', ctx.Sentiment__c);
     System.assertEquals(true, ctx.Has_Open_Context__c);
@@ -364,14 +364,14 @@ private class CsatRatingSaverTest {
         'This was frustrating',
         'FRUSTRATED'
       );
-      System.assertEquals(true, first.isSuccess, first.errorMessage);
+      System.assertEquals(true, first.isSuccess, 'Save failed: ' + first.errorMessage);
     }
     System.assertEquals(
       true,
       [
         SELECT Has_Open_Context__c
         FROM CARES_Customer_Context__c
-        WHERE Contact__c = :c.Id
+        WHERE Contact__c = :c.Id WITH SYSTEM_MODE
       ]
       .Has_Open_Context__c
     );
@@ -379,13 +379,13 @@ private class CsatRatingSaverTest {
     System.runAs(ratingUser()) {
       // A second, separate rating later in time (e.g. the next resolved case) reports POSITIVE
       CsatRatingSaver.Result second = save(c.Id, 5, 'All good now', 'POSITIVE');
-      System.assertEquals(true, second.isSuccess, second.errorMessage);
+      System.assertEquals(true, second.isSuccess, 'Save failed: ' + second.errorMessage);
     }
 
     List<CARES_Customer_Context__c> rows = [
       SELECT Sentiment__c, Has_Open_Context__c
       FROM CARES_Customer_Context__c
-      WHERE Contact__c = :c.Id
+      WHERE Contact__c = :c.Id WITH SYSTEM_MODE
     ];
     System.assertEquals(
       1,
@@ -405,7 +405,7 @@ private class CsatRatingSaverTest {
     System.runAs(agentUser()) {
       r = save(c.Id, 5, 'Customer was happy', 'POSITIVE');
     }
-    System.assertEquals(true, r.isSuccess, r.errorMessage);
+    System.assertEquals(true, r.isSuccess, 'Save failed: ' + r.errorMessage);
     System.assertEquals(1, [SELECT COUNT() FROM CSAT_Rating__c]);
     System.assertEquals(
       1,

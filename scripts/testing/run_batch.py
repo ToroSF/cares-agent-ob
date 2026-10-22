@@ -3,7 +3,8 @@
 
 Usage:
   python3 scripts/testing/run_batch.py --scenarios .claude/skills/cares-testing/scenarios/p0.json \
-      --runs 2 [--workers 1] [--pace 3] [--only B-RF-01,B-OS-01] [--org team-pronto] [--out .sfdx/cares-batch]
+      --runs 2 [--workers 1] [--pace 3] [--only B-RF-01,B-OS-01] [--org team-pronto] [--out .sfdx/cares-batch] \
+      [--bundle CARES_Router_V2]   # default CARES; the test agent of the router redesign (ROUTER_REDESIGN_SPEC.md)
   python3 scripts/testing/run_batch.py --scenarios ... --rescore .sfdx/cares-batch/<stamp>   # no org calls
 
 Each scenario run is one preview session (or several, for "sessions" scenarios). The script
@@ -31,7 +32,7 @@ import threading
 import time
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-BUNDLE = "CARES"
+BUNDLE = ["CARES"]  # authoring bundle to preview (--bundle)
 PACE = [3.0]  # seconds before each turn (--pace)
 # Set after 2 runs in a row hit the org's AI usage block, so no more calls are sent
 BLOCK = {"lock": threading.Lock(), "streak": 0, "stop": threading.Event()}
@@ -43,7 +44,7 @@ NEVER = [
     (r"risk (status|score|check|result)|history check|fraud score|\btier\b|loyalty level|refund limit|"
      r"maximum refund", re.I, "INV-1"),
     (r"\b(get_risk_result|find_order|log_order_issue|calculate_refund_offer|issue_resolution|get_order_status|"
-     r"find_contact_by_email|create_escalation_case|router_active_task|customer_id|risk_checked|risk_status|refund_confirmed|go_to_\w+|"
+     r"find_contact_by_email|create_escalation_case|router_active_task|customer_id|risk_checked|risk_status|refund_confirmed|go_to_\w+|close_issue|identify_pending|risk_needs_review|WRAP_UP|"
      r"continue_\w+|confirm_refund|confirm_store_credit)\b", 0, "INV-2"),
     (r"\b(HIGH_TRUST\w*|DATA_UNAVAILABLE|NOT_A_PRONTO_ORDER_NUMBER|NOT_DELIVERED|NOT_FOUND|NO_ACCOUNT_LINK|"
      r"READY_FOR_REFUND|STANDARD_PATH|PATTERN_REVIEW)\b", 0, "INV-2"),
@@ -83,13 +84,15 @@ def sf(args, org):
 
 def preview(mode, contact, turns, org):
     """One session. contact: None = no ContactId, "" = blank, else an id."""
-    start = ["agent", "preview", "start", "--authoring-bundle", BUNDLE,
+    start = ["agent", "preview", "start", "--authoring-bundle", BUNDLE[0],
              "--use-live-actions" if mode == "live" else "--simulate-actions"]
     if contact is not None:
         start += ["--context-variables", f"$Context.ContactId={contact}"]
     r = sf(start, org)
     if r.get("status") != 0:
-        return {"error": "start failed", "raw": json.dumps(r)[:800]}
+        # Same shape as a real session, so the checks report ERROR instead of crashing the batch
+        return {"error": "start failed: " + str(r.get("message", ""))[:300], "raw": json.dumps(r)[:800],
+                "convo": [], "trace": {"path": [], "actions": [], "sets": [], "replies": []}}
     sid = r["result"]["sessionId"]
     convo = [("agent", m.get("message", "")) for m in r["result"].get("messages", [])]
     err = None
@@ -100,19 +103,19 @@ def preview(mode, contact, turns, org):
                 break
             time.sleep(PACE[0])
             convo.append(("user", u))
-            s = sf(["agent", "preview", "send", "--authoring-bundle", BUNDLE, "--session-id", sid, "-u", u], org)
+            s = sf(["agent", "preview", "send", "--authoring-bundle", BUNDLE[0], "--session-id", sid, "-u", u], org)
             if s.get("status") != 0:
                 err = "send failed: " + json.dumps(s)[:500]
                 break
             msgs = s["result"].get("messages", [])
             convo.append(("agent", "\n".join(m.get("message", "") or f"<{m.get('type')}>" for m in msgs) or "<empty>"))
     finally:
-        sf(["agent", "preview", "end", "--authoring-bundle", BUNDLE, "--session-id", sid], org)
+        sf(["agent", "preview", "end", "--authoring-bundle", BUNDLE[0], "--session-id", sid], org)
     return {"sessionId": sid, "convo": convo, "error": err, "trace": read_trace(sid)}
 
 
 def read_trace(sid):
-    base = os.path.join(REPO, ".sfdx", "agents", BUNDLE, "sessions", sid)
+    base = os.path.join(REPO, ".sfdx", "agents", BUNDLE[0], "sessions", sid)
     steps = {"path": [], "actions": [], "sets": [], "replies": []}
     try:
         idx = json.load(open(os.path.join(base, "turn-index.json")))
@@ -362,6 +365,8 @@ def run_one(sc, run, args, fixtures, alloc):
     except RuntimeError as e:
         return {"scenario": sc["id"], "run": run, "outcome": "BLOCKED", "problems": [str(e)]}
     fx.update(fixtures.get("globals", {}))
+    if sc.get("no_contact"):  # the fixture's data, but no ContactId: the customer gives the email (web chat)
+        cid = None
     mode = sc.get("mode", "live")
     sessions = []
     for turns in sc.get("sessions", [sc.get("turns", [])]):
@@ -416,6 +421,7 @@ def main():
     ap.add_argument("--pace", type=float, default=3.0, help="seconds to wait before each turn")
     ap.add_argument("--only", default="")
     ap.add_argument("--org", default="team-pronto")
+    ap.add_argument("--bundle", default="CARES", help="authoring bundle to preview, e.g. CARES_Router_V2")
     ap.add_argument("--burned", default="", help="comma list of order ids that already have a resolution")
     ap.add_argument("--out", default=os.path.join(REPO, ".sfdx", "cares-batch"))
     ap.add_argument("--rescore", default="", help="run dir to check again with the current rules, no org calls")
@@ -428,12 +434,13 @@ def main():
         keep = set(args.only.split(","))
         scenarios = [s for s in scenarios if s["id"] in keep]
     PACE[0] = args.pace
+    BUNDLE[0] = args.bundle
     if args.workers > 1:
         log(f"WARNING: {args.workers} workers. Parallel runs can use up the org's AI allowance (G-090)")
     turns = sum(len(t) for s in scenarios for t in s.get("sessions", [s.get("turns", [])]))
     # Each turn costs several LLM calls (router, sub-agent, guardrails); about 4 is what the gateway log shows
     log(f"About {turns * args.runs} turns, {turns * args.runs * 4} LLM requests: {len(scenarios)} scenarios x "
-        f"{args.runs} runs, {args.workers} worker(s), {args.pace:g}s pace")
+        f"{args.runs} runs, {args.workers} worker(s), {args.pace:g}s pace, bundle {args.bundle}")
     fixtures = json.load(open(args.fixtures))
     alloc = {"lock": threading.Lock(), "taken": {}, "used": set(),
              "burned": set(x for x in args.burned.split(",") if x)}
@@ -454,7 +461,7 @@ def main():
                 with open(os.path.join(out, f"{res['scenario']}-r{res['run']}.json"), "w") as fh:
                     json.dump(res, fh, indent=1)
     results.sort(key=lambda r: (r["scenario"], r["run"]))
-    json.dump({"timestamp": stamp, "scenarios": args.scenarios, "results": results,
+    json.dump({"timestamp": stamp, "bundle": args.bundle, "scenarios": args.scenarios, "results": results,
                "allocation": {f"{k[0]}-r{k[1]}": v for k, v in alloc["taken"].items()}},
               open(os.path.join(out, "summary.json"), "w"), indent=1)
     by = {}
