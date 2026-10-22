@@ -58,8 +58,8 @@
    ],
    "expect": {
     "path": [
-     "risk_detection",
      "refund",
+     "risk_detection",
      "identify_customer"
     ],
     "no_actions": [
@@ -153,6 +153,35 @@
    "burns": true
   },
   {
+   "id": "B-RT-12",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "FX-CLEAN",
+   "turns": [
+    "One item in my last order was missing, I want a refund."
+   ],
+   "expect": {
+    "path": [
+     "refund",
+     "risk_detection",
+     "refund"
+    ],
+    "no_path": [
+     "stolen_delayed_orders"
+    ],
+    "actions": [
+     "find_order"
+    ],
+    "inputs_none": {
+     "find_order.orderNumber": "\\S"
+    },
+    "reply_none": [
+     "order number"
+    ]
+   },
+   "judge": "R-D10: a logged-in item problem goes straight to Refund, which finds the latest order and names it, with no order-number question."
+  },
+  {
    "id": "B-RT-05",
    "priority": "P0",
    "mode": "live",
@@ -162,7 +191,7 @@
    ],
    "expect": {
     "path": [
-     "off_topic"
+     "ambiguous_question"
     ],
     "no_actions": [
      "find_order",
@@ -267,9 +296,9 @@
    ],
    "expect": {
     "path": [
+     "refund",
      "risk_detection",
      "identify_customer",
-     "refund",
      "risk_detection",
      "refund"
     ],

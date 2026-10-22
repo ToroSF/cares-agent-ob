@@ -213,7 +213,7 @@ The build detail (exact script, variables, route descriptions, tests and decisio
 
 ## B1. Decisions behind this structure
 
-1. **One spine for every order problem:** router → identity check → risk → S&D, which then goes to refund or escalate, and both end in rating. S&D will later be renamed Delivery Exceptions.
+1. **One spine for every whole-order problem:** router → identity check → risk → S&D, which then goes to refund or escalate, and both end in rating. S&D will later be renamed Delivery Exceptions. **Item problems** (missing, wrong or poor items) go router → Refund, which runs the same identity check and risk check first, then gets the customer back (R-D10, decided after the first draft test).
 2. **Side paths.** Pronto Help and Order Status are separate router routes and end in rating. Order Status hands complaints to risk.
 3. **Identity.** If `ContactId` is present, continue. If not, `identify_customer` asks for the account email. **An email match behaves exactly like a `ContactId` conversation** (demo only).
 4. **Off Topic and Ambiguous Question merge** into one fallback, which hands back to the router.
@@ -227,7 +227,10 @@ flowchart TD
     R[agent_router] --> ph[pronto_help]
     R --> os[order_status]
     R --> fb["off-topic / ambiguous<br/>(merged fallback)"]
-    R -->|order problem| risk
+    R -->|delivery problem| risk
+    R -->|"(+) item problem (R-D10)"| refund
+    refund -->|"risk not checked yet"| gate
+    check -->|"task REFUND: back"| refund
     R -->|"(+) email reply, while identify waits"| idc
     R -->|"(+) safety report"| urg["urgent_escalation<br/>(sets URGENT)"]
     R -->|"(+) person or dispute"| esc
@@ -279,10 +282,10 @@ Other differences from the drawing:
 
 | Edge | Today | Target |
 |---|---|---|
-| router → order problem | Split across three routes: refund (L207), S&D (L210), risk (L212) | **One route** → identity gate → risk |
+| router → order problem | Split across three routes: refund (L207), S&D (L210), risk (L212) | **Two routes** (R-D10): delivery problem → risk → S&D; item problem → Refund → risk → Refund. Both pass the identity gate and the risk check |
 | identity check | Each subagent bounces to identify; runs *after* risk | **Before risk**, once |
 | identify → next | Back to refund, S&D or order_status (L1331-1337) | **→ risk** (plus order_status, B4.6) |
-| risk → next | refund or escalate (L871-882) | **→ S&D** |
+| risk → next | refund or escalate (L871-882) | **→ S&D**, or back to Refund when Refund sent the customer (R-D10) |
 | S&D → refund | Through risk (L849) | **Direct** |
 | refund → S&D | L409 | **Kept as a guarded correction edge** (R-D9): an item problem that turns out to be a whole-order claim |
 | refund → rating | None | **New** |
@@ -370,7 +373,7 @@ The script already uses one variable, `customer_id`, for both (L138). Refund, S&
 ### B4.4 Risk Detection (L856-904)
 
 - **The gate and check** as in B3.
-- **Exit:** `transition to @subagent.refund` (L882) becomes `transition to @subagent.stolen_delayed_orders`.
+- **Exit:** `transition to @subagent.refund` (L882) becomes `transition to @subagent.stolen_delayed_orders`, except for item problems, which go back to Refund (R-D10).
 - **PATTERN_REVIEW.** The diagram has no risk → escalate edge. Stop transitioning at L871-873 and set a `risk_needs_review` flag instead. S&D's script then escalates before any offer. Amends D-062.
 - **Description (L858):** rewrite it, since it no longer hands over to Refund.
 

@@ -73,8 +73,12 @@ def log(*a):
 
 
 def sf(args, org):
-    p = subprocess.run(["sf"] + args + ["-o", org, "--json"], capture_output=True, text=True, timeout=300,
-                       cwd=REPO, env=ENV)
+    try:
+        p = subprocess.run(["sf"] + args + ["-o", org, "--json"], capture_output=True, text=True, timeout=300,
+                           cwd=REPO, env=ENV)
+    except subprocess.TimeoutExpired:
+        # One hung call must not end the batch and lose the results not yet written
+        return {"status": -1, "stdout": "", "stderr": "timed out after 300 s"}
     out = p.stdout[p.stdout.find("{"):] if "{" in p.stdout else ""
     try:
         return json.loads(out)

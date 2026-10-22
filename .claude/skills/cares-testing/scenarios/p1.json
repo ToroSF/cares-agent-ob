@@ -209,8 +209,8 @@
    ],
    "expect": {
     "path": [
-     "risk_detection",
      "refund",
+     "risk_detection",
      "identify_customer"
     ],
     "no_actions": [
