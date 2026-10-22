@@ -117,7 +117,7 @@
   /* headline metric */
   .headline { display:grid; grid-template-columns:auto 1fr; gap:44px; align-items:end; }
   .headline .big { font:600 128px/0.9 var(--display); color:var(--electric); letter-spacing:-.04em; }
-  .terms { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; margin-top:48px; }
+  .terms { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; margin-top:48px; }
   .term { background:#fff; border-radius:var(--r-lg); padding:22px 24px; box-shadow:var(--sh-card); border:1px solid rgba(0,30,91,.06); }
   .term .op { font:600 28px var(--display); color:var(--electric); }
   .term .t { font-weight:700; font-size:18px; margin:6px 0 6px; }
@@ -292,11 +292,11 @@
 
   <!-- 5. Sizing -->
   <section class="slide white" id="sizing"><div class="wrap">
-    <p class="eyebrow">How we will size it</p>
-    <h2>Two inputs are measured; the rest come from market research</h2>
+    <p class="eyebrow">How we size it</p>
+    <h2 id="sizing-title">Every input has a market benchmark or a labelled assumption</h2>
     <p class="sub" id="formula"></p>
-    <div class="card"><table><thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead><tbody id="inputs"></tbody></table>
-      <div class="note">Every dollar value is a team assumption until the research lands. None is a Pronto figure today.</div></div>
+    <div class="card"><table><thead><tr><th>Input</th><th>Low</th><th>Base</th><th>High</th><th>Source</th></tr></thead><tbody id="inputs"></tbody></table>
+      <div class="note">Benchmarks and sources: <code>docs/MARKET_BENCHMARKS.md</code>. <code>[$]</code> marks a team assumption. None is a Pronto figure: Pronto is a fictional company.</div></div>
   </div></section>
 
   <!-- 6. Divider -->
@@ -455,7 +455,7 @@ const METRIC = {
   topic_assertion: "Right subagent", actions_assertion: "Right actions", output_validation: "Right answer (LLM judge)",
   coherence: "Coherent (LLM judge)", completeness: "Complete (LLM judge)",
 };
-const STATUS_COLOR = { DECIDED:C.ok, PROPOSAL:C.warn, OPEN:C.bad, CLOSED:C.title, "PARTLY CLOSED":C.cloud, MITIGATED:C.electric, SUPERSEDED:C.gray, OTHER:C.light };
+const STATUS_COLOR = { DECIDED:C.ok, PROPOSAL:C.warn, OPEN:C.bad, CLOSED:C.title, "PARTLY CLOSED":C.cloud, BUILT:C.cloud80, MITIGATED:C.electric, SUPERSEDED:C.gray, OTHER:C.light };
 
 // Text colour with the higher contrast on a fill, so segment labels stay readable
 function inkOn(hex) {
@@ -559,7 +559,7 @@ $("chain").innerHTML = [
   ["Value", "The customer keeps ordering", "KPI: orders again within 30 days of a complaint"],
   ["System", "CARES checks the order and history, then refunds or credits inside policy", res?.limitUsd ? `KPI: compensation per case, ${usd(res.limitUsd, 0)} auto-approval limit` : "KPI: compensation per case vs the policy limit"],
   ["Outcome", "Support only sees the cases that need a person", "KPI: resolved without a person · customer rating"],
-  ["Dollar", "Retention kept + support cost saved − compensation paid", "Sized after the market research"],
+  ["Dollar", "Retention kept + support cost saved − extra compensation − agent cost", "Sized with market benchmarks · docs/MARKET_BENCHMARKS.md"],
 ].map(([k, t, m], i) => `<div class="step"><div class="k"><span>0${i + 1}</span>${k}</div><div class="t">${esc(t)}</div><div class="m">${esc(m)}</div></div>`).join("");
 
 // ---------- business KPIs ----------
@@ -580,7 +580,7 @@ const al = D.org?.alerts;
 $("stats-next").innerHTML = [
   cn ? stat(`${pct(cn.passed, cn.scenarios)}%`, "escalations with the case number in the reply", `${cn.passed} of ${cn.scenarios} escalation scenarios · live batch, latest run · target 100%`)
     : later("100%", "escalations with the case number in the reply", "Target. Hard check on every escalation scenario in the live batch: the reply carries a real case number, never a placeholder."),
-  al?.total ? stat(`${pct(al.sent, al.total)}%`, "escalation alerts delivered", `${al.sent} of ${al.total} alerts sent · ${al.failed} failed`)
+  al?.total ? stat(`${pct(al.sent, al.total)}%`, "escalation alerts delivered", `${al.sent} of ${al.total} escalations alerted the team · ${al.slackSent ?? 0} also on Slack · ${al.failed} failed`)
     : later("100%", "escalation alerts delivered", "Target. Every escalation records Sent or Failed on the case, so no case waits without an owner."),
   later("30d", "customers who order again after a complaint", "The headline KPI. Needs Pronto order data for 30 days after each case, compared with a baseline.", "Needs Pronto order data"),
 ].join("");
@@ -589,36 +589,41 @@ $("stats-next").innerHTML = [
 (function value() {
   const V = D.value;
   const inputs = V?.inputs || {};
-  const val = (k) => inputs[k]?.value;
-  const measured = {
-    resolvedWithoutPerson: contained ? contained.n / contained.of : null,
-    avgCompensation: res?.amount?.mean ?? null,
+  const needed = ["complaintsPerYear", "churnAfterBadOrder", "retainedByCares", "ordersPerCustomerYear", "avgOrderValue", "margin", "costPerHumanCase", "resolvedWithoutPerson", "extraCompensationPerCase", "agentCostPerConversation"];
+  const SCEN = { low: "low", base: "value", high: "high" };
+  const ready = (s) => V && needed.every((k) => typeof inputs[k]?.[SCEN[s]] === "number");
+  const size = (s) => {
+    const v = (k) => inputs[k][SCEN[s]];
+    const n = v("complaintsPerYear");
+    const resolved = n * v("resolvedWithoutPerson");
+    const kept = n * v("churnAfterBadOrder") * v("retainedByCares") * v("ordersPerCustomerYear") * v("avgOrderValue") * v("margin");
+    const saved = resolved * v("costPerHumanCase");
+    const extra = resolved * v("extraCompensationPerCase");
+    const agent = n * v("agentCostPerConversation");
+    return { kept, saved, extra, agent, total: kept + saved - extra - agent };
   };
-  const needed = ["complaintsPerYear", "churnAfterBadOrder", "retainedByCares", "ordersPerCustomerYear", "avgOrderValue", "margin", "costPerHumanCase"];
-  const ready = V && needed.every((k) => typeof val(k) === "number") && measured.resolvedWithoutPerson != null && measured.avgCompensation != null;
-  let kept, saved, paid;
-  if (ready) {
-    const n = val("complaintsPerYear");
-    kept = n * val("churnAfterBadOrder") * val("retainedByCares") * val("ordersPerCustomerYear") * val("avgOrderValue") * val("margin");
-    saved = n * measured.resolvedWithoutPerson * val("costPerHumanCase");
-    paid = n * measured.resolvedWithoutPerson * measured.avgCompensation;
-    $("headline-n").textContent = compactUsd(kept + saved - paid);
-    $("headline-s").textContent = "Team assumptions (see sizing). Replace with research before quoting outside the team.";
+  const base = ready("base") ? size("base") : null;
+  if (V?.headline) $("headline-l").textContent = V.headline;
+  if (base) {
+    $("headline-n").textContent = compactUsd(base.total);
+    const range = ready("low") && ready("high") ? `Range ${compactUsd(size("low").total)} to ${compactUsd(size("high").total)}. ` : "";
+    $("headline-s").textContent = `${range}Base case from market benchmarks and team assumptions, not a Pronto figure.`;
   }
-  const amt = (x) => (ready ? compactUsd(x) : "Pending");
+  const amt = (x) => (base ? compactUsd(x) : "Pending");
   $("terms").innerHTML = [
-    ["+", "Retention kept", "Customers kept × orders a year × order value × margin", kept],
-    ["+", "Support cost saved", "Cases without a person × cost of a human case", saved],
-    ["−", "Compensation paid", "Cases CARES resolves × average refund or credit", paid],
+    ["+", "Retention kept", "Customers kept × orders a year × order value × margin", base?.kept],
+    ["+", "Support cost saved", "Cases without a person × cost of a human case", base?.saved],
+    ["−", "Extra compensation", "Cases CARES resolves × compensation above what a person would pay", base?.extra],
+    ["−", "Agent cost", "Conversations × Agentforce cost per conversation", base?.agent],
   ].map(([op, t, f, x]) => `<div class="term"><div class="op">${op} ${esc(amt(x))}</div><div class="t">${t}</div><div class="f">${f}</div></div>`).join("");
-  $("formula").textContent = "Value = (customers kept × orders × order value × margin) + (cases without a person × cost per case) − compensation";
-  const fmt = (v, unit) => unit === "usd" ? usd(v) : unit === "pct" ? `${Math.round(v * 1000) / 10}%` : Number(v).toLocaleString("en-US");
-  const rows = [
-    ["Resolved without a person", measured.resolvedWithoutPerson, "pct", active ? `Measured · v${active.version} conversations in the team org` : "Measured · team org"],
-    ["Average refund or credit per case", measured.avgCompensation, "usd", "Measured · refunds and credits CARES issued"],
-    ...needed.map((k) => [inputs[k]?.label || k, val(k), inputs[k]?.unit, inputs[k]?.source || "Market research (planned)"]),
-  ];
-  $("inputs").innerHTML = rows.map(([l, v, unit, src]) => `<tr><td>${esc(l)}</td>${typeof v === "number" ? `<td class="num">${esc(fmt(v, unit))}</td>` : `<td class="pending">Market research pending</td>`}<td style="color:var(--mute)">${esc(src)}</td></tr>`).join("");
+  $("formula").textContent = "Value = retention kept + support cost saved − extra compensation − agent cost";
+  const fmt = (v, unit) => typeof v !== "number" ? "—" : unit === "usd" ? usd(v) : unit === "pct" ? `${Math.round(v * 1000) / 10}%` : Number(v).toLocaleString("en-US");
+  const cell = (v, unit) => typeof v === "number" ? `<td class="num">${esc(fmt(v, unit))}</td>` : `<td class="pending">Pending</td>`;
+  const rows = needed.map((k) => `<tr><td>${esc(inputs[k]?.label || k)}</td>${cell(inputs[k]?.low, inputs[k]?.unit)}${cell(inputs[k]?.value, inputs[k]?.unit)}${cell(inputs[k]?.high, inputs[k]?.unit)}<td style="color:var(--mute)">${esc(inputs[k]?.source || "Market research (planned)")}</td></tr>`);
+  const ref = (l, v, unit, src) => `<tr><td>${esc(l)}</td><td></td><td class="num">${esc(fmt(v, unit))}</td><td></td><td style="color:var(--mute)">${esc(src)}</td></tr>`;
+  if (contained) rows.push(ref("Measured: resolved without a person", contained.n / contained.of, "pct", `Reference only · v${active.version} conversations, mostly test traffic`));
+  if (res?.amount?.mean != null) rows.push(ref("Measured: average refund or credit", res.amount.mean, "usd", "Reference only · refunds and credits CARES issued in the team org"));
+  $("inputs").innerHTML = rows.join("");
 })();
 
 // ---------- Testing Center ----------

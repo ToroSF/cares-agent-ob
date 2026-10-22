@@ -7,7 +7,7 @@
 |---|---|---|
 | Why it matters | The value chain: customers keep ordering → CARES resolves inside policy → fewer cases need a person → dollars kept | Static text |
 | Business KPIs | Resolved without a person (active version's conversations), average refund or credit (`CARES_Resolution__c`), CSAT. Two tiles say "Measured from v6" until their data exists (see below) | The build |
-| Headline KPI and sizing | `data/value.json` plus the two measured inputs above | Editing `value.json`, then the build |
+| Headline KPI and sizing | `data/value.json` (benchmarks in `docs/MARKET_BENCHMARKS.md`), with the two measured inputs as reference | Editing `value.json`, then the build |
 | Quality: Testing Center | Normalized suite results in `data/testing-center/*.json`; our reading of each run in `data/findings.json`. Findings are split over two slides: what still fails, and what works | Running a suite, then the build |
 | Live batch runs and personas | `.claude/skills/cares-testing/test-results.json` (outcome counts only) | Running `run_batch.py`, then the build |
 | Policy alignment | `docs/POLICY_ALIGNMENT.md` (v0 vs v1 status per rule) | The build |
@@ -17,19 +17,20 @@
 | Appendix | Every Testing Center case (synthetic utterances), collapsed | The build |
 
 ## The dollar figure (`data/value.json`)
-The headline is the value kept each year by retaining customers after a complaint:
+The headline is the value of CARES per year, for a marketplace with 1M orders a year:
 
 ```
 (customers kept × orders per year × average order value × margin)
 + (cases not handled by a person × cost per case)
-− compensation paid
+− (cases CARES resolves × compensation above what a person would pay)
+− (conversations × agent cost)
 ```
 
-- Customers kept = complaints per year × churn after a bad complaint × share CARES keeps.
-- "Resolved without a person" and "average refund or credit" are measured from the org. The rest are inputs in `value.json`.
-- Every input starts as `null` and shows "Market research pending". The page computes the dollar figure only when **every** input is a number. Until then the headline is "$ —".
+- Customers kept = complaints per year × spend lost after a bad order × share CARES wins back.
+- Each input has `low`, `value` (base) and `high`. The headline shows the base case, and the subtitle shows the range. A scenario is computed only when every input in it is a number; otherwise the headline is "$ —".
+- The sources and the reasoning are in [../MARKET_BENCHMARKS.md](../MARKET_BENCHMARKS.md). Write where each number came from in `source`, and mark team assumptions `[$]`.
+- The measured "resolved without a person" and "average refund or credit" are shown as reference rows only: they come from test traffic.
 - Units: `count` and `usd` are plain numbers. `pct` is a fraction: `0.3` means 30%.
-- Write where each number came from in `source`. The numbers are team assumptions until the research lands; do not quote them outside the team.
 
 ## Measured from v6
 Two escalation KPIs have tiles now and data later:

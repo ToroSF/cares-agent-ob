@@ -10,7 +10,10 @@ Short answers (two sentences) to questions we expect. Each of us must be able to
 6. **Risk: one failure for People, Business, Tech, Data?** See [RISKS.md](RISKS.md).
 7. **How did we test?** See [TEST_PLAN.md](TEST_PLAN.md).
 8. **Why Flow here and Apex there?** Flow is easier to maintain for a customer without a dedicated IT team; Apex where speed matters. Not measured yet.
-9. **ROI / consumption / security / governance objections?** `OPEN`.
+9. **ROI / consumption / security / governance objections?**
+   - **ROI:** about US$1M a year in the base case, for a marketplace with 1M orders a year (range ~US$0.1M to ~US$4.5M). It comes from support time saved plus customers kept. All inputs are market benchmarks or `[$]` assumptions ([MARKET_BENCHMARKS.md](MARKET_BENCHMARKS.md)). The best evidence is an Uber field experiment on 1.5M riders: a late trip cut future spend 5–10%, and a US$5 coupon sent right away won part of it back, net of its cost. In production we would measure reorder within 30 days, CARES vs. a baseline.
+   - **Consumption:** about US$0.50 a conversation with Flex Credits (US$0.10 per action), or US$2 per conversation. A human contact costs about US$7.80. Risk, caps and amounts run in Flows and Apex, so the cost does not grow with model reasoning.
+   - **Security and governance:** see Q3 and [RISKS.md](RISKS.md).
 10. **What would we rebuild? What is the strongest counter-argument to our own approach?** `OPEN`.
 11. **Why RAG for about 800 words? A static text in the instructions would be cheaper.** True: it adds 1–3 s on that path (estimate) and one more thing to keep indexed. We chose it for three reasons: citations show where an answer came from; a new PDF from Pronto is a re-index, not a republish of the whole agent; and the text stays out of the subagents that decide money and safety. Retrieval never decides eligibility, amounts or escalation (D-060). If the latency measured with the golden set is too high, static text in Pronto Help only is the fallback.
 12. **Why not reuse the org's existing policy library?** It indexes the internal Playbook too (supervisor review, abuse patterns), which must never be quoted to a customer, and it probably serves other agents. Ours has only the three customer documents (D-060, D-064).

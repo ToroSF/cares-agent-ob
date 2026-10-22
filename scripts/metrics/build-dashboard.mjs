@@ -153,8 +153,9 @@ function parseDocs() {
     status: (c[2].match(/^[A-Z]+/) || ["OTHER"])[0],
   }));
   const gaps = tableRows(readRepo("docs/GAPS.md"), /^\| G-\d+/).map((c) => {
-    const s = c[c.length - 1].toUpperCase();
-    const status = s.startsWith("PARTLY") ? "PARTLY CLOSED" : /^(CLOSED|FIXED)/.test(s) ? "CLOSED" : /^(MITIGATED|DECIDED)/.test(s) ? "MITIGATED" : s.startsWith("OPEN") ? "OPEN" : "OTHER";
+    // Status is the 5th column; a "|" inside a cell can add columns after it.
+    const s = (c[4] ?? c[c.length - 1]).toUpperCase();
+    const status = /^PART(LY|IALLY)/.test(s) ? "PARTLY CLOSED" : s.startsWith("BUILT") ? "BUILT" : /^(CLOSED|FIXED)/.test(s) ? "CLOSED" : /^(MITIGATED|DECIDED)/.test(s) ? "MITIGATED" : s.startsWith("OPEN") ? "OPEN" : "OTHER";
     return { id: c[0], status };
   });
   const risks = tableRows(readRepo("docs/RISKS.md"), /^\| R-\d+/).map((c) => ({
@@ -266,8 +267,10 @@ function collectOrg() {
     resolutions: resolutions && summarizeResolutions(resolutions),
     alerts: alerts && {
       total: alerts.length,
-      sent: alerts.filter((a) => /^sent/i.test(a.CARES_Alert_Status__c)).length,
-      failed: alerts.filter((a) => /^failed/i.test(a.CARES_Alert_Status__c)).length,
+      // Status reads like "Bell: Sent | Slack: Off": delivered when any channel was sent.
+      sent: alerts.filter((a) => /\bsent\b/i.test(a.CARES_Alert_Status__c)).length,
+      failed: alerts.filter((a) => /\bfailed\b/i.test(a.CARES_Alert_Status__c)).length,
+      slackSent: alerts.filter((a) => /slack:\s*sent/i.test(a.CARES_Alert_Status__c)).length,
     },
     conversations: versions?.length ? collectConversations(versions) : null,
   };
