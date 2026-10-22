@@ -233,6 +233,26 @@ private class CARES_StolenDelayedTimingTest {
     Assert.areEqual('UNSURE', CARES_StolenDelayedPolicy.normalizeClaim(null));
   }
 
+  // G-126: with no claim type, only a plain "it came late" is LATE
+  @IsTest
+  static void aMissingClaimTypeComesFromTheCustomersWords() {
+    Assert.areEqual('LATE', CARES_StolenDelayedPolicy.claimFrom(null, 'Order PR-1 came way too late, the food was sitting somewhere for ages.'));
+    Assert.areEqual('LATE', CARES_StolenDelayedPolicy.claimFrom('', 'It took so long, I waited forever'));
+    Assert.areEqual('UNSURE', CARES_StolenDelayedPolicy.claimFrom(null, 'The app says delivered but I never got it'));
+    Assert.areEqual('UNSURE', CARES_StolenDelayedPolicy.claimFrom(null, 'It is late and still hasn\'t come'));
+    Assert.areEqual('UNSURE', CARES_StolenDelayedPolicy.claimFrom(null, null));
+    Assert.areEqual('NOT_RECEIVED', CARES_StolenDelayedPolicy.claimFrom('NOT_RECEIVED', 'it came late'), 'A given claim type wins');
+  }
+
+  @IsTest
+  static void aLateDeliveryWithNoClaimTypeIsADelayNotAFullRefund() {
+    CARES_StolenDelayedTelemetry t = delivered(58);
+    t.claimType = CARES_StolenDelayedPolicy.claimFrom(null, 'It came way too late');
+    CARES_StolenDelayedPolicy.Outcome d = CARES_StolenDelayedPolicy.decide(t, settings());
+    Assert.areEqual(CARES_StolenDelayedPolicy.DELAY, d.decision);
+    Assert.areEqual(CARES_StolenDelayedPolicy.SEVERITY_SEVERE, d.delaySeverity);
+  }
+
   // End to end through the agent action, on real-order rows with stage times and the demo clock
 
   private static final String APP_ID = 'PA-sd-timing-1';
