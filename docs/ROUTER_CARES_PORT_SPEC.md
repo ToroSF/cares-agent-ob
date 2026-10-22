@@ -1,6 +1,6 @@
 # Spec: port the router redesign from CARES_Router_V2 into CARES
 
-Status date: 2026-10-22. Status: `PROPOSAL`. Nothing in this file is built yet.
+Status date: 2026-10-22. Status: **built on this branch**. `CARES.agent` is ported, and its local compile and `sf agent validate authoring-bundle` pass. Not deployed, published or activated: that is the release, section 5.
 
 - **Branch:** `fix/router-cares-port`.
 - **Source:** `main` at `735e77a` (PRs #48 to #52), plus R-D10 and the batch-runner timeout fix carried on this branch.
@@ -29,7 +29,7 @@ So the port is a copy of the V2 blocks, plus **one reconciliation**: PR #49's Ri
 
 | Change | Where | Effect on the port |
 |---|---|---|
-| #49 G-112: flat `if`s in Risk Detection | `CARES.agent` L882-892 | Kept in substance. V2's Risk Detection is flat too (V2 L1013-1015) |
+| #49 G-112: flat `if`s in Risk Detection | `CARES.agent` L882-892 | Kept in substance. V2's Risk Detection is flat too (V2 L1021-1023) |
 | #49 G-113: `customer_id` for both risk lookups, and identify the customer before the check | `CARES.agent` L861-869, L871, L885 | Outcome kept. The routing is replaced (section 2) |
 | #49 G-115: permission sets and `CsatRatingSaverTest` | metadata and Apex | None, it doesn't touch the agent |
 | #52: `CARES_Get_Risk_Result` v3 and `CARES_Get_Customer_Context` are Active | Flows | None. V2 calls the same Flows with the same inputs. Both must stay Active (G-075) |
@@ -46,9 +46,9 @@ So the port is a copy of the V2 blocks, plus **one reconciliation**: PR #49's Ri
 
 That works today because Refund is the only order path behind the risk check.
 
-**After the port it would be wrong.** A whole-order problem now goes router → Risk Detection → Stolen & Delayed, and Risk Detection's exit depends on the task (R-D10, V2 L1017-1020). If #49's `set router_active_task = "REFUND"` stayed, a customer identified by email partway through a "never arrived" claim would come back from identification marked `REFUND`. They would then go to Refund instead of Stolen & Delayed, and the G-087 fix would be undone for every web-chat customer.
+**After the port it would be wrong.** A whole-order problem now goes router → Risk Detection → Stolen & Delayed, and Risk Detection's exit depends on the task (R-D10, V2 L1024-1027). If #49's `set router_active_task = "REFUND"` stayed, a customer identified by email partway through a "never arrived" claim would come back from identification marked `REFUND`. They would then go to Refund instead of Stolen & Delayed, and the G-087 fix would be undone for every web-chat customer.
 
-**Decision for the port:** take V2's Risk Detection block whole (V2 L930-1058). It keeps everything #49 delivered:
+**Decision for the port:** take V2's Risk Detection block whole (V2 L932-1065). It keeps everything #49 delivered:
 
 | #49 outcome | Where V2 does it |
 |---|---|
@@ -73,18 +73,29 @@ The mechanics are simple: copy each V2 block over the CARES block, then review `
 | `system.instructions` (L2) | Take V2's | Team | The list of specialist areas |
 | `config` (L7-11) | **Keep CARES's** `developer_name: "CARES"` and `agent_label: "CARES"`. Description: "CARES is a customer care router agent: order problems go through a silent check to Refund or Stolen & Delayed Orders; it also handles order status, Pronto's rules, escalation to a person and feedback." | Team | No "test copy" text |
 | `access`, `knowledge`, `language`, `connection messaging` | Unchanged | — | Same values in both files |
-| `variables` | Add `identify_pending`, `identify_turns`, `risk_needs_review` (V2 L150-155). Take V2's descriptions for `router_active_task` and `customer_id` | Team | R-D5, R-D6, R-D8 |
-| `agent_router` (L169-228) | Replace with V2 L176-234 | Team | 11 routes: two order routes, four continuation-only routes, urgent and person routes, fallback |
-| `refund` (L229-640) | Take V2 L235-707 | Refund owner | Per-issue reset when Refund is the first stop. Its own identify bounce removed. PATTERN_REVIEW flag. `close_issue`. `WRAP_UP`. `channelContactId = customer_id` (R-D2) |
-| `stolen_delayed_orders` (L641-855) | Take V2 L708-929 | S&D owner | PATTERN_REVIEW flag, `go_to_refund_items`, `continue_to_refund` goes straight to Refund, identify bounce removed, `WRAP_UP` on redispatch |
-| `risk_detection` (L856-930) | Take V2 L930-1058 (section 2) | Risk Detection owner | Reset, identity gate, both checks on `customer_id`, flag, exit by task |
+| `variables` | Add `identify_pending`, `identify_turns`, `risk_back_to_refund`, `risk_needs_review` (V2 L150-157). Take V2's descriptions for `router_active_task` and `customer_id` | Team | R-D5, R-D6, R-D8 |
+| `agent_router` (L169-228) | Replace with V2 L178-236 | Team | 11 routes: two order routes, four continuation-only routes, urgent and person routes, fallback |
+| `refund` (L229-640) | Take V2 L237-709 | Refund owner | Per-issue reset when Refund is the first stop. Its own identify bounce removed. PATTERN_REVIEW flag. `close_issue`. `WRAP_UP`. `channelContactId = customer_id` (R-D2) |
+| `stolen_delayed_orders` (L641-855) | Take V2 L710-931 | S&D owner | PATTERN_REVIEW flag, `go_to_refund_items`, `continue_to_refund` goes straight to Refund, identify bounce removed, `WRAP_UP` on redispatch |
+| `risk_detection` (L856-930) | Take V2 L932-1065 (section 2) | Risk Detection owner | Reset, identity gate, both checks on `customer_id`, flag, exit by task |
 | `experience_rating`, `experience_rating_skipped`, `urgent_escalation` | Unchanged | — | Already identical |
-| `escalate_to_human` (L1025-1153) | Take V2 L1153-1286 | Escalate owner | `identify_pending` cleared, `channelContactId = customer_id`, `WRAP_UP` only without a live transfer and never for URGENT |
-| `pronto_help` (L1166-1241) | Take V2 L1299-1369 | Pronto Help owner | Hand-offs removed. `WRAP_UP` when no other task is open |
-| `order_status` (L1242-1306) | Take V2 L1370-1435 | Order Status owner | Delivery and item split, `identify_pending`, `WRAP_UP` once the order is found, escalate route removed |
-| `identify_customer` (L1307-1370) | Take V2 L1436-1496 | Identify owner | `continue_to_risk` and `continue_order_status`, turn cap |
+| `escalate_to_human` (L1025-1153) | Take V2 L1160-1293 | Escalate owner | `identify_pending` cleared, `channelContactId = customer_id`, `WRAP_UP` only without a live transfer and never for URGENT |
+| `pronto_help` (L1166-1241) | Take V2 L1306-1376 | Pronto Help owner | Hand-offs removed. `WRAP_UP` when no other task is open |
+| `order_status` (L1242-1306) | Take V2 L1377-1442 | Order Status owner | Delivery and item split, `identify_pending`, `WRAP_UP` once the order is found, escalate route removed |
+| `identify_customer` (L1307-1370) | Take V2 L1443-1503 | Identify owner | `continue_to_risk` and `continue_order_status`, turn cap |
 | `off_topic` (L1371-1394) | **Delete** | Team | Merged into the fallback |
-| `ambiguous_question` (L1395-1418) | Take V2 L1497-1510 | Team | Label "Off-topic / Ambiguous", custom prompt |
+| `ambiguous_question` (L1395-1418) | Take V2 L1504-1517 | Team | Label "Off-topic / Ambiguous", custom prompt |
+
+### 3.1 Found while porting: Risk Detection must know who sent the customer
+
+The test agent chose Risk Detection's exit by the task: `REFUND` went back to Refund. Scenario B-IN-01 showed the flaw:
+1. A customer with an open refund says "actually the order never came".
+2. The router sends that to Risk Detection with the task still `REFUND`.
+3. The customer went back to Refund instead of Stolen & Delayed.
+
+**Fix, in both agents:** a new variable, `risk_back_to_refund`, set on entry. It is True only when the task is `REFUND` **and** the check hasn't run yet, which means Refund sent the customer for its check. Then:
+- the email detour (Identify Customer → Risk Detection) keeps it True, because the check still hasn't run;
+- a delivery problem raised mid-refund leaves it False, because the check already ran, so it goes on to Stolen & Delayed.
 
 **After copying, check** (no org involved):
 - The local compile gives 0 severity-1 errors.
@@ -100,12 +111,12 @@ The mechanics are simple: copy each V2 block over the CARES block, then review `
 
 | Scenario | Today's `expect.path` | New path | Change to |
 |---|---|---|---|
-| B-RD-06 (email only, #49) | `risk_detection > identify_customer > refund > risk_detection > refund` | `refund > risk_detection > identify_customer > risk_detection > refund` | that new path |
-| B-SM-03, B-RF-16 (no contact) | `risk_detection > refund > identify_customer` | `refund > risk_detection > identify_customer > risk_detection > refund` | `risk_detection > identify_customer > risk_detection > refund` |
-| B-PO-02 (safety mid-refund) | `refund > urgent_escalation` | `urgent_escalation > escalate_to_human` (safety route) | `urgent_escalation` |
-| B-RT-05 | `off_topic` | `ambiguous_question` | `ambiguous_question` |
-| B-ER-01, B-ER-02, B-ER-03, B-ER-06 (rating) | `… experience_rating` | Rating only follows a finished issue plus a closing message (`WRAP_UP`) | Check each one's turns include the closing message. Add one if not |
-| B-IN-01 | `risk_detection > refund > stolen_delayed_orders` | Depends on the first message: item → `refund…`; whole order → `risk_detection > stolen_delayed_orders` | Re-read the scenario, then set the path for its first message |
+| B-RD-06 (email only, #49) | `risk_detection > identify_customer > refund > risk_detection > refund` | `refund > risk_detection > identify_customer > risk_detection > refund` | that new path. **Done** |
+| B-SM-03, B-RF-16 (no contact, one turn) | `risk_detection > refund > identify_customer` | `refund > risk_detection > identify_customer` (it waits for the email) | that new path. **Done** |
+| B-PO-02 (safety mid-refund) | `refund > urgent_escalation` | `refund > risk_detection > refund > urgent_escalation > escalate_to_human` | No change: still a subsequence |
+| B-RT-05 | `off_topic` | `ambiguous_question` | `ambiguous_question`. **Done** |
+| B-ER-01, B-ER-02, B-ER-03, B-ER-06 (rating) | `… experience_rating` | Order found → `WRAP_UP`, then "Great, that's all, thanks." → rating | No change: each already has the closing message |
+| B-IN-01 (item, then "actually the order never came") | `risk_detection > refund > stolen_delayed_orders` | `refund > risk_detection > refund > risk_detection > stolen_delayed_orders` | No change. It needed `risk_back_to_refund` (section 3.1): without it, Risk Detection sent the delivery problem back to Refund because the task was still `REFUND` |
 
 Every other path expectation (about 60 across the four files) stays as it is.
 
@@ -115,7 +126,7 @@ The P0 run on `CARES_Router_V2` (section 4.3) confirms this list. A scenario tha
 
 Add these to `p1-router.json` and `p0.json`. They come from ROUTER_REDESIGN_SPEC: A4 (two issues in one chat), B3 (email-identified PATTERN_REVIEW, re-ask cap), C4 (G-087 "never showed up" / "50 minutes late" reach S&D), D5 (the A6 message set, the G-088 safety cases, G-094, G-095) and E6 (Pronto question then "thanks" → rating).
 
-Add one more for R-D10: **a logged-in "one item in my last order was missing"** must reach `refund` with no order-number question and `find_order` with a blank number. That's the regression the first draft test showed.
+**Done:** B-RT-12 in `p0.json` covers R-D10. A logged-in "one item in my last order was missing" must reach `refund` with no order-number question and `find_order` with a blank number. That's the regression the first draft test showed.
 
 ### 4.3 Evidence before the port: CARES vs CARES_Router_V2, P0, 1 run each, live actions, team org
 

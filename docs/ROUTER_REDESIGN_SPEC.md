@@ -297,7 +297,7 @@ Built after the first draft test: through S&D, "one item in my last order was mi
   3. Set the task to `REFUND`.
   4. `risk_checked == False` → Risk Detection.
   5. `risk_needs_review` → Escalate with PATTERN_REVIEW.
-- **Risk Detection exit:** `REFUND` task → back to `refund`. Otherwise → `stolen_delayed_orders`. Its reset is skipped on this path, because the task is already `REFUND`.
+- **Risk Detection exit:** back to `refund` when `risk_back_to_refund` is True: the task is `REFUND` and the check hadn't run on entry, so Refund sent the customer. Otherwise → `stolen_delayed_orders`. A delivery problem raised mid-refund therefore still reaches S&D (ROUTER_CARES_PORT_SPEC 3.1). Its reset is skipped on this path, because the task is already `REFUND`.
 - **S&D `go_to_refund_items`** stays, as a correction edge for an item problem the router sent there.
 
 ## C3. What does not change
