@@ -41,6 +41,18 @@ NAMED_POOL = {"FX-EXP": "R-EXP", "FX-EXP-2": "R-EXP", "FX-INS": "R-INS", "FX-INS
               "FX-PP-2": "R-PP", "FX-ONE": "R-ONE", "FX-OFD": "R-OFD", "FX-PREP": "R-PREP", "FX-CANC": "R-CANC"}
 # Named fixtures that only need a tier: with no unpaid spare in their pool, any clean contact of that tier will do
 TIER_ONLY = {"FX-EXP", "FX-EXP-2", "FX-INS", "FX-INS-2", "FX-PP", "FX-PP-2"}
+# A pool with fewer unpaid members than this gets fresh contacts that fit it (no cases, no payout, not reserved),
+# so the pools that pay on every run do not run dry. Each rule reads the contact's fixture
+POOL_MIN_FREE = 3
+POOL_RULES = {
+    "R-EXP": lambda fx: fx["tier"] == "Explorer" and fx["latest_status"] == "Delivered" and fx["item_count"] >= 2,
+    "R-INS": lambda fx: fx["tier"] == "Insider" and fx["latest_status"] == "Delivered" and fx["item_count"] >= 2,
+    "R-PP": lambda fx: fx["tier"] == "Pronto Plus" and fx["latest_status"] == "Delivered" and fx["item_count"] >= 2,
+    "R-ONE": lambda fx: fx["latest_status"] == "Delivered" and fx["item_count"] == 1,
+    "R-OFD": lambda fx: fx["latest_status"] == "Out for Delivery",
+    "R-PREP": lambda fx: fx["latest_status"] == "Preparing",
+    "R-CANC": lambda fx: fx["latest_status"] == "Canceled",
+}
 REVIEW_AT = 3  # risk_review_threshold: this many issue cases go to PATTERN_REVIEW (D-062)
 RETENTION_BONUS_PCT = 5  # Retention_Bonus_Pct__c seeded by seed-refund-tiers.apex (D-083, mock data, [$])
 # Mock sentiment context (D-083): contact name => Has_Open_Context__c is true. These are the two
@@ -228,6 +240,15 @@ def main():
             if key not in out["fixtures"]:
                 add(key, n)
             out["pools"][pool].append(key)
+        free = [k for k in out["pools"][pool] if out["fixtures"][k]["order"] not in paid]
+        extra = [n for n, (a2, c2) in sorted(by_name.items()) if len(free) < POOL_MIN_FREE and n not in named.values()
+                 and n not in pooled and n not in reserved and a2 in orders and c2["cases"] == 0 and not c2.get("open_ctx")
+                 and fixture(c2, orders[a2])["order"] not in paid and POOL_RULES[pool](fixture(c2, orders[a2]))]
+        for n in extra[:POOL_MIN_FREE - len(free)]:
+            add(key_for("P", n), n)
+            out["pools"][pool].append(key_for("P", n))
+            pooled.add(n)
+            print(f"{pool}: topped up with {n}")
     used = set(named.values()) | pooled
     # FX-CLEAN and the ESC pool need no cases and no payout yet, so earlier live runs never leak into them
     def low_trust(app, c):

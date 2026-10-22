@@ -595,15 +595,18 @@
    ],
    "expect": {
     "path_any": [
+     "ambiguous_question",
      "experience_rating",
      "experience_rating_skipped"
     ],
     "no_actions": [
      "calculate_refund_offer",
-     "issue_resolution"
+     "issue_resolution",
+     "save_csat_rating"
     ]
    },
-   "judge": "Wrap-up goes to Experience Rating. A rating question with nothing resolved is a finding, not a fail."
+   "judge": "Wrap-up goes to Experience Rating. A rating question with nothing resolved is a finding, not a fail.",
+   "notes": "Since the router port (v10) a closing message goes to Experience Rating only once an issue is finished (R-D8). With no issue in the chat there is nothing to rate, so Ambiguous Question is right too; nothing may be paid or saved."
   },
   {
    "id": "B-RT-06",

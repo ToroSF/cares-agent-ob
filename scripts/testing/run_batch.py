@@ -137,7 +137,9 @@ def read_trace(sid):
                 f = st.get("function") or {}
                 steps["actions"].append({"name": ALIAS.get(f.get("name"), f.get("name")), "input": f.get("input"), "output": f.get("output"),
                                          "errors": [e.get("detail") or e.get("title") for e in f.get("errors") or []],
-                                         "ms": st.get("executionLatency")})
+                                         "ms": st.get("executionLatency"),
+                                         # Subagent the action ran in and how many transitions came before it
+                                         "agent": steps["path"][-1] if steps["path"] else None, "at": len(steps["path"])})
             elif ty == "VariableUpdateStep":
                 for u in d.get("variable_updates", []):
                     n = u.get("variable_name", "")
@@ -274,10 +276,13 @@ def invariant_problems(sc, sessions):
             any(n == "csat_saved" and str(v).lower() == "true" for n, v in s["trace"]["sets"])
         if saves and not saved and RATING_CLAIM.search(text):
             problems.append("INV-9: claims the rating was saved: " + RATING_CLAIM.search(text).group(0))
-        # Risk gate (D-007): Refund is never entered before Risk Detection in a session
+        # Risk gate (D-007): Refund does nothing before Risk Detection in a session. Entering Refund first is
+        # fine: its own gate sends the customer to Risk Detection before any action (D-015)
         path = s["trace"]["path"]
-        if "refund" in path and "risk_detection" not in path[:path.index("refund")]:
-            problems.append(f"GATE: refund before risk_detection ({path})")
+        first_risk = path.index("risk_detection") if "risk_detection" in path else len(path)
+        early = [a["name"] for a in acts if a.get("agent") == "refund" and a.get("at", 0) <= first_risk]
+        if "refund" in path and ("risk_detection" not in path or early):
+            problems.append(f"GATE: refund before risk_detection ({path}{', actions ' + str(early) if early else ''})")
         grounded = set()
         for a in acts:
             grounded |= norm_amounts(a["output"])

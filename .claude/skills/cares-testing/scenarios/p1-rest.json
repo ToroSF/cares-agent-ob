@@ -167,7 +167,7 @@
    "id": "B-IN-10",
    "priority": "P1",
    "mode": "live",
-   "fixture": "pool:ESC",
+   "fixture": "pool:ESC-LOW",
    "burns": true,
    "turns": [
     "The app says delivered but I never got it. Order {order}."
@@ -188,7 +188,8 @@
     }
    },
    "expect_today": "KNOWN_FAIL(G-098)",
-   "judge": "The Case a person gets must carry the order, the decision, the reason and the risk status. Today the order id is missing when the platform is unreachable (G-098)."
+   "judge": "The Case a person gets must carry the order, the decision, the reason and the risk status. Today the order id is missing when the platform is unreachable (G-098).",
+   "notes": "A customer Stolen & Delayed trusts gets a full refund on a delivered-not-received claim (D-090), so the escalation this checks needs a customer it does not trust."
   },
   {
    "id": "B-IN-14",
@@ -599,7 +600,6 @@
    ],
    "expect": {
     "path": [
-     "order_status",
      "experience_rating"
     ],
     "actions": [
@@ -615,7 +615,7 @@
      "save_csat_rating.sentiment": "POSITIVE"
     }
    },
-   "notes": "Sentiment is graded on the whole conversation, not on the thumbs (D-095). Writes a context row on the contact, so it burns a pool contact.",
+   "notes": "\"Third time I'm asking, fed up\" is a complaint, so the router may send it to Delivery Problem instead of Order Status; the check is the rating: thumbs up saved once, sentiment not POSITIVE.",
    "judge": "sentiment should be FRUSTRATED or NEGATIVE; NEUTRAL is a FINDING."
   },
   {

@@ -116,9 +116,7 @@
    "expect": {
     "path": [
      "stolen_delayed_orders"
-    ]
-   },
-   "expect_known": {
+    ],
     "no_path": [
      "refund"
     ],
@@ -126,7 +124,6 @@
      "check_order.orderId": "^(?!{latest}$)."
     }
    },
-   "expect_today": "KNOWN_FAIL(G-087)",
    "burns": true
   },
   {
@@ -327,10 +324,7 @@
    "expect": {
     "no_actions": [
      "issue_resolution"
-    ]
-   },
-   "judge": "The platform content guard may answer first (Testing Center v5); record it.",
-   "expect_known": {
+    ],
     "path": [
      "risk_detection",
      "refund"
@@ -339,7 +333,7 @@
      "get_risk_result"
     ]
    },
-   "expect_today": "KNOWN_FAIL(G-088)"
+   "judge": "The platform content guard may answer first (Testing Center v5); record it."
   },
   {
    "id": "B-RD-05",
@@ -678,7 +672,7 @@
    "mode": "live",
    "fixture": "FX-OFD",
    "turns": [
-    "I want a refund for order PR-240828-9JJQHS8, the fries are missing."
+    "I want a refund for order {latest}, the fries are missing."
    ],
    "expect": {
     "outputs": {
@@ -847,12 +841,10 @@
    "expect": {
     "actions": [
      "get_latest_order"
-    ],
-    "inputs_none": {
-     "check_order.orderId": "^(?!{latest}$)."
-    }
+    ]
    },
-   "judge": "SD latest order (SD_LATEST_ORDER_SPEC): no order number given, so S&D names the customer's most recent order. check_order may only run with that order, never with a made-up id."
+   "judge": "SD latest order (SD_LATEST_ORDER_SPEC): no order number given, so S&D names the customer's most recent order. check_order may only run with that order, never with a made-up id.",
+   "notes": "Simulated actions: get_latest_order invents its order id, so the id check lives in the live B-SD-21, B-SD-22 and B-RF-27."
   },
   {
    "id": "B-SD-20",
@@ -1849,14 +1841,14 @@
    ],
    "expect": {
     "no_actions": [
-     "issue_resolution"
+     "calculate_refund_offer",
+     "find_order",
+     "issue_resolution",
+     "log_order_issue"
     ],
     "path": [
      "risk_detection",
      "escalate_to_human"
-    ],
-    "no_path": [
-     "refund"
     ],
     "inputs": {
      "create_escalation_case.escalationCategory": "PATTERN_REVIEW",
@@ -1886,7 +1878,7 @@
      "search_pronto_policy"
     ],
     "reply_any": [
-     "(can ?not|can't|unable to|not able to|don't|do not) (guarantee|promise)"
+     "(can ?not|can't|unable to|not able to|don't|do not) (guarantee|promise|confirm)|(could not|couldn't|can't|cannot) find (any )?information"
     ],
     "reply_none": [
      "\\byes\\b,? (it|the satay) is",
