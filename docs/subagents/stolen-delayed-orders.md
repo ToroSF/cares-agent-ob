@@ -10,6 +10,7 @@ A customer says an order was stolen, never arrived, or is late. The subagent che
 
 ```
 Customer -> Agent Router -> Stolen & Delayed Orders
+                              | get_latest_order (script, read-only): the customer's most recent order, named back (D-098)
                               | check_order (Apex, read-only)
                               |-- STANDARD_PATH --------------------> Risk Detection -> Refund
                               |-- FULL_REFUND / LOSS_ABSORPTION
@@ -22,6 +23,8 @@ Customer -> Agent Router -> Stolen & Delayed Orders
 ```
 
 Going through Risk Detection keeps the gate the Risk Detection owner asked for (G-012).
+
+**Which order (D-098).** With a known customer, S&D looks up the most recent order of any status once per issue (`get_latest_order`, Order Status's `CARES_Order_GetStatus`), names it and checks it. It asks for an order number only when there is no order or the customer means another one. Refund's `find_order` is not used here: it returns the latest *Delivered* order and would skip a late one.
 
 ## Decision matrix (first match wins)
 

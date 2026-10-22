@@ -120,12 +120,9 @@
     "no_path": [
      "refund"
     ],
-    "no_actions": [
-     "check_order"
-    ],
-    "reply_any": [
-     "order( number|\\b)|which order"
-    ]
+    "inputs_none": {
+     "check_order.orderId": "^(?!{latest}$)."
+    }
    },
    "expect_today": "KNOWN_FAIL(G-087)",
    "burns": true
@@ -805,13 +802,117 @@
     "The app says delivered but I never got it."
    ],
    "expect": {
-    "no_actions": [
+    "actions": [
+     "get_latest_order"
+    ],
+    "inputs_none": {
+     "check_order.orderId": "^(?!{latest}$)."
+    }
+   },
+   "judge": "SD latest order (SD_LATEST_ORDER_SPEC): no order number given, so S&D names the customer's most recent order. check_order may only run with that order, never with a made-up id."
+  },
+  {
+   "id": "B-SD-20",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "pool:R-ONE",
+   "burns": true,
+   "turns": [
+    "My last order never arrived. The app says delivered but nothing came."
+   ],
+   "expect": {
+    "path": [
+     "risk_detection",
+     "stolen_delayed_orders"
+    ],
+    "actions": [
+     "get_latest_order"
+    ],
+    "inputs_none": {
+     "check_order.orderId": "^(?!{latest}$)."
+    },
+    "reply_none": [
+     "(provide|share|give|send|tell)[^.?!]{0,40}order number"
+    ]
+   },
+   "judge": "Logged in: S&D names the most recent order and checks it, without asking for an order number."
+  },
+  {
+   "id": "B-SD-21",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "pool:R-ONE",
+   "burns": true,
+   "no_contact": true,
+   "turns": [
+    "My last order never arrived.",
+    "{email}"
+   ],
+   "expect": {
+    "path": [
+     "risk_detection",
+     "identify_customer",
+     "risk_detection",
+     "stolen_delayed_orders"
+    ],
+    "actions": [
+     "get_latest_order"
+    ],
+    "inputs_none": {
+     "check_order.orderId": "^(?!{latest}$)."
+    },
+    "reply_none": [
+     "(provide|share|give|send|tell)[^.?!]{0,40}order number"
+    ]
+   },
+   "judge": "Email only: after Identify Customer, the same as B-SD-20."
+  },
+  {
+   "id": "B-SD-22",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "FX-OFD",
+   "turns": [
+    "My last order is really late, it still hasn't come.",
+    "Yes, that one."
+   ],
+   "expect": {
+    "path": [
+     "stolen_delayed_orders"
+    ],
+    "actions": [
+     "get_latest_order",
      "check_order"
     ],
-    "reply_any": [
-     "order( number|\\b)|which order"
-    ]
-   }
+    "inputs": {
+     "check_order.orderId": "{latest}"
+    },
+    "outputs": {
+     "check_order.decision": "STANDARD_PATH"
+    }
+   },
+   "judge": "The latest order is Out for Delivery: S&D checks that order, not an older delivered one (Refund's find_order would have picked one)."
+  },
+  {
+   "id": "B-SD-23",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "pool:R-ONE",
+   "burns": true,
+   "turns": [
+    "My order never arrived.",
+    "No, not that one. It was order {other_order}."
+   ],
+   "expect": {
+    "actions": [
+     "get_latest_order",
+     "check_order"
+    ],
+    "inputs": {
+     "check_order.orderId": "{other_order}"
+    }
+   },
+   "judge": "The customer means another order: S&D uses the number they typed. {other_order} is not theirs, so ORDER_NOT_FOUND and a request to double-check is fine."
   },
   {
    "id": "B-SD-03",
