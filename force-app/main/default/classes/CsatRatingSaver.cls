@@ -19,7 +19,7 @@ public with sharing class CsatRatingSaver {
   };
   // Only the customer's own thumbs down opens the context (score 2; thumbs up is 5). The
   // sentiment is the model's read, so a customer who asks to be marked FRUSTRATED on a
-  // thumbs up must not unlock the retention bonus (G-133, D-101)
+  // thumbs up must not unlock the retention bonus (G-133, D-102)
   private static final Decimal OPEN_CONTEXT_MAX_SCORE = 2;
   @InvocableMethod(
     label='Save CSAT Rating'
