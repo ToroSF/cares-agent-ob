@@ -859,6 +859,13 @@ subagent risk_detection:
 
     before_reasoning:
         # customer_id is the verified contact: from the channel or from the email lookup (G-113)
+        if @variables.customer_id == "" and @variables.ContactId is not None and @variables.ContactId != "":
+            set @variables.customer_id = @variables.ContactId
+        # No contact yet (web chat): find the customer first, so the check counts the right one. Identify
+        # Customer returns through Refund, which sends the customer back here
+        if @variables.risk_checked == False and @variables.customer_id == "" and @variables.identify_attempts < 2:
+            set @variables.router_active_task = "REFUND"
+            transition to @subagent.identify_customer
         if @variables.risk_checked == False:
             run @actions.get_risk_result
                 with contactId = @variables.customer_id

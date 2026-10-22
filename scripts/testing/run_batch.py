@@ -364,6 +364,8 @@ def run_one(sc, run, args, fixtures, alloc):
     except RuntimeError as e:
         return {"scenario": sc["id"], "run": run, "outcome": "BLOCKED", "problems": [str(e)]}
     fx.update(fixtures.get("globals", {}))
+    if sc.get("no_contact"):  # the fixture's data, but no ContactId: the customer gives the email (web chat)
+        cid = None
     mode = sc.get("mode", "live")
     sessions = []
     for turns in sc.get("sessions", [sc.get("turns", [])]):

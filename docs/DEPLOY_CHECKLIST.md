@@ -143,6 +143,8 @@ Decisions D-083 to D-087, gaps G-086, G-082, G-068. Design: [subagents/escalate-
 - Not run yet: `seed-delivery-telemetry.apex` and `seed-customer-context.apex` (data writes). Without the rows, Stolen & Delayed and the retention bonus behave as before.
 - `CARES_Get_Risk_Result` v3 is still a Draft: activate it in Setup.
 - The draft would not start a preview: `CARES_Get_Customer_Context` (new in PR #47) was in the repo as `Draft`, so the platform refused `get_customer_context` and, with it, `create_escalation_case` and `create_settlement_review_case` ("invalid attribute value for 'target'"). Set to `Active` in the repo and deployed alone (`0AfjV000004gbCCSAY`); the draft starts again. v7 was never affected: it does not call that Flow.
+- First batch on the draft found that Risk Detection got a blank contact when the router sent the customer straight to it (`customer_id` not copied from `ContactId`): `UNKNOWN` for everyone. Fixed in the agent (G-113 row), draft deployed `0AfjV000004gfPSSAY`.
+- 1 run each, live actions. Before the fix: B-SD-01, B-SD-02, B-ES-01 PASS (they do not depend on the risk result). After the fix: B-RD-01, B-RD-02, B-RD-03, B-RD-05, B-RD-06 (new: email only), B-RF-03 PASS; B-RD-04 UNEXPECTED_PASS. B-RF-01 and B-RF-02 FAIL: the fixture order already has a refund (`alreadyResolved`), the open G-108, not this change.
 
 ## Mock delivery telemetry (`feature/sd-mock-telemetry`, D-096)
 Mock data, not a live feed. No agent change: the active agent version picks it up as soon as the Apex and the `Default` record are deployed.
