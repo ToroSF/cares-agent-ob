@@ -193,6 +193,8 @@ Mock data for this project, not a real Pronto signal (same disclosure as the moc
 5. Run the timing rows in [TEST_PLAN.md](TEST_PLAN.md).
 6. Rollback without a deploy: blank `Promised_Delivery_Minutes__c` keeps 40; to go back to the old rule, activate the previous agent version (the Apex still answers its 3-input calls).
 
+**Done 2026-10-22:** steps 1 to 4 with `main` after PRs #57 to #59: deploy `0AfjV000004hSmlSAE`, CARES v11 published and active, timing rows seeded (the CLI user was given `CARES_Delivery_Mock_Admin` for the seed). Then PR #60 (G-125, G-126): check-only `0AfjV000004hNjwSAE` (200/200 tests), quick deploy `0AfjV000004hy0ESAQ`, **CARES v12 published and active**; v11 is the rollback. Step 5: B-SD-24 to B-SD-27 in `p0.json` pass on v12.
+
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).
