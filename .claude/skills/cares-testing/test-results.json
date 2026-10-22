@@ -6838,6 +6838,112 @@
         "runs": 8,
         "runsLostToPlatform": 0
       }
+    },
+    {
+      "tier": "S",
+      "configHash": "a8e8bb1881578c9e",
+      "agentVersion": "v13 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p0.json, p1-rest.json",
+      "timestamp": "2026-10-22T22:09:03Z",
+      "commit": "baea55a",
+      "runner": "scripts/testing/run_batch.py --runs 1 --workers 1 --pace 3 --only <the 9 scenarios>",
+      "why": "v13 live check after publish: the scenarios of G-127, G-128, G-129, G-131 and G-133",
+      "personas": {
+        "v13-check": {
+          "name": "v13 live check",
+          "mode": "live",
+          "totalScenarios": 9,
+          "passed": 7,
+          "failed": 2,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "status": "PASS 7/9",
+          "results": [
+            {
+              "scenario": "B-PO-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-23",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-12b",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-15",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-16",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-14",
+              "repeats": 1,
+              "outcomes": [
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "G-132 open: Refund repeats its offer after \"that's all\", no rating saved"
+            },
+            {
+              "scenario": "B-ER-15",
+              "repeats": 1,
+              "outcomes": [
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "The model still saves FRUSTRATED (the check this fails), but the G-133 fix holds: score 5, CTX-00008 Has_Open_Context__c = false, no bonus"
+            }
+          ]
+        }
+      }
     }
   ]
 }
