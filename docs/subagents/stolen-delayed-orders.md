@@ -160,16 +160,16 @@ Code: `CARES_StolenDelayedPolicy.gpsResult()` → `insideTripGeofence()`, `geofe
 
 | Profile | Order (fixture) | Values | Expected |
 |---|---|---|---|
-| `LOSS_ABSORPTION` | `PR-240826-YLNU39N` (P-MARTA-BASSINDALE) | Driver at the door (inside); 240 s, 1 call; driver 0.2%, 900 | `LOSS_ABSORPTION`: refund, driver paid, restaurant reimbursed |
+| `LOSS_ABSORPTION` | `PR-240815-23HWUID` (E-DELMOR-HEART) | Driver at the door (inside); 240 s, 1 call; driver 0.2%, 900 | `LOSS_ABSORPTION`: refund, driver paid, restaurant reimbursed |
 | `GPS_MISMATCH` | `PR-240829-5WE179W` (P-ROZANNE-DEVEREUX) | Driver 2.2 km from the center (outside) | `FULL_REFUND`, driver pay withheld |
 | `INSIDE_NEAR_RESTAURANT` | `PR-240826-AL2NKVM` (P-PEYTON-BATRICK) | Driver 30 m from the restaurant (inside); excellent driver | `LOSS_ABSORPTION` (known consequence, G-111) |
 | `AVERAGE_DRIVER` | `PR-240827-L9KMKYL` (P-DORE-BRIANT) | Driver at the door (inside); driver 4%, 300 | `FULL_REFUND`, driver paid |
 | `FRAUD` | `PR-240827-HQ2DT25` (P-BRUCE-CLEMENDOT) | fraud flag | `ESCALATE` / `FRAUD_SIGNAL` |
 | `DEVICE_DUP` | `PR-240822-GY8RVKV` (P-BEATRIX-SHOOTER) | device flag | `ESCALATE` / `FRAUD_SIGNAL` |
 | `ADDRESS_DUP` | `PR-240828-ZO28CZ7` (P-PENNY-DANFORTH) | address flag | `ESCALATE` / `FRAUD_SIGNAL` |
-| `REDISPATCH` | `PR-240816-CSQI55B` (P-HUMFRID-JENDRUSCH) | like loss absorption, re-dispatch eligible | Re-dispatch offered; `RD-…` reference |
+| `REDISPATCH` | `PR-240822-P7LB1WC` (E-CATRIONA-SHERGILL) | like loss absorption, re-dispatch eligible | Re-dispatch offered; `RD-…` reference |
 
-These customers are also in Refund's test pools (`R-INS`, `R-PP`, `R-ONE`). Once Refund pays one of these orders, a new claim on it is a duplicate claim (`ESCALATE`), the same problem as G-108. And any refund to the same customer, on any order, lifts their claim rate above 5% (1 of 6 orders is about 17%), so they are no longer high trust and the demo ends in `MANUAL_REVIEW`. Then move the profile to another customer's delivered order in the script and run it again. On 2026-10-21 none of the 8 customers had a refund.
+These customers are also in Refund's test pools (`R-INS`, `R-PP`, `R-ONE`). Once Refund pays one of these orders, a new claim on it is a duplicate claim (`ESCALATE`), the same problem as G-108. And any refund to the same customer, on any order, lifts their claim rate above 5% (1 of 6 orders is about 17%), so they are no longer high trust and the demo ends in `MANUAL_REVIEW`. Then move the profile to another customer's delivered order in the script and run it again. On 2026-10-21 none of the 8 customers had a refund. On 2026-10-22 two of them were refunded by a test run before the seed (Marta Bassindale `PR-240826-YLNU39N`, Humfrid Jendrusch `PR-240816-CSQI55B`), so `LOSS_ABSORPTION` and `REDISPATCH` moved to escalation-pool customers (`E-*`), whose tests escalate instead of paying. In the org the two old rows are kept, relabeled `RETIRED_…` (the policy does not read `Scenario__c`).
 
 **Access.** `CARES_Stolen_Delayed_Access` (agent user): read telemetry, create re-dispatch requests and trust events, with field access (the queries and writes run in user mode; missing access is logged, not silent). `CARES_Delivery_Mock_Admin` (people staging demos): full access and the three tabs in the CARES Admin app. Running the seed script needs it.
 
