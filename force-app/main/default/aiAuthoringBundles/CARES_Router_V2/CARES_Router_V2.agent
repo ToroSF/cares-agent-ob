@@ -151,6 +151,8 @@ variables:
         description: "Identify Customer: True while CARES is waiting for the customer's email. Set and cleared only by the script. The router sends the reply back to Identify Customer only while it is True."
     identify_turns: mutable number = 0
         description: "Identify Customer: turns spent asking for the email in this conversation. Caps re-asks when the customer never sends one."
+    risk_back_to_refund: mutable boolean = False
+        description: "Risk Detection: True when Refund sent the customer here because the check had not run yet, so Risk Detection returns to Refund. Set only by the script (R-D10)."
     risk_needs_review: mutable boolean = False
         description: "Risk Detection: True when the issue count reached the review threshold (D-062). Stolen & Delayed sends the customer to a person before any offer. Set only by the script."
 
@@ -932,6 +934,11 @@ subagent risk_detection:
     description: "Silent internal check of the customer's recent history (default 30 days). Runs once per issue, stores CLEAN, NOT_CLEAN or UNKNOWN, then hands back to Refund for item problems or over to Stolen & Delayed Orders. Never talks to the customer about it."
 
     before_reasoning:
+        # Refund sent the customer for the check it needs (R-D10). Any other entry, including a delivery problem
+        # raised in the middle of a refund, goes on to Stolen & Delayed
+        set @variables.risk_back_to_refund = False
+        if @variables.router_active_task == "REFUND" and @variables.risk_checked == False:
+            set @variables.risk_back_to_refund = True
         # New issue (no refund or order check open): clear the last issue's state so it can't leak (spec Part A).
         # Customer, CSAT, transfer and paid-claim state stay.
         if @variables.router_active_task != "REFUND" and @variables.router_active_task != "STOLEN_DELAYED":
@@ -1015,7 +1022,7 @@ subagent risk_detection:
         if @variables.risk_status == "NOT_CLEAN":
             set @variables.risk_retention_eligible = False
         # Item problems came from Refund and go back there; every other order problem goes to Stolen & Delayed (R-D10)
-        if @variables.router_active_task == "REFUND":
+        if @variables.risk_back_to_refund == True:
             transition to @subagent.refund
         transition to @subagent.stolen_delayed_orders
 
