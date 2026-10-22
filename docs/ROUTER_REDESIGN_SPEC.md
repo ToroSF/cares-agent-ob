@@ -15,8 +15,9 @@ The analysis, the current graph and the target diagram are in [ROUTER_AUDIT.md](
 ## Target
 
 ```
-agent_router ─┬─ order problem ──► risk_detection [identity gate → risk check] ──► stolen_delayed_orders ─┬─► refund ──┐
-              │                          │ no customer                                                    └─► escalate ┤
+agent_router ─┬─ delivery problem ──► risk_detection [identity gate → risk check] ──► stolen_delayed_orders ─┬─► refund ──┐
+              ├─ item problem ──► refund ──► risk_detection [same gate and check] ──► back to refund (R-D10)  └─► escalate ┤
+              │                          │ no customer                                                                 │
               │                          └─► identify_customer ──► back to the gate                                    │
               ├─ order status ──► order_status ── complaint ──► risk_detection                                         │
               ├─ Pronto question ──► pronto_help                                                                       │
@@ -285,6 +286,19 @@ Description (L858): "Silent internal check of the customer's recent history. Run
 - **`go_to_stolen_delayed` (L409-411):** kept as a **correction edge** (R-D9), for when S&D sent an item problem that turns out to be a whole-order claim. The guard is unchanged (`refund_order_outcome == "" and refund_sd_path == ""`), so it can't loop.
 - **`WRAP_UP` and `close_issue`:** see A2.3.
 
+### C2.4 Item problems go straight to Refund (R-D10)
+
+Built after the first draft test: through S&D, "one item in my last order was missing" was asked for an order number.
+- **Router:** `go_to_item_problem` goes to `refund` (D2).
+- **Refund `before_reasoning`**, in this order:
+  1. Copy `ContactId`.
+  2. When Refund is the first stop (task not `REFUND` or `STOLEN_DELAYED`), run the same per-issue reset as Risk Detection (A2.2). That includes `risk_checked = False`.
+  3. Set the task to `REFUND`.
+  4. `risk_checked == False` → Risk Detection.
+  5. `risk_needs_review` → Escalate with PATTERN_REVIEW.
+- **Risk Detection exit:** `REFUND` task → back to `refund`. Otherwise → `stolen_delayed_orders`. Its reset is skipped on this path, because the task is already `REFUND`.
+- **S&D `go_to_refund_items`** stays, as a correction edge for an item problem the router sent there.
+
 ## C3. What does not change
 
 - **Apex:** the S&D policy and its decision matrix, and Refund's offer, issue and settlement steps.
@@ -319,7 +333,8 @@ The most common batch path changes. Fourteen scenarios expect `risk_detection > 
 
 | Route | Target | `available when` | Description (draft; each ≤255 chars, checked by D4) |
 |---|---|---|---|
-| `go_to_order_problem` (was `go_to_risk_detection`) | risk_detection | — | "A problem with a specific order: it never arrived, was stolen, is late or stuck, shows delivered but isn't there, an item is missing or wrong, the food was poor, or the customer wants money back for it." |
+| `go_to_delivery_problem` (was `go_to_risk_detection`) | risk_detection | — | "The whole order never arrived, was stolen, is late or stuck, or shows delivered but isn't there. Not for one missing or wrong item in an order that arrived." |
+| `go_to_item_problem` (R-D10) | refund | — | "The order arrived but an item is missing or wrong, or the food was poor quality, or the customer wants a refund or credit for an order that arrived." |
 | `go_to_order_status` | order_status | — | "The customer only wants the status or arrival time of one of their orders, with no complaint that it is late, missing or wrong." |
 | `go_to_pronto_help` | pronto_help | — | "A general question about how Pronto works, not a problem with a specific order: status words, refund and late-order rules, address changes, promo codes, membership, gift certificates, allergens, storefronts." |
 | `go_to_urgent_escalation` | urgent_escalation | — | "Safety first: illness or an allergic reaction, a foreign object in food, harassment or an unsafe delivery, fraud or account takeover, or a legal threat. A person takes over before any offer." |
@@ -336,14 +351,15 @@ Removed:
 - `go_to_off_topic` (L225)
 - the old `go_to_refund` guard on `risk_checked` (L209)
 
-`go_to_order_problem` keeps the `go_to_risk_detection` target. The rename is only so the classifier sees a route named for the customer's problem, not an internal step. If the team prefers fewer renames, keep the old name. The batch runner reports subagents, not route names.
+`go_to_delivery_problem` keeps the `go_to_risk_detection` target; the new name describes the customer's problem, not an internal step. `go_to_item_problem` goes to Refund, which sends the customer through Risk Detection first and gets them back (R-D10, C2.4). The batch runner reports subagents, not route names.
 
 ## D3. Instruction text (L180-205, replaced in full)
 
 ```
 | Choose the route that best matches the customer's latest message and the conversation.
   Safety first: illness or an allergic reaction, a foreign object in food, harassment or an unsafe delivery, fraud or someone using their account, or a legal threat always goes to Urgent Escalation, even if a task is open and even if they also ask for money.
-  A problem with a specific order (never arrived, stolen, late, missing or wrong item, poor food, money back for an order) goes to Order Problem. A question about how Pronto works in general goes to Pronto Help. Only the status or arrival time, with no complaint, goes to Order Status.
+  A whole order that never arrived, was stolen, is late or stuck, or shows delivered but isn't there goes to Delivery Problem, even if they also ask for a refund. An order that arrived with an item missing or wrong, or poor food, or a refund or credit request for an order that arrived, goes to Item Problem.
+  A question about how Pronto works in general goes to Pronto Help. Only the status or arrival time, with no complaint, goes to Order Status.
   Open task (blank means none): {!@variables.router_active_task}
   If a task is open and the message answers or continues it (yes or no, an order number, item names, a choice between options), continue that task. A bare email address while CARES is waiting for it goes to Identify Customer.
   If the task is WRAP_UP and the message only closes the conversation (thanks, that's all, bye), choose Experience Rating. If a task other than WRAP_UP is open, thanks or small talk continues that task.
@@ -409,7 +425,7 @@ What goes and why:
 
 ## E2. Order Status (L1232-1296)
 
-- **`go_to_stolen_delayed` (L1263)** is replaced by `go_to_order_problem: @utils.transition to @subagent.risk_detection`, with the same description. The existing `go_to_refund_check` (L1265) already goes to risk. Merge the two into one action.
+- **`go_to_stolen_delayed` (L1263)** becomes `go_to_delivery_problem` (→ risk_detection), and `go_to_refund_check` (L1265) becomes `go_to_item_problem` (→ refund), the same split as the router (R-D10).
 - **Delete `go_to_escalate_human` (L1267).** For "order data unavailable" and "account not found", the instruction says "apologize and tell them they can ask for a member of the support team". The next turn goes to the router's escalate route.
 - **`WRAP_UP` on found** (A2.3).
 
@@ -478,6 +494,7 @@ Do this last, in its own commit, so the routing changes can be measured without 
 | R-D6 | Where does PATTERN_REVIEW escalate from? | S&D, from a `risk_needs_review` flag | Matches the diagram. The decision stays in script | D-062 |
 | R-D7 | Treat an email match like a `ContactId` conversation? | Yes, demo only | Team decision. G-065 stays open as a production blocker | D-058 |
 | R-D8 | How is "this issue is done" signalled? | `router_active_task = "WRAP_UP"`, set by script or `close_issue` | Makes "only Rating after a finished issue" a guard, not a judgment (G-047) | D-041, D-079 |
+| R-D10 | Do item problems go through S&D? (decided 2026-10-22, after testing the draft) | **No.** Two router routes: delivery problem → risk → S&D, item problem → Refund → risk → back to Refund. Refund also acts on `risk_needs_review` | Through S&D, an item problem was asked for an order number, because S&D's `check_order` needs one. Refund's `find_order` takes the latest order, as in the original CARES. Both paths still get the identity gate, the risk check and the repeated-issues rule | Amends the target diagram, D-015 |
 | R-D9 | Keep Refund → S&D? | Yes, as a guarded correction edge | S&D can misjudge an item problem that is really a whole-order claim. The existing guard prevents loops | — |
 
 ---
