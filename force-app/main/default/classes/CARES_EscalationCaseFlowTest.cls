@@ -92,7 +92,7 @@ private class CARES_EscalationCaseFlowTest {
     Assert.areEqual('Stolen & Delayed check: not run', lines[7]);
     Assert.areEqual('Risk status (internal): CLEAN', lines[8]);
     Assert.areEqual(
-      'Customer sentiment (internal, as perceived by CARES): not assessed',
+      'Customer sentiment (internal): not assessed',
       lines[9]
     );
     Assert.areEqual('Offer: none made', lines[10]);
@@ -183,11 +183,11 @@ private class CARES_EscalationCaseFlowTest {
     ]
     .Description;
     Assert.isTrue(
-      d.contains('Customer sentiment (internal, as perceived by CARES): FRUSTRATED')
+      d.contains('Customer sentiment (internal): FRUSTRATED')
     );
     Assert.isTrue(
       d.contains('Customer said: Found a piece of glass in their burger.'),
-      'The agent\'s summary of what the customer reported is on the case (D-101)'
+      'The agent\'s summary of what the customer reported is on the case (D-103)'
     );
   }
 

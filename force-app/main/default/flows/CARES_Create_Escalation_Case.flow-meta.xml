@@ -557,7 +557,7 @@ Customer: {!customerCheck}
 Order: {!orderLabel}
 Stolen &amp; Delayed check: {!stolenDelayedLabel}
 Risk status (internal): {!riskLabel}
-Customer sentiment (internal, as perceived by CARES): {!sentimentLabel}
+Customer sentiment (internal): {!sentimentLabel}
 Offer: {!offerLabel}
 Customer chose: {!choiceLabel}
 Chat: {!sessionLabel}
@@ -634,7 +634,7 @@ Next step: {!nextStep}</text>
   </variables>
   <variables>
     <description
-    >One or two sentences on what the customer reported, written by the agent from the conversation (D-101). Internal only.</description>
+    >One or two sentences on what the customer reported, written by the agent from the conversation (D-103). Internal only.</description>
     <name>customerSummary</name>
     <dataType>String</dataType>
     <isCollection>false</isCollection>
@@ -643,7 +643,7 @@ Next step: {!nextStep}</text>
   </variables>
   <variables>
     <description
-    >POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED or blank: the agent's own read of the conversation (D-101). Internal only, never shown to the customer.</description>
+    >POSITIVE, NEUTRAL, NEGATIVE, FRUSTRATED or blank: the context sentiment on the first log, the agent's own read on add_case_details (D-103). Internal only, never shown to the customer.</description>
     <name>customerSentiment</name>
     <dataType>String</dataType>
     <isCollection>false</isCollection>
