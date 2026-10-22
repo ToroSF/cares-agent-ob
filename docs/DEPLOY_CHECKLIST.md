@@ -136,6 +136,13 @@ Decisions D-083 to D-087, gaps G-086, G-082, G-068. Design: [subagents/escalate-
 - `CARES_Alert_Setting.Default` Mode set to `WORKFLOW` (deploy `0AfjV000004b7ZlSAI`, only this record).
 - Test: B-ES-01 once on the draft with live actions, PASS. Case 00001271 has `Bell: Sent | Slack: Sent`.
 - To stop Slack alerts: set Mode `OFF` on `Default`. The bell keeps working.
+
+**Done 2026-10-22 (deploy of `main` after PR #45 to #48, with the G-112, G-113, G-115 fixes):**
+- Check-only `0AfjV000004gCqUSAU`, then quick deploy `0AfjV000004gV0ISAU`: 160 components, 182/182 tests (`CARES_EscalationAlertsTest`, `CARES_EscalationCaseFlowTest`, `CARES_Identity_FindContactByEmailTest`, `CARES_OrderDataTest`, `CARES_Refund_ActionsTest`, `CARES_StolenDelayedActionsTest`, `CARES_StolenDelayedMockTelemetryTest`, `CARES_StolenDelayedPolicyTest`, `CsatRatingSaverTest`).
+- Agent: v7 stays Active; the fixed `CARES.agent` is the draft only. The Apex, Flow and record changes of PR #45 and #47 reach v7 at once: mock telemetry is on (`Mock_Telemetry_Enabled__c`), and the retention bonus logic in `Refund_CalculateOffer`.
+- Not run yet: `seed-delivery-telemetry.apex` and `seed-customer-context.apex` (data writes). Without the rows, Stolen & Delayed and the retention bonus behave as before.
+- `CARES_Get_Risk_Result` v3 is still a Draft: activate it in Setup.
+
 ## Mock delivery telemetry (`feature/sd-mock-telemetry`, D-096)
 Mock data, not a live feed. No agent change: the active agent version picks it up as soon as the Apex and the `Default` record are deployed.
 1. Check-only with the Stolen & Delayed tests (the shared order-data tests ride along): `sf project deploy start --dry-run --test-level RunSpecifiedTests --tests CARES_StolenDelayedMockTelemetryTest --tests CARES_StolenDelayedActionsTest --tests CARES_StolenDelayedPolicyTest -o <team org>`.

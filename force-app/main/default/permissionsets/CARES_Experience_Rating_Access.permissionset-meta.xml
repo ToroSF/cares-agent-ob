@@ -60,22 +60,7 @@
         <editable>true</editable>
     </fieldPermissions>
     <fieldPermissions>
-        <field>CARES_Customer_Context__c.Contact__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Customer_Context__c.Sentiment__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
         <field>CARES_Customer_Context__c.Has_Open_Context__c</field>
-        <readable>true</readable>
-        <editable>true</editable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <field>CARES_Customer_Context__c.Last_Interaction_Date__c</field>
         <readable>true</readable>
         <editable>true</editable>
     </fieldPermissions>
