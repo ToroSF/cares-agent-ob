@@ -1,0 +1,18 @@
+{
+  "headline": "a year of value from CARES, for a marketplace with 1M orders a year",
+  "status": "benchmarked",
+  "note": "Low, base and high values from docs/MARKET_BENCHMARKS.md. Each input is a market benchmark or a labelled team assumption [$]; none is a Pronto figure. The page computes all three scenarios when every input is filled.",
+  "formula": "(customers kept x orders per year x average order value x margin) + (cases not handled by a person x cost per case) - (cases CARES resolves x compensation above what a person would pay) - (conversations x agent cost)",
+  "inputs": {
+    "complaintsPerYear": { "label": "Orders with a complaint, per year", "unit": "count", "low": 61000, "value": 122000, "high": 183000, "source": "[$] 1M orders x 24.4% with a problem (Zion & Zion) x 25 / 50 / 75% that contact support" },
+    "churnAfterBadOrder": { "label": "Spend lost after a bad order, as customers who leave", "unit": "pct", "low": 0.05, "value": 0.10, "high": 0.30, "source": "Uber field experiment, 1.5M riders: 5-10% less spend (NBER w25676); high is below Zendesk's 63% stated intention" },
+    "retainedByCares": { "label": "Share of that loss CARES wins back", "unit": "pct", "low": 0.20, "value": 0.30, "high": 0.40, "source": "Same experiment: a coupon sent right away recovered ~2 points of the 5-10" },
+    "ordersPerCustomerYear": { "label": "Orders per customer, per year", "unit": "count", "low": 32, "value": 64, "high": 64, "source": "DoorDash Q4 2025: 903M orders / 56M monthly active users; low is half [$]" },
+    "avgOrderValue": { "label": "Average order value", "unit": "usd", "low": 30, "value": 32.87, "high": 34.10, "source": "DoorDash Marketplace GOV / orders, Q4 2025 and Q2 2026; low [$]" },
+    "margin": { "label": "Contribution margin per order", "unit": "pct", "low": 0.038, "value": 0.047, "high": 0.050, "source": "DoorDash contribution profit 4.7-5.0% of GOV; Uber Delivery segment income ~3.8% of bookings" },
+    "costPerHumanCase": { "label": "Cost of a case handled by a person", "unit": "usd", "low": 6.70, "value": 7.80, "high": 13.50, "source": "Deloitte Digital 2026 Contact Center Survey (2024 and 2026); Gartner assisted contact" },
+    "resolvedWithoutPerson": { "label": "Share resolved without a person", "unit": "pct", "low": 0.50, "value": 0.70, "high": 0.90, "source": "[$] Planning value; the measured share below is test traffic" },
+    "extraCompensationPerCase": { "label": "Compensation above what a person would pay, per case", "unit": "usd", "low": 0, "value": 0, "high": 0, "source": "[$] Same policy caps as a person; Risk Detection should make it negative once measured" },
+    "agentCostPerConversation": { "label": "Agent cost per conversation", "unit": "usd", "low": 2.00, "value": 0.50, "high": 0.40, "source": "Salesforce Agentforce pricing: $2 per conversation, or $0.10 per action x ~4-5 actions (Flex Credits)" }
+  }
+}

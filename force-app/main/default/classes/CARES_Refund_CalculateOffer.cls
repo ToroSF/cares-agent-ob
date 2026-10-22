@@ -26,7 +26,7 @@ public with sharing class CARES_Refund_CalculateOffer {
     public String riskStatus;
     @InvocableVariable(
       label='Affected Value'
-      description='Value of affected items; ignored for Stolen and Delayed'
+      description='Value of affected items. For Stolen and Delayed the order total (Order Total Cap) is used instead'
     )
     public Decimal affectedValue;
     @InvocableVariable(
@@ -223,8 +223,23 @@ public with sharing class CARES_Refund_CalculateOffer {
       Decimal ceiling = req.riskStatus == 'CLEAN'
         ? policy.Clean_History_Max_Refund__c
         : policy.Max_Refund__c;
-      Decimal affectedValue = req.affectedValue == null ? 0 : req.affectedValue;
-      refund = affectedValue < ceiling ? affectedValue : ceiling;
+      // Stolen and Delayed lose the whole order: the base is the order total, not the affected items,
+      // which log_order_issue always values at 0 for them (G-117, D-099). A delay Stolen & Delayed
+      // already measured comes with its own value (order total x delay %, D-100): that value is the base
+      Boolean deliveryOutcome =
+        req.orderOutcome == 'Stolen' || req.orderOutcome == 'Delayed';
+      Decimal affected = req.affectedValue == null ? 0 : req.affectedValue;
+      Decimal base = deliveryOutcome && affected <= 0
+        ? (req.orderTotalCap == null ? 0 : req.orderTotalCap)
+        : affected;
+      if (deliveryOutcome && base <= 0) {
+        r.eligible = false;
+        r.ineligibleReason = 'We could not confirm this order\'s value, so we could not calculate an offer. A team member will take it from here.';
+        r.refundAmount = 0;
+        r.creditAmount = 0;
+        return r;
+      }
+      refund = base < ceiling ? base : ceiling;
       bonusPercent = policy.Store_Credit_Bonus_Pct__c;
     }
 

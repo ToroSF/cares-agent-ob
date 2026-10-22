@@ -46,3 +46,7 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+
+# Metrics presentation build: licensed Salesforce fonts and brand art, local only (public repo)
+docs/metrics/brand/
+docs/metrics/presentation.html

@@ -637,6 +637,113 @@ private class CARES_Refund_ActionsTest {
     );
   }
 
+  // Stolen & Delayed standard path: the whole order is the base, not the affected items (G-117, D-099)
+
+  @IsTest
+  static void standardPathDelayedUsesTheOrderTotalUnderTheCeiling() {
+    CARES_Tier__c tier = makeTier('Silver', 2, true);
+    makePolicy(tier, 'Delayed', 50.00, 60.00, 10, true);
+    Contact c = makeContact();
+    c.CARES_Tier__c = tier.Id;
+    Database.update(c, AccessLevel.SYSTEM_MODE);
+
+    CARES_Refund_CalculateOffer.Result r = offer(
+      c.Id,
+      'Delayed',
+      'NOT_CLEAN',
+      0,
+      0,
+      20.00,
+      ''
+    );
+    System.assertEquals(true, r.eligible, 'A late order with a known total gets an offer');
+    System.assertEquals(
+      20.00,
+      r.refundAmount,
+      'The order total is the base; log_order_issue values Delayed at 0'
+    );
+    System.assertEquals(22.00, r.creditAmount, '20.00 + 10% bonus');
+  }
+
+  @IsTest
+  static void standardPathStolenIsCappedByTheCeiling() {
+    CARES_Tier__c tier = makeTier('Silver', 2, true);
+    makePolicy(tier, 'Stolen', 30.00, 40.00, 10, true);
+    Contact c = makeContact();
+    c.CARES_Tier__c = tier.Id;
+    Database.update(c, AccessLevel.SYSTEM_MODE);
+
+    CARES_Refund_CalculateOffer.Result r = offer(
+      c.Id,
+      'Stolen',
+      'NOT_CLEAN',
+      0,
+      0,
+      90.00,
+      ''
+    );
+    System.assertEquals(true, r.eligible, 'A stolen order with a known total gets an offer');
+    System.assertEquals(
+      30.00,
+      r.refundAmount,
+      'The standard ceiling caps the order total'
+    );
+  }
+
+  @IsTest
+  static void standardPathDeliveryOutcomeWithoutOrderTotalIsIneligible() {
+    CARES_Tier__c tier = makeTier('Silver', 2, true);
+    makePolicy(tier, 'Delayed', 50.00, 60.00, 10, true);
+    Contact c = makeContact();
+    c.CARES_Tier__c = tier.Id;
+    Database.update(c, AccessLevel.SYSTEM_MODE);
+
+    CARES_Refund_CalculateOffer.Result r = offer(
+      c.Id,
+      'Delayed',
+      'CLEAN',
+      0,
+      0,
+      0,
+      ''
+    );
+    System.assertEquals(
+      false,
+      r.eligible,
+      'No order total: no offer, never an eligible 0.00'
+    );
+    System.assertEquals(0, r.refundAmount, 'No amount without an offer');
+    System.assertEquals(0, r.creditAmount, 'No credit without an offer');
+    System.assert(
+      r.ineligibleReason.contains('team member'),
+      'The customer is told a person will check it: ' + r.ineligibleReason
+    );
+  }
+
+  @IsTest
+  static void directPathStillUsesTheAffectedValue() {
+    CARES_Tier__c tier = makeTier('Silver', 2, true);
+    makePolicy(tier, 'Wrong_Missing_Items', 50.00, 60.00, 10, true);
+    Contact c = makeContact();
+    c.CARES_Tier__c = tier.Id;
+    Database.update(c, AccessLevel.SYSTEM_MODE);
+
+    CARES_Refund_CalculateOffer.Result r = offer(
+      c.Id,
+      'Wrong_Missing_Items',
+      'NOT_CLEAN',
+      8.00,
+      0,
+      40.00,
+      ''
+    );
+    System.assertEquals(
+      8.00,
+      r.refundAmount,
+      'Item problems are still worth the affected items, not the order total'
+    );
+  }
+
   @IsTest
   static void cleanRiskStatusUnlocksTheHigherLimit() {
     CARES_Tier__c tier = makeTier('Silver', 2, true);

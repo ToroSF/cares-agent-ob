@@ -33,7 +33,7 @@ Refund reads the `stolen_delayed_*` variables, which are set only by Stolen & De
 | Condition (all also need `stolen_delayed_needs_person == False`, an order Refund hasn't handled yet, Refund not already on a Stolen & Delayed path, and nothing confirmed or attempted, see D-033) | Path | What Refund does |
 |---|---|---|
 | `stolen_delayed_handoff_status == "READY_FOR_REFUND"` | READY | Order = `stolen_delayed_order_id`, outcome `Stolen`, approved amount and cap = `stolen_delayed_order_total`. Offer: the full total as a refund, or the full total + bonus as wallet credit (D-029). The script maps the customer's choice to `refund_chosen_resolution` (`WALLET_CREDIT` → `Store_Credit`, `REFUND` → `Refund`, D-035), and only that method is offered. Confirm once, then issue (D-028). The driver and restaurant recommendations are recorded on the payout row by `issue_resolution` (D-092) |
-| `stolen_delayed_decision == "STANDARD_PATH"` | STANDARD | Order = `stolen_delayed_order_id`, cap = `stolen_delayed_order_total`. Ask "stolen or late?" and log `Stolen` or `Delayed` (D-030). Then the normal offer, capped at the order total |
+| `stolen_delayed_decision == "STANDARD_PATH"` | STANDARD | Order = `stolen_delayed_order_id`, cap = `stolen_delayed_order_total`. If S&D's reason is `NOT_MARKED_DELIVERED`, the script logs `Delayed` itself (the order can only be late). Otherwise (`PHOTO_EVIDENCE`), ask "stolen or late?" and log `Stolen` or `Delayed` (D-030). Then the normal offer, based on the order total (D-099) |
 | `stolen_delayed_needs_person == True` | none | Never offer or issue. Tell the customer a person will take it |
 
 A hand-off replaces unconfirmed direct-path work: if the customer was mid-way through a direct refund and went to Stolen & Delayed, Refund resets its offer state and takes the hand-off (D-033).
@@ -59,7 +59,7 @@ At any step: rejects both options, asks for more, or disputes → hand off to a 
 ## Offer rule (owned by `calculate_refund_offer`)
 **First, on every path (D-088):** if the order already has a `CARES_Resolution__c` row (any status), the offer is not eligible, both amounts are 0, `alreadyResolved` is true and the reason is "This order already has a refund or credit on file…". Refund then sets `escalation_category = CLAIM_REVIEW` if it was blank, so a hand-off is categorised (G-091).
 
-READY path: `refund = approved full amount`. Otherwise `refund = min(affected value, ceiling, order total cap)`, where the ceiling is the higher limit if `risk_status` is `CLEAN`, and the standard limit for `NOT_CLEAN` or `UNKNOWN` (D-008). Then `credit = refund × (1 + bonus %)`. If no active tier can be resolved, or no active policy row matches, the offer is not eligible.
+READY path: `refund = approved full amount`. STANDARD path, `Stolen` or `Delayed`: `refund = min(order total, ceiling)`; no order total means not eligible ("…a team member will take it from here"), never an eligible 0 (D-099, G-117). Otherwise `refund = min(affected value, ceiling, order total cap)`, where the ceiling is the higher limit if `risk_status` is `CLEAN`, and the standard limit for `NOT_CLEAN` or `UNKNOWN` (D-008). Then `credit = refund × (1 + bonus %)`. If no active tier can be resolved, or no active policy row matches, the offer is not eligible.
 
 **Real today (D-046, D-047):** the ceiling, and the credit bonus percent, come from the Contact's `CARES_Tier__c` and a matching active `CARES_Refund_Policy__c` row for that tier × `orderOutcome`. A Contact with no tier, or an inactive one, falls back to the lowest-ranked active `CARES_Tier__c`; no active tier at all makes the offer ineligible. The READY path skips the policy ceiling (the Stolen & Delayed contract carries an approved amount) and takes the credit bonus from the same tier row for that outcome; no row means no bonus (D-082).
 
@@ -160,7 +160,7 @@ Reads, not owned: `ContactId` (channel), `risk_checked` and `risk_status` (Risk 
 | R-01 | Wrong item, credit chosen | Find order → log `Wrong_Missing_Items` → offer → credit → read-back → yes → issued with reference → state cleared |
 | R-02 | READY, customer chose `REFUND` | Skips intake → confirms full order total to original payment → issued → the recommendations are on the resolution row (`Settlement_Status__c`); `Needs_Review` opens a review case |
 | R-03 | READY, customer chose `WALLET_CREDIT` | Only the credit option (total + bonus) is offered → issued → settlement runs |
-| R-15 | STANDARD path | Asks "stolen or late?" → logs it → offer capped at the order total; no settlement |
+| R-15 | STANDARD path | `NOT_MARKED_DELIVERED`: logs `Delayed` without asking, then an offer based on the order total. `PHOTO_EVIDENCE`: asks "stolen or late?" first. Never a 0.00 offer (agent guard, G-117); no settlement |
 | R-16 | `stolen_delayed_needs_person == True` | No offer; issue action hidden |
 | R-17 | After a READY payout, customer asks again in the same conversation | Same order not paid twice (`refund_handled_order_id`) |
 | R-04 | 1 of 4 items missing | Offer based on that item only |

@@ -34,9 +34,9 @@ Status: `PROPOSAL` (draft for the team to edit). Numbers marked `[$]` need Pront
 | Value   | A fast, fair, personal answer; better treatment for a clean record                                                     | Customer feels recognized                                                                                                                       |
 | System  | Risk Detection (history), Stolen & Delayed (diagnosis), Refund (offer inside limits), Escalate (people for hard cases) | Actions run, offers made                                                                                                                        |
 | Outcome | The customer orders again; fewer cases reach support                                                                   | Retention up, handled-by-person down                                                                                                            |
-| Dollar  | Retained margin + saved support time - compensation cost                                                               | `[$]` = (customers kept x orders per year x average order value x margin) + (cases not handled by a person x cost per case) - compensation paid |
+| Dollar  | Retained margin + saved support time - extra compensation - agent cost                                                 | `[$]` = (customers kept x orders per year x average order value x margin) + (cases not handled by a person x cost per case) - (cases CARES resolves x compensation above what a person would pay) - (conversations x agent cost). Base case ~US$1M a year for 1M orders a year |
 
-Inputs we still need from Pronto `[$]`: average order value, orders per customer per year, margin, the share of customers who leave after a bad order, cost per support case.
+Pronto has no real figures, so each input is a market benchmark or a team assumption `[$]`, with low, base and high values: see [MARKET_BENCHMARKS.md](MARKET_BENCHMARKS.md) and `metrics/data/value.json`. Compensation counts only what CARES pays above a person applying the same policy.
 
 **Handoff to the internal customer.** When CARES escalates, the support team gets a case with a short summary, what was already offered, and the customer's priority. No customer has to repeat the story.
 

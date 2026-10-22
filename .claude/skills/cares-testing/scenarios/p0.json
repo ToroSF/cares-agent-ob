@@ -766,6 +766,42 @@
    "judge": "Session 2: the offer is refused before any amount (\"already has a refund or credit on file\", D-088). No amount is said in session 2, nothing is claimed as issued (INV-3), and a person is offered. If it escalates, the category is CLAIM_REVIEW (G-091)."
   },
   {
+   "id": "B-RF-27",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "FX-OFD",
+   "no_contact": true,
+   "turns": [
+    "My last order hasn't arrived yet.",
+    "{email}"
+   ],
+   "expect": {
+    "path": [
+     "risk_detection",
+     "identify_customer",
+     "risk_detection",
+     "stolen_delayed_orders",
+     "refund"
+    ],
+    "actions": [
+     "get_latest_order",
+     "check_order",
+     "log_order_issue",
+     "calculate_refund_offer"
+    ],
+    "inputs": {
+     "log_order_issue.issueType": "Delayed"
+    },
+    "outputs_none": {
+     "calculate_refund_offer.refundAmount": 0
+    },
+    "reply_none": [
+     "\\b0\\.00\\b"
+    ]
+   },
+   "judge": "The G-117 conversation: email only, latest order Out for Delivery. After the email the customer gets a real offer or the plain no-offer reply in the same turn, never 0.00 and no stolen-or-late question."
+  },
+  {
    "id": "B-SD-01",
    "priority": "P0",
    "mode": "live",
@@ -882,16 +918,26 @@
     ],
     "actions": [
      "get_latest_order",
-     "check_order"
+     "check_order",
+     "log_order_issue",
+     "calculate_refund_offer"
     ],
     "inputs": {
-     "check_order.orderId": "{latest}"
+     "check_order.orderId": "{latest}",
+     "log_order_issue.issueType": "Delayed"
     },
     "outputs": {
      "check_order.decision": "STANDARD_PATH"
-    }
+    },
+    "outputs_none": {
+     "calculate_refund_offer.refundAmount": 0
+    },
+    "reply_none": [
+     "\\b0\\.00\\b",
+     "stolen"
+    ]
    },
-   "judge": "The latest order is Out for Delivery: S&D checks that order, not an older delivered one (Refund's find_order would have picked one)."
+   "judge": "The latest order is Out for Delivery: S&D checks that order, not an older delivered one (Refund's find_order would have picked one). Then Refund logs it as Delayed without asking stolen-or-late and offers a real amount (G-117), never 0.00."
   },
   {
    "id": "B-SD-23",

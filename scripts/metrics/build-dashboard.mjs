@@ -153,8 +153,9 @@ function parseDocs() {
     status: (c[2].match(/^[A-Z]+/) || ["OTHER"])[0],
   }));
   const gaps = tableRows(readRepo("docs/GAPS.md"), /^\| G-\d+/).map((c) => {
-    const s = c[c.length - 1].toUpperCase();
-    const status = s.startsWith("PARTLY") ? "PARTLY CLOSED" : /^(CLOSED|FIXED)/.test(s) ? "CLOSED" : /^(MITIGATED|DECIDED)/.test(s) ? "MITIGATED" : s.startsWith("OPEN") ? "OPEN" : "OTHER";
+    // Status is the 5th column; a "|" inside a cell can add columns after it.
+    const s = (c[4] ?? c[c.length - 1]).toUpperCase();
+    const status = /^PART(LY|IALLY)/.test(s) ? "PARTLY CLOSED" : s.startsWith("BUILT") ? "BUILT" : /^(CLOSED|FIXED)/.test(s) ? "CLOSED" : /^(MITIGATED|DECIDED)/.test(s) ? "MITIGATED" : s.startsWith("OPEN") ? "OPEN" : "OTHER";
     return { id: c[0], status };
   });
   const risks = tableRows(readRepo("docs/RISKS.md"), /^\| R-\d+/).map((c) => ({
@@ -244,6 +245,9 @@ function collectOrg() {
   );
   const sessions = tryQuery("SELECT Status, CreatedDate FROM MessagingSession ORDER BY CreatedDate");
   const csat = tryQuery("SELECT Score__c, CreatedDate FROM CSAT_Rating__c");
+  const resolutions = tryQuery("SELECT Resolution_Type__c, Amount__c, Status__c FROM CARES_Resolution__c");
+  // Delivery result of the escalation alert (Sent / Failed: reason); the field arrives with the escalation hand-off
+  const alerts = tryQuery("SELECT CARES_Alert_Status__c FROM Case WHERE CARES_Alert_Status__c != null");
   const caseKind = (s = "") => (/escalat/i.test(s) ? "Escalation" : /refund|credit/i.test(s) ? "Refund" : "Other");
   return {
     readAt: new Date().toISOString(),
@@ -260,8 +264,44 @@ function collectOrg() {
     },
     sessions: sessions && { total: sessions.length, byDay: count(sessions, (s) => day(s.CreatedDate)), byStatus: count(sessions, "Status") },
     csat: csat && { total: csat.length, byScore: count(csat, (c) => String(c.Score__c ?? "(none)")) },
+    resolutions: resolutions && summarizeResolutions(resolutions),
+    alerts: alerts && {
+      total: alerts.length,
+      // Status reads like "Bell: Sent | Slack: Off": delivered when any channel was sent.
+      sent: alerts.filter((a) => /\bsent\b/i.test(a.CARES_Alert_Status__c)).length,
+      failed: alerts.filter((a) => /\bfailed\b/i.test(a.CARES_Alert_Status__c)).length,
+      slackSent: alerts.filter((a) => /slack:\s*sent/i.test(a.CARES_Alert_Status__c)).length,
+    },
     conversations: versions?.length ? collectConversations(versions) : null,
   };
+}
+
+// Refunds and credits CARES issued: counts and amounts only, against the policy's auto-approval limit
+function summarizeResolutions(rows) {
+  const limit = policyLimitUsd();
+  const amounts = rows.map((r) => Number(r.Amount__c) || 0);
+  const total = amounts.reduce((a, b) => a + b, 0);
+  const byType = {};
+  for (const r of rows) {
+    const t = (byType[r.Resolution_Type__c || "(none)"] ??= { count: 0, amount: 0 });
+    t.count++;
+    t.amount = +(t.amount + (Number(r.Amount__c) || 0)).toFixed(2);
+  }
+  return {
+    total: rows.length,
+    byStatus: count(rows, (r) => r.Status__c || "(none)"),
+    byType,
+    amount: { total: +total.toFixed(2), mean: rows.length ? +(total / rows.length).toFixed(2) : null, max: rows.length ? Math.max(...amounts) : null },
+    limitUsd: limit,
+    withinLimit: limit == null ? null : amounts.filter((a) => a <= limit).length,
+  };
+}
+
+// Escalation_Amount_USD__c in the Stolen & Delayed policy record: above it, a person decides
+function policyLimitUsd() {
+  const xml = readRepo("force-app/main/default/customMetadata/CARES_Stolen_Delayed_Policy.Default.md-meta.xml", "") || "";
+  const m = xml.match(/Escalation_Amount_USD__c<\/field>\s*<value[^>]*>([\d.]+)</);
+  return m ? Number(m[1]) : null;
 }
 
 // Agent conversations from the platform's own session log (ConversationDefinitionSession + EventLog).
@@ -335,7 +375,10 @@ function loadBatch() {
   const results = JSON.parse(readRepo(".claude/skills/cares-testing/test-results.json") || '{"runs":[]}');
   const dir = ".claude/skills/cares-testing/scenarios";
   const files = (git("ls-tree", "--name-only", docsRef || "HEAD", `${dir}/`) || "").split("\n").filter((f) => f.endsWith(".json"));
-  const checked = new Set(files.flatMap((f) => (JSON.parse(readRepo(f) || '{"scenarios":[]}').scenarios || []).map((s) => s.id.replace(/[a-z]$/, ""))));
+  const specs = files.flatMap((f) => JSON.parse(readRepo(f) || '{"scenarios":[]}').scenarios || []);
+  const checked = new Set(specs.map((s) => s.id.replace(/[a-z]$/, "")));
+  // Scenarios with a hard check that the reply carries the case number (a soft check only writes a note)
+  const caseNumberIds = new Set(specs.filter((s) => (s.expect?.reply_any || []).some((rx) => rx.includes("0\\d{7}"))).map((s) => s.id));
   // Persona of each scenario, as written in personas.md (run labels are not personas)
   const personaOf = {};
   let persona = "";
@@ -360,8 +403,12 @@ function loadBatch() {
     };
   });
   const latestRows = Object.values(latest);
+  const withCaseNumber = Object.entries(latest).filter(([id]) => caseNumberIds.has(id));
   return {
     checkedScenarios: checked.size,
+    caseNumberInReply: withCaseNumber.length
+      ? { scenarios: withCaseNumber.length, passed: withCaseNumber.filter(([, r]) => ["PASS", "UNEXPECTED_PASS"].includes(r.outcome)).length }
+      : null,
     runs,
     totalSessions: runs.reduce((a, r) => a + (r.sessions || 0), 0),
     latest: { total: latestRows.length, byOutcome: count(latestRows, "outcome") },
@@ -385,6 +432,9 @@ if (args.offline) {
 // Our reading of each suite run (written by hand, keyed by suite name)
 const findingsPath = join(DATA_DIR, "findings.json");
 const findings = existsSync(findingsPath) ? JSON.parse(readFileSync(findingsPath, "utf8")) : {};
+// The business case inputs (team assumptions until the market research fills them)
+const valuePath = join(DATA_DIR, "value.json");
+const value = existsSync(valuePath) ? JSON.parse(readFileSync(valuePath, "utf8")) : null;
 
 const data = {
   generatedAt: new Date().toISOString(),
@@ -397,10 +447,27 @@ const data = {
   org,
   testing: loadTestingCenter().map((run) => ({ ...run, findings: findings[run.suite] || [] })),
   batch: loadBatch(),
+  value,
 };
 
 const template = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "dashboard.template.html"), "utf8");
-const json = JSON.stringify(data).replace(/</g, "\\u003c");
-writeFileSync(join(OUT_DIR, "index.html"), template.replace("/*__DATA__*/null", json));
+const inline = (o) => JSON.stringify(o).replace(/</g, "\\u003c");
+const page = template.replace("/*__DATA__*/null", inline(data));
+writeFileSync(join(OUT_DIR, "index.html"), page.replace("/*__BRAND__*/null", "null"));
 writeFileSync(join(DATA_DIR, "metrics.json"), JSON.stringify(data, null, 2) + "\n");
 console.log(`Wrote docs/metrics/index.html (${data.testing.length} Testing Center run(s), org: ${org ? "yes" : "no"})`);
+
+// The presentation copy adds the licensed Salesforce fonts and brand art from docs/metrics/brand/.
+// Both the folder and presentation.html are ignored by git: the repo is public.
+const BRAND_DIR = join(OUT_DIR, "brand");
+if (existsSync(BRAND_DIR)) {
+  const file = (name, type) => (existsSync(join(BRAND_DIR, name)) ? `data:${type};base64,${readFileSync(join(BRAND_DIR, name)).toString("base64")}` : null);
+  const brand = {
+    fonts: { display: file("avantgarde.woff", "font/woff"), regular: file("sfsans-regular.woff", "font/woff"), bold: file("sfsans-bold.woff", "font/woff") },
+    logo: existsSync(join(BRAND_DIR, "salesforce-horizontal-mono.svg")) ? readFileSync(join(BRAND_DIR, "salesforce-horizontal-mono.svg"), "utf8") : null,
+    ball: file("agentforce-ball.png", "image/png"),
+    sparkles: readdirSync(BRAND_DIR).filter((f) => /^sparkle-.*\.png$/.test(f)).sort().map((f) => ({ name: f, src: file(f, "image/png") })),
+  };
+  writeFileSync(join(OUT_DIR, "presentation.html"), page.replace("/*__BRAND__*/null", inline(brand)));
+  console.log("Wrote docs/metrics/presentation.html (brand fonts and art, not committed)");
+}

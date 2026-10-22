@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-10-21T14:58:23.689Z",
-  "commit": "b72b774",
-  "branch": "fix/g084-g089-after-account-read",
+  "generatedAt": "2026-10-22T17:21:15.049Z",
+  "commit": "a6d5dce",
+  "branch": "feature/metrics-dashboard-v2",
   "docsRef": "working tree",
   "agent": {
-    "lines": 1235,
-    "variables": 58,
+    "lines": 1573,
+    "variables": 71,
     "subagents": [
       {
         "name": "agent_router",
@@ -14,19 +14,15 @@
         "actions": [],
         "tools": [
           {
-            "name": "go_to_refund",
-            "kind": "transition"
-          },
-          {
-            "name": "go_to_stolen_delayed",
-            "kind": "transition"
-          },
-          {
-            "name": "go_to_risk_detection",
-            "kind": "transition"
-          },
-          {
             "name": "go_to_urgent_escalation",
+            "kind": "transition"
+          },
+          {
+            "name": "go_to_delivery_problem",
+            "kind": "transition"
+          },
+          {
+            "name": "go_to_item_problem",
             "kind": "transition"
           },
           {
@@ -42,29 +38,37 @@
             "kind": "transition"
           },
           {
-            "name": "go_to_experience_rating",
-            "kind": "transition"
-          },
-          {
-            "name": "go_to_off_topic",
-            "kind": "transition"
-          },
-          {
             "name": "go_to_ambiguous_question",
+            "kind": "transition"
+          },
+          {
+            "name": "go_to_identify_customer",
+            "kind": "transition"
+          },
+          {
+            "name": "go_to_refund",
+            "kind": "transition"
+          },
+          {
+            "name": "go_to_stolen_delayed",
+            "kind": "transition"
+          },
+          {
+            "name": "go_to_experience_rating",
             "kind": "transition"
           }
         ],
         "goesTo": [
-          "refund",
-          "stolen_delayed_orders",
-          "risk_detection",
           "urgent_escalation",
+          "risk_detection",
+          "refund",
           "order_status",
           "pronto_help",
           "escalate_to_human",
-          "experience_rating",
-          "off_topic",
-          "ambiguous_question"
+          "ambiguous_question",
+          "identify_customer",
+          "stolen_delayed_orders",
+          "experience_rating"
         ]
       },
       {
@@ -89,8 +93,8 @@
             "type": "apex"
           },
           {
-            "name": "apply_settlement",
-            "type": "apex"
+            "name": "create_settlement_review_case",
+            "type": "flow"
           }
         ],
         "tools": [
@@ -121,13 +125,16 @@
           {
             "name": "go_to_escalate_human",
             "kind": "transition"
+          },
+          {
+            "name": "close_issue",
+            "kind": "setVariables"
           }
         ],
         "goesTo": [
           "risk_detection",
-          "identify_customer",
-          "stolen_delayed_orders",
-          "escalate_to_human"
+          "escalate_to_human",
+          "stolen_delayed_orders"
         ]
       },
       {
@@ -135,6 +142,10 @@
         "label": "Stolen & Delayed Orders",
         "start": false,
         "actions": [
+          {
+            "name": "get_latest_order",
+            "type": "apex"
+          },
           {
             "name": "evaluate_delivery_exception",
             "type": "apex"
@@ -164,12 +175,15 @@
           {
             "name": "go_to_experience_rating",
             "kind": "transition"
+          },
+          {
+            "name": "go_to_refund_items",
+            "kind": "transition"
           }
         ],
         "goesTo": [
-          "identify_customer",
-          "risk_detection",
           "escalate_to_human",
+          "refund",
           "experience_rating"
         ]
       },
@@ -181,12 +195,18 @@
           {
             "name": "get_risk_result",
             "type": "flow"
+          },
+          {
+            "name": "get_customer_context",
+            "type": "flow"
           }
         ],
         "tools": [],
         "goesTo": [
+          "identify_customer",
           "escalate_to_human",
-          "refund"
+          "refund",
+          "stolen_delayed_orders"
         ]
       },
       {
@@ -263,30 +283,9 @@
           {
             "name": "search_pronto_policy",
             "kind": "action"
-          },
-          {
-            "name": "go_to_refund_check",
-            "kind": "transition"
-          },
-          {
-            "name": "go_to_stolen_delayed",
-            "kind": "transition"
-          },
-          {
-            "name": "go_to_order_status",
-            "kind": "transition"
-          },
-          {
-            "name": "go_to_escalate_human",
-            "kind": "transition"
           }
         ],
-        "goesTo": [
-          "risk_detection",
-          "stolen_delayed_orders",
-          "order_status",
-          "escalate_to_human"
-        ]
+        "goesTo": []
       },
       {
         "name": "order_status",
@@ -304,23 +303,18 @@
             "kind": "action"
           },
           {
-            "name": "go_to_stolen_delayed",
+            "name": "go_to_delivery_problem",
             "kind": "transition"
           },
           {
-            "name": "go_to_refund_check",
-            "kind": "transition"
-          },
-          {
-            "name": "go_to_escalate_human",
+            "name": "go_to_item_problem",
             "kind": "transition"
           }
         ],
         "goesTo": [
           "identify_customer",
-          "stolen_delayed_orders",
           "risk_detection",
-          "escalate_to_human"
+          "refund"
         ]
       },
       {
@@ -339,11 +333,7 @@
             "kind": "action"
           },
           {
-            "name": "continue_refund",
-            "kind": "transition"
-          },
-          {
-            "name": "continue_order_check",
+            "name": "continue_to_risk",
             "kind": "transition"
           },
           {
@@ -356,56 +346,47 @@
           }
         ],
         "goesTo": [
-          "refund",
-          "stolen_delayed_orders",
+          "risk_detection",
           "order_status",
           "escalate_to_human"
         ]
       },
       {
-        "name": "off_topic",
-        "label": "Off Topic",
-        "start": false,
-        "actions": [],
-        "tools": [],
-        "goesTo": []
-      },
-      {
         "name": "ambiguous_question",
-        "label": "Ambiguous Question",
+        "label": "Off-topic / Ambiguous",
         "start": false,
         "actions": [],
         "tools": [],
         "goesTo": []
       }
     ],
-    "actionCount": 13,
+    "actionCount": 15,
     "actionsByType": {
       "apex": 10,
-      "flow": 2,
+      "flow": 4,
       "standard": 1
     },
-    "transitions": 34,
+    "transitions": 28,
     "hasKnowledge": true
   },
   "agentCompare": null,
   "docs": {
     "decisions": {
-      "total": 76,
+      "total": 98,
       "byStatus": {
-        "DECIDED": 50,
-        "PROPOSAL": 25,
+        "DECIDED": 69,
+        "PROPOSAL": 28,
         "OPEN": 1
       }
     },
     "gaps": {
-      "total": 100,
+      "total": 117,
       "byStatus": {
-        "CLOSED": 32,
-        "OPEN": 62,
-        "OTHER": 1,
-        "PARTLY CLOSED": 3,
-        "MITIGATED": 2
+        "CLOSED": 51,
+        "OPEN": 55,
+        "PARTLY CLOSED": 6,
+        "MITIGATED": 2,
+        "BUILT": 3
       }
     },
     "risks": {
@@ -456,16 +437,16 @@
       ]
     },
     "scenarios": {
-      "total": 180,
+      "total": 185,
       "p0": 72,
       "byPersona": {
         "P0 Harness and smoke checks": 7,
         "P1 Router and first contact": 11,
-        "P2 Risk Detection": 14,
+        "P2 Risk Detection": 17,
         "P3 Refund, direct path": 26,
         "P4 Stolen & Delayed Orders": 15,
         "P5 Contracts between subagents": 15,
-        "P6 Experience Rating": 13,
+        "P6 Experience Rating": 15,
         "P7 Escalate to Human": 9,
         "P8 Guardrails and red team": 16,
         "P9 Continuity and context retention": 8,
@@ -482,17 +463,17 @@
       "adversarial": 5
     },
     "runLog": {
-      "total": 50,
+      "total": 63,
       "byResult": {
-        "Pass": 20,
+        "Pass": 23,
         "Fail": 3,
-        "Open": 9,
-        "Other": 18
+        "Open": 18,
+        "Other": 19
       }
     }
   },
   "org": {
-    "readAt": "2026-10-21T14:58:15.490Z",
+    "readAt": "2026-10-22T17:21:09.935Z",
     "versions": [
       {
         "version": 1,
@@ -516,97 +497,153 @@
       },
       {
         "version": 5,
-        "status": "Active",
+        "status": "Inactive",
         "date": "2026-10-21"
+      },
+      {
+        "version": 6,
+        "status": "Inactive",
+        "date": "2026-10-21"
+      },
+      {
+        "version": 7,
+        "status": "Inactive",
+        "date": "2026-10-22"
+      },
+      {
+        "version": 8,
+        "status": "Inactive",
+        "date": "2026-10-22"
+      },
+      {
+        "version": 9,
+        "status": "Inactive",
+        "date": "2026-10-22"
+      },
+      {
+        "version": 10,
+        "status": "Active",
+        "date": "2026-10-22"
       }
     ],
     "cases": {
-      "total": 143,
+      "total": 282,
       "byDay": {
         "2026-10-20": 64,
-        "2026-10-21": 79
+        "2026-10-21": 185,
+        "2026-10-22": 33
       },
       "byType": {
-        "Customer Order Issue": 127,
-        "Delivery & Driver Issue": 16
+        "Customer Order Issue": 224,
+        "Delivery & Driver Issue": 58
       },
       "byReason": {
         "Missing items": 64,
-        "(none)": 56,
-        "Fraud or policy review": 23
+        "(none)": 157,
+        "Fraud or policy review": 61
       },
       "byPriority": {
-        "Medium": 121,
-        "High": 22
+        "Medium": 222,
+        "High": 60
       },
       "byStatus": {
-        "New": 121,
-        "Escalated": 22
+        "New": 222,
+        "Escalated": 60
       },
       "byOrigin": {
         "Chat": 64,
-        "Agentforce": 79
+        "Agentforce": 218
       },
       "byKind": {
-        "Escalation": 143
+        "Escalation": 282
       }
     },
     "sessions": {
-      "total": 6,
+      "total": 7,
       "byDay": {
-        "2026-10-20": 6
+        "2026-10-20": 6,
+        "2026-10-21": 1
       },
       "byStatus": {
-        "Ended": 6
+        "Ended": 7
       }
     },
     "csat": {
-      "total": 6,
+      "total": 18,
       "byScore": {
-        "2": 3,
-        "5": 3
+        "2": 9,
+        "5": 9
       }
     },
+    "resolutions": {
+      "total": 41,
+      "byStatus": {
+        "Issued": 41
+      },
+      "byType": {
+        "Refund": {
+          "count": 38,
+          "amount": 533.84
+        },
+        "Store_Credit": {
+          "count": 3,
+          "amount": 41.59
+        }
+      },
+      "amount": {
+        "total": 575.43,
+        "mean": 14.03,
+        "max": 92.2
+      },
+      "limitUsd": 100,
+      "withinLimit": 41
+    },
+    "alerts": {
+      "total": 138,
+      "sent": 138,
+      "failed": 0,
+      "slackSent": 49
+    },
     "conversations": {
-      "sessions": 277,
-      "engaged": 235,
-      "escalated": 48,
+      "sessions": 339,
+      "engaged": 279,
+      "escalated": 50,
       "transferred": 2,
       "customerMessages": {
-        "mean": 1.64,
+        "mean": 1.72,
         "median": 2,
-        "max": 7
+        "max": 10
       },
       "byMode": {
         "Builder preview": {
-          "sessions": 238,
-          "engaged": 198,
-          "escalated": 43,
+          "sessions": 258,
+          "engaged": 202,
+          "escalated": 45,
           "transferred": 0,
           "customerMessages": {
-            "mean": 1.53,
+            "mean": 1.58,
             "median": 2,
-            "max": 6
+            "max": 10
           }
         },
         "Other (tests, API)": {
-          "sessions": 30,
-          "engaged": 30,
+          "sessions": 42,
+          "engaged": 41,
           "escalated": 2,
           "transferred": 0,
           "customerMessages": {
-            "mean": 2.47,
+            "mean": 2.38,
             "median": 2,
             "max": 7
           }
         },
         "Live chat (website)": {
-          "sessions": 9,
-          "engaged": 7,
+          "sessions": 39,
+          "engaged": 36,
           "escalated": 3,
           "transferred": 2,
           "customerMessages": {
-            "mean": 1.78,
+            "mean": 1.92,
             "median": 2,
             "max": 3
           }
@@ -658,34 +695,91 @@
           }
         },
         "v5": {
-          "sessions": 85,
-          "engaged": 83,
+          "sessions": 93,
+          "engaged": 89,
           "escalated": 8,
           "transferred": 0,
           "customerMessages": {
-            "mean": 1.92,
+            "mean": 1.89,
             "median": 2,
             "max": 3
+          }
+        },
+        "v6": {
+          "sessions": 12,
+          "engaged": 12,
+          "escalated": 0,
+          "transferred": 0,
+          "customerMessages": {
+            "mean": 2.17,
+            "median": 2,
+            "max": 4
+          }
+        },
+        "v7": {
+          "sessions": 19,
+          "engaged": 15,
+          "escalated": 0,
+          "transferred": 0,
+          "customerMessages": {
+            "mean": 1.68,
+            "median": 2,
+            "max": 3
+          }
+        },
+        "v8": {
+          "sessions": 4,
+          "engaged": 1,
+          "escalated": 1,
+          "transferred": 0,
+          "customerMessages": {
+            "mean": 3,
+            "median": 2,
+            "max": 8
+          }
+        },
+        "v10": {
+          "sessions": 7,
+          "engaged": 5,
+          "escalated": 0,
+          "transferred": 0,
+          "customerMessages": {
+            "mean": 1.71,
+            "median": 2,
+            "max": 5
+          }
+        },
+        "v9": {
+          "sessions": 12,
+          "engaged": 5,
+          "escalated": 1,
+          "transferred": 0,
+          "customerMessages": {
+            "mean": 2.67,
+            "median": 2,
+            "max": 10
           }
         }
       },
       "byEnd": {
-        "(still open)": 118,
-        "EndedByEndUser": 154,
+        "(still open)": 139,
+        "EndedByEndUser": 194,
         "Action": 2,
-        "SessionTimedOut": 1,
+        "SessionTimedOut": 2,
         "Transferred": 2
       },
       "byDay": {
         "2026-10-20": 191,
-        "2026-10-21": 86
+        "2026-10-21": 124,
+        "2026-10-22": 24
       },
       "turnsHistogram": {
-        "0": 4,
-        "1": 110,
-        "2": 154,
-        "3": 6,
-        "5": 3
+        "0": 12,
+        "1": 116,
+        "2": 194,
+        "3": 9,
+        "4": 1,
+        "5": 7
       }
     }
   },
@@ -3204,7 +3298,11 @@
     }
   ],
   "batch": {
-    "checkedScenarios": 153,
+    "checkedScenarios": 159,
+    "caseNumberInReply": {
+      "scenarios": 8,
+      "passed": 7
+    },
     "runs": [
       {
         "at": "2026-10-21T08:14:31Z",
@@ -3397,5 +3495,93 @@
       "UNEXPECTED_PASS",
       "N/A"
     ]
+  },
+  "value": {
+    "headline": "a year of value from CARES, for a marketplace with 1M orders a year",
+    "status": "benchmarked",
+    "note": "Low, base and high values from docs/MARKET_BENCHMARKS.md. Each input is a market benchmark or a labelled team assumption [$]; none is a Pronto figure. The page computes all three scenarios when every input is filled.",
+    "formula": "(customers kept x orders per year x average order value x margin) + (cases not handled by a person x cost per case) - (cases CARES resolves x compensation above what a person would pay) - (conversations x agent cost)",
+    "inputs": {
+      "complaintsPerYear": {
+        "label": "Orders with a complaint, per year",
+        "unit": "count",
+        "low": 61000,
+        "value": 122000,
+        "high": 183000,
+        "source": "[$] 1M orders x 24.4% with a problem (Zion & Zion) x 25 / 50 / 75% that contact support"
+      },
+      "churnAfterBadOrder": {
+        "label": "Spend lost after a bad order, as customers who leave",
+        "unit": "pct",
+        "low": 0.05,
+        "value": 0.1,
+        "high": 0.3,
+        "source": "Uber field experiment, 1.5M riders: 5-10% less spend (NBER w25676); high is below Zendesk's 63% stated intention"
+      },
+      "retainedByCares": {
+        "label": "Share of that loss CARES wins back",
+        "unit": "pct",
+        "low": 0.2,
+        "value": 0.3,
+        "high": 0.4,
+        "source": "Same experiment: a coupon sent right away recovered ~2 points of the 5-10"
+      },
+      "ordersPerCustomerYear": {
+        "label": "Orders per customer, per year",
+        "unit": "count",
+        "low": 32,
+        "value": 64,
+        "high": 64,
+        "source": "DoorDash Q4 2025: 903M orders / 56M monthly active users; low is half [$]"
+      },
+      "avgOrderValue": {
+        "label": "Average order value",
+        "unit": "usd",
+        "low": 30,
+        "value": 32.87,
+        "high": 34.1,
+        "source": "DoorDash Marketplace GOV / orders, Q4 2025 and Q2 2026; low [$]"
+      },
+      "margin": {
+        "label": "Contribution margin per order",
+        "unit": "pct",
+        "low": 0.038,
+        "value": 0.047,
+        "high": 0.05,
+        "source": "DoorDash contribution profit 4.7-5.0% of GOV; Uber Delivery segment income ~3.8% of bookings"
+      },
+      "costPerHumanCase": {
+        "label": "Cost of a case handled by a person",
+        "unit": "usd",
+        "low": 6.7,
+        "value": 7.8,
+        "high": 13.5,
+        "source": "Deloitte Digital 2026 Contact Center Survey (2024 and 2026); Gartner assisted contact"
+      },
+      "resolvedWithoutPerson": {
+        "label": "Share resolved without a person",
+        "unit": "pct",
+        "low": 0.5,
+        "value": 0.7,
+        "high": 0.9,
+        "source": "[$] Planning value; the measured share below is test traffic"
+      },
+      "extraCompensationPerCase": {
+        "label": "Compensation above what a person would pay, per case",
+        "unit": "usd",
+        "low": 0,
+        "value": 0,
+        "high": 0,
+        "source": "[$] Same policy caps as a person; Risk Detection should make it negative once measured"
+      },
+      "agentCostPerConversation": {
+        "label": "Agent cost per conversation",
+        "unit": "usd",
+        "low": 2,
+        "value": 0.5,
+        "high": 0.4,
+        "source": "Salesforce Agentforce pricing: $2 per conversation, or $0.10 per action x ~4-5 actions (Flex Credits)"
+      }
+    }
   }
 }

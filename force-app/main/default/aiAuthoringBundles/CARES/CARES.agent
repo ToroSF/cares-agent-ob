@@ -368,6 +368,19 @@ subagent refund:
                 set @variables.refund_credit_amount = 0
                 set @variables.refund_chosen_resolution = ""
 
+            # Not marked delivered (S&D reason NOT_MARKED_DELIVERED): it can only be late, so don't ask stolen-or-late (G-117)
+            if @variables.refund_sd_path == "STANDARD" and @variables.refund_order_outcome == "" and @variables.refund_issue_accepted == False and @variables.stolen_delayed_reason == "NOT_MARKED_DELIVERED":
+                run @actions.log_order_issue
+                    with contactId = @variables.customer_id
+                    with orderId = @variables.refund_order_id
+                    with issueType = "Delayed"
+                    with issueDescription = "Not marked delivered; the customer reports it has not arrived (from Stolen & Delayed Orders)."
+                    with affectedItems = ""
+                    with deliveryPath = "STANDARD"
+                    set @variables.refund_issue_accepted = @outputs.accepted
+                    set @variables.refund_order_outcome = @outputs.orderOutcome if @outputs.accepted == True else ""
+                    set @variables.refund_affected_value = @outputs.affectedValue if @outputs.accepted == True else 0
+
             if @variables.refund_order_outcome != "" and @variables.refund_offer_calculated == False:
                 run @actions.calculate_refund_offer
                     with contactId = @variables.customer_id
@@ -388,6 +401,11 @@ subagent refund:
                     set @variables.refund_order_already_resolved = @outputs.alreadyResolved
                 set @variables.refund_offer_calculated = True
 
+            # Never offer nothing (G-117): an eligible result worth 0 is treated as no offer
+            if @variables.refund_offer_calculated == True and @variables.refund_offer_eligible == True and @variables.refund_offer_amount <= 0 and @variables.refund_credit_amount <= 0:
+                set @variables.refund_offer_eligible = False
+                set @variables.refund_offer_ineligible_reason = "I couldn't calculate an offer for this order. A team member can check it for you."
+
             # A repeat claim on a resolved order is a claim review for the person (G-091); never override URGENT or PATTERN_REVIEW
             if @variables.refund_order_already_resolved == True and @variables.escalation_category == "":
                 set @variables.escalation_category = "CLAIM_REVIEW"
@@ -403,7 +421,7 @@ subagent refund:
                 | Current step: identify the order. If the customer has given an order number or said it's their most recent order, call {!@actions.find_order} now (leave orderNumber blank for the most recent order). Otherwise ask which order this is about.
                   If no order is found, ask for the order number (it looks like PR-250101-ABC1234; that example is made up). If the result says the order is not delivered yet, tell the customer and offer to check its status. If the order data is unavailable, apologize and use {!@actions.go_to_escalate_human}. Never make up an order.
             else if @variables.refund_order_outcome == "" and @variables.refund_sd_path == "STANDARD":
-                | Current step: ask the customer whether the order was stolen (marked delivered but never received) or late. Then call {!@actions.log_order_issue} with issue type Stolen or Delayed and the customer's words; leave the affected items blank.
+                | Current step: ask the customer whether the order was stolen (marked delivered but never received) or late. Then call {!@actions.log_order_issue} with issue type Stolen or Delayed and the customer's words; leave the affected items blank. When the customer answers, call {!@actions.log_order_issue} in that same reply. Do not say you will check their options without calling it.
             else if @variables.refund_order_outcome == "":
                 | Current step: record what went wrong. The order's items are: {!@variables.refund_order_line_items}
                   If the customer did not give an order number (you used their most recent order), first tell them which order this is — the restaurant and date from {!@variables.refund_order_summary} — before asking about items.
