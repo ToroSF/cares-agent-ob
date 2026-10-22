@@ -161,15 +161,15 @@ variables:
     stolen_delayed_latest_order_summary: mutable string = ""
         description: "Stolen & Delayed: order, restaurant, status and time of that order, from Order Status's lookup. Named back to the customer."
     stolen_delayed_timing: mutable string = ""
-        description: "Stolen & Delayed: ON_TIME, NOT_LATE_YET, DELAYED_MINOR, DELAYED_SEVERE, LIKELY_LOST or UNKNOWN, from the order's own times (D-099). Set only by the action."
+        description: "Stolen & Delayed: ON_TIME, NOT_LATE_YET, DELAYED_MINOR, DELAYED_SEVERE, LIKELY_LOST or UNKNOWN, from the order's own times (D-100). Set only by the action."
     stolen_delayed_delay_severity: mutable string = ""
-        description: "Stolen & Delayed: MINOR or SEVERE for a DELAY decision, else blank (D-099). Context for Refund."
+        description: "Stolen & Delayed: MINOR or SEVERE for a DELAY decision, else blank (D-100). Context for Refund."
     stolen_delayed_delay_value: mutable number = 0
-        description: "Stolen & Delayed: DELAY only, the order total times the delay percentage; Refund caps it with the tier's Delayed row (D-099)."
+        description: "Stolen & Delayed: DELAY only, the order total times the delay percentage; Refund caps it with the tier's Delayed row (D-100)."
     stolen_delayed_minutes_until_expected: mutable number = 0
-        description: "Stolen & Delayed: NOT_LATE_YET only, minutes until the order's expected time (D-099)."
+        description: "Stolen & Delayed: NOT_LATE_YET only, minutes until the order's expected time (D-100)."
     stolen_delayed_delivery_minutes: mutable number = 0
-        description: "Stolen & Delayed: delivered orders, the minutes the delivery took (D-099)."
+        description: "Stolen & Delayed: delivered orders, the minutes the delivery took (D-100)."
 
 knowledge:
     # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-060, D-066, D-067)
@@ -337,7 +337,7 @@ subagent refund:
                 set @variables.refund_credit_amount = 0
                 set @variables.refund_chosen_resolution = "Store_Credit" if @variables.stolen_delayed_customer_choice == "WALLET_CREDIT" else "Refund"
             else if @variables.refund_sd_path == "" and @variables.refund_confirmed == False and @variables.refund_issue_attempted == False and @variables.stolen_delayed_needs_person == False and @variables.stolen_delayed_decision == "DELAY" and @variables.stolen_delayed_order_id != @variables.refund_handled_order_id:
-                # A late order (D-099): Stolen & Delayed already measured it, so no "stolen or late?" question and a non-zero offer
+                # A late order (D-100): Stolen & Delayed already measured it, so no "stolen or late?" question and a non-zero offer
                 set @variables.refund_sd_path = "STANDARD"
                 set @variables.refund_order_id = @variables.stolen_delayed_order_id
                 set @variables.refund_order_line_items = ""
@@ -834,7 +834,7 @@ subagent stolen_delayed_orders:
                     description: "NOT_RECEIVED if the customer says it never arrived or is not there, LATE if late or still waiting, else UNSURE."
             outputs:
                 decision: string
-                    description: "FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE, ORDER_NOT_FOUND, DELAY, NOT_LATE_YET, DELIVERED_ON_TIME or STANDARD_PATH (D-089, D-099)."
+                    description: "FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE, ORDER_NOT_FOUND, DELAY, NOT_LATE_YET, DELIVERED_ON_TIME or STANDARD_PATH (D-089, D-100)."
                     filter_from_agent: True
                 reasonCode: string
                     description: "Internal reason code."

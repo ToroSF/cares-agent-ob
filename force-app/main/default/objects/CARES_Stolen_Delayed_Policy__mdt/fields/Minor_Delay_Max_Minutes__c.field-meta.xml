@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Minor_Delay_Max_Minutes__c</fullName>
-    <description>Late by up to this many minutes is a minor delay (goodwill); more is a severe delay (D-099, POL-P07/P08). [$]</description>
+    <description>Late by up to this many minutes is a minor delay (goodwill); more is a severe delay (D-100, POL-P07/P08). [$]</description>
     <externalId>false</externalId>
     <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Minor Delay Max Minutes</label>

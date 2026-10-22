@@ -1,6 +1,6 @@
 /**
  * Stolen & Delayed Orders: is the order on time, late (minor or severe) or likely lost?
- * Pure function over the order's own times (D-099). Pronto's promise comes from the data:
+ * Pure function over the order's own times (D-100). Pronto's promise comes from the data:
  * On_Time_Delivery__c is true exactly when Delivery_Time_Min__c <= 40 (908 of 908
  * delivered orders on 2026-10-22).
  *

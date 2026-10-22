@@ -64,7 +64,7 @@ public with sharing class CARES_StolenDelayedMockTelemetry {
     t.dropoffLongitude = r.Dropoff_Location__Longitude__s;
     t.driverLatitude = r.Driver_Location__Latitude__s;
     t.driverLongitude = r.Driver_Location__Longitude__s;
-    // Demo clock for the timing check (D-099)
+    // Demo clock for the timing check (D-100)
     t.minutesSinceOrder = toInteger(r.Minutes_Since_Order__c);
     t.driverWaitSeconds = toInteger(r.Driver_Wait_Seconds__c);
     t.driverCallsToCustomer = toInteger(r.Driver_Calls__c);

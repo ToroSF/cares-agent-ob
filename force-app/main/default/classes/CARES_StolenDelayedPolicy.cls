@@ -12,7 +12,7 @@
  *   4. Fraud, device or address duplication          -> ESCALATE
  *   5. Order already claimed                         -> ESCALATE
  *   6. Value over the USD limit, or unknown          -> ESCALATE
- *   7. Timing (D-099): not delivered yet -> NOT_LATE_YET, DELAY or, when likely lost, the
+ *   7. Timing (D-100): not delivered yet -> NOT_LATE_YET, DELAY or, when likely lost, the
  *      trust check below as a lost order; delivered and the customer says it was late
  *      -> DELIVERED_ON_TIME or DELAY. Unknown timing, or a photo -> STANDARD_PATH
  *   8. Low-trust customer                            -> MANUAL_REVIEW
@@ -27,12 +27,12 @@ public with sharing class CARES_StolenDelayedPolicy {
   public static final String MANUAL_REVIEW = 'MANUAL_REVIEW';
   public static final String ESCALATE = 'ESCALATE';
   public static final String ORDER_NOT_FOUND = 'ORDER_NOT_FOUND';
-  // Timing outcomes (D-099)
+  // Timing outcomes (D-100)
   public static final String DELAY = 'DELAY';
   public static final String NOT_LATE_YET = 'NOT_LATE_YET';
   public static final String DELIVERED_ON_TIME = 'DELIVERED_ON_TIME';
 
-  // What the customer says happened (D-099)
+  // What the customer says happened (D-100)
   public static final String CLAIM_NOT_RECEIVED = 'NOT_RECEIVED';
   public static final String CLAIM_LATE = 'LATE';
   public static final String CLAIM_UNSURE = 'UNSURE';
@@ -78,7 +78,7 @@ public with sharing class CARES_StolenDelayedPolicy {
     public Boolean redispatchEligible = false;
     public String driverCompensation = '';
     public String restaurantReimbursement = '';
-    // Timing (D-099)
+    // Timing (D-100)
     public String timing = CARES_StolenDelayedTiming.UNKNOWN;
     public String stage = '';
     public Integer minutesLate = 0;
@@ -121,7 +121,7 @@ public with sharing class CARES_StolenDelayedPolicy {
     public Boolean platformEnabled = false;
     // Mock telemetry records stand in for the platform, and win over it (D-096)
     public Boolean mockTelemetryEnabled = false;
-    // Timing (D-099). The promise is the data's own on-time line; the rest are team assumptions [$]
+    // Timing (D-100). The promise is the data's own on-time line; the rest are team assumptions [$]
     public Decimal promisedDeliveryMinutes = 40;
     public Decimal delayGraceMinutes = 5;
     public Decimal minorDelayMaxMinutes = 15;
@@ -324,7 +324,7 @@ public with sharing class CARES_StolenDelayedPolicy {
     if (usd > s.escalationAmountUsd) {
       return withOrder(new Outcome(ESCALATE, 'HIGH_VALUE'), t);
     }
-    // Timing first (D-099): late, on time and lost are told apart from the order's own times
+    // Timing first (D-100): late, on time and lost are told apart from the order's own times
     CARES_StolenDelayedTiming.Result timing = CARES_StolenDelayedTiming.classify(t, s, System.now());
     Boolean delivered = t.orderStatus == CARES_StolenDelayedOrderSource.DELIVERED;
     Boolean lostInTransit = !delivered && timing.timing == CARES_StolenDelayedTiming.LIKELY_LOST;
@@ -335,7 +335,7 @@ public with sharing class CARES_StolenDelayedPolicy {
       if (timing.isDelay()) {
         return delay(t, s, timing);
       }
-      // No order time to measure against: the standard way, as before D-099
+      // No order time to measure against: the standard way, as before D-100
       return withTiming(withOrder(new Outcome(STANDARD_PATH, 'NOT_MARKED_DELIVERED'), t), timing, t);
     }
     if (delivered && t.claimType == CLAIM_LATE) {
@@ -380,7 +380,7 @@ public with sharing class CARES_StolenDelayedPolicy {
     return withOrder(d, t);
   }
 
-  // A late order: Refund offers the delay value, capped by the tier's Delayed policy row (D-099)
+  // A late order: Refund offers the delay value, capped by the tier's Delayed policy row (D-100)
   private static Outcome delay(
     CARES_StolenDelayedTelemetry t,
     Settings s,

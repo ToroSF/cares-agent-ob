@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Minutes_Since_Order__c</fullName>
     <label>Minutes Since Order</label>
-    <description>Demo clock (D-099): the customer writes this many minutes after ordering, so an order still on its way can be on time, late or lost in a demo. The order data is from 2024-2025, so real time makes every open order look a year late. Blank means real time.</description>
+    <description>Demo clock (D-100): the customer writes this many minutes after ordering, so an order still on its way can be on time, late or lost in a demo. The order data is from 2024-2025, so real time makes every open order look a year late. Blank means real time.</description>
     <type>Number</type>
     <precision>6</precision>
     <scale>0</scale>

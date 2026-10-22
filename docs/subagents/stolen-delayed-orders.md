@@ -117,9 +117,9 @@ Refund owner: when `stolen_delayed_handoff_status == "READY_FOR_REFUND"`, refund
 
 A canceled order goes to a person (`ORDER_CANCELED`, D-091). A customer with no app account link escalates as `NO_ACCOUNT_LINK`.
 
-## Delivery timing (D-099, `feature/sd-delivery-timing`)
+## Delivery timing (D-100, `feature/sd-delivery-timing`)
 
-Before D-099 the only test was "is the order marked Delivered?": anything else went the standard way and Refund asked the customer "stolen or late?", and a delivered order that came late went down the stolen path. Now the order's own times decide.
+Before D-100 the only test was "is the order marked Delivered?": anything else went the standard way and Refund asked the customer "stolen or late?", and a delivered order that came late went down the stolen path. Now the order's own times decide.
 
 **What the data says** (1,015 `Order__dlm` rows, 2026-10-22):
 - Pronto's promise is **40 minutes**: `On_Time_Delivery__c` is true exactly when `Delivery_Time_Min__c` ≤ 40 (908 of 908 delivered orders). Late deliveries took 41-60 minutes.
@@ -142,7 +142,7 @@ Before D-099 the only test was "is the order marked Delivered?": anything else w
 
 `DELAY` carries a severity and a value: order total × 15% (minor) or 50% (severe) `[$]`. Refund starts from that value and caps it with the tier's `Delayed` policy row (CLEAN unlocks the higher ceiling). Refund no longer asks "stolen or late?" for these. Before this, the standard-path delivery offer was **$0.00** (G-117). `claimType` is the customer's claim, read from their words: it chooses which question is asked of the data, the data decides the answer.
 
-**Demo clock.** The order data is from 2024-2025, so on the real clock every order still on its way is over a year late (`LIKELY_LOST`). `CARES_Delivery_Telemetry__c.Minutes_Since_Order__c` says "the customer writes N minutes after ordering" for one order. Blank means real time (G-119).
+**Demo clock.** The order data is from 2024-2025, so on the real clock every order still on its way is over a year late (`LIKELY_LOST`). `CARES_Delivery_Telemetry__c.Minutes_Since_Order__c` says "the customer writes N minutes after ordering" for one order. Blank means real time (G-120).
 
 **Demo orders** (`scripts/apex/seed-delivery-telemetry.apex`, customers with 5+ orders and no refund on 2026-10-22):
 | Case | Email | Order | Expected |

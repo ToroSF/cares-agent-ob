@@ -10,7 +10,7 @@ public with sharing class CARES_OrderData {
     private static final String COLUMNS =
         'Customer_ID__c, Order_ID__c, Created_At__c, Order_Status__c, Restaurant_Name__c, ' +
         'Total_Amount__c, Items_Ordered__c, Estimated_Delivery_At__c, ETA_Minutes__c, Delivered_At__c, ' +
-        // Stage times for Stolen & Delayed's timing check (D-099); rows without them still parse
+        // Stage times for Stolen & Delayed's timing check (D-100); rows without them still parse
         'Accepted_At__c, Picked_Up_At__c, Delivery_Time_Min__c';
     private static final Pattern ORDER_NUMBER = Pattern.compile('PR-[0-9]{6}-[A-Z0-9]{7}');
 
@@ -47,7 +47,7 @@ public with sharing class CARES_OrderData {
         public Datetime deliveredAt;
         public Datetime acceptedAt;
         public Datetime pickedUpAt;
-        // Minutes the delivery took; the data's on-time flag is exactly this <= 40 (D-099)
+        // Minutes the delivery took; the data's on-time flag is exactly this <= 40 (D-100)
         public Decimal deliveryMinutes;
     }
 
