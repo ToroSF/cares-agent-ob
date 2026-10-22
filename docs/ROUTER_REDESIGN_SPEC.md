@@ -36,7 +36,7 @@ Build and review in this order, because each part's tests assume the one before 
 | Part | Gap | What | Blocks touched (owner per SPEC §3) | Decisions |
 |---|---|---|---|---|
 | A | G-047, audit A7 | Per-issue reset at the start of the spine, and a `WRAP_UP` marker for "this issue is done" | risk_detection, refund, order_status, pronto_help, escalate_to_human, stolen_delayed_orders, experience_rating | R-D3, R-D8 |
-| B | G-076, G-006 | Identity gate inside `risk_detection`; email identity treated like `ContactId` | risk_detection, identify_customer, refund, stolen_delayed_orders | R-D2, R-D5, R-D7 |
+| B | G-076, G-113, G-006 | Identity gate inside `risk_detection`; email identity treated like `ContactId` | risk_detection, identify_customer, refund, stolen_delayed_orders | R-D2, R-D5, R-D7 |
 | C | G-087, D-062 | Spine: risk → S&D → refund \| escalate; S&D takes partial-order problems too | risk_detection, stolen_delayed_orders, refund | R-D6, R-D9 |
 | D | G-005, G-088, G-094, G-095 | Router: 10 routes, guards, new descriptions and instruction text | agent_router, `system`, `config` | R-D1 |
 | E | G-072, G-095 | Side paths, merged fallback, deleting `off_topic` | pronto_help, order_status, escalate_to_human, ambiguous_question, off_topic | R-D1, R-D4 |
@@ -172,13 +172,14 @@ identify_pending: mutable boolean = False
             run @actions.get_customer_context
                 with contactId = @variables.customer_id                # was ContactId (L876)
                 ...
-            (NOT_CLEAN override unchanged, L880-881)
+        if risk_status == "NOT_CLEAN" → risk_retention_eligible = False   # top-level now, see the G-112 note
         transition to @subagent.stolen_delayed_orders                  # Part C, was refund (L882)
 ```
 
 Notes:
 - D-083 still holds: the context lookup is never read for a pattern case.
-- **Bug fixed on the way.** In `CARES.agent` the `risk_status == "NOT_CLEAN"` override (L880) is a nested `if` under `else`. The compiler rejects that (severity 1, `unsupported-nested-if`) and compiles the condition as `not X and X`, which is never true, so the override never fires. In the test bundle it's a top-level `if`. Tell the Risk Detection owner, since `main` has the same bug.
+- **G-112 is fixed in the test bundle.** In `CARES.agent` the `risk_status == "NOT_CLEAN"` override (L880) is a nested `if` under `else`. The local compiler rejects it (severity 1, `unsupported-nested-if`) and `sf agent validate` fails on `main` (G-112). In the test bundle it is a top-level `if`. `main` still needs its own fix from the Risk Detection owner.
+- **G-113 is fixed in the test bundle** too: `get_customer_context` takes `customer_id`.
 - **Action input descriptions** for `get_risk_result.contactId` and `get_customer_context.contactId` change from "The contact id from the channel, never from the chat" to "The customer's contact id: from the channel, or from the email lookup (R-D7). Never typed by the model."
 - **No Flow change.** `CARES_Get_Risk_Result` and `CARES_Get_Customer_Context` already take a contact id.
 

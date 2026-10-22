@@ -953,7 +953,7 @@ subagent risk_detection:
                 with lookbackDays = @variables.risk_lookback_days
                 set @variables.risk_customer_sentiment = @outputs.sentiment
                 set @variables.risk_retention_eligible = @outputs.hasOpenContext
-        # Not nested under the else above: AgentScript has no nested if (it never fired in CARES, L880)
+        # Top-level, not under the else above: AgentScript has no nested if (G-112)
         if @variables.risk_status == "NOT_CLEAN":
             set @variables.risk_retention_eligible = False
         transition to @subagent.stolen_delayed_orders

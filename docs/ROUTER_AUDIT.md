@@ -165,7 +165,7 @@ Other gaps the router can't resolve:
 6. **Risk ignores email identity, and runs before identify.**
    - It reads `ContactId` (L863), so email-identified customers are always `UNKNOWN`/0 (G-076).
    - `risk_checked = True` (L867) locks that result in.
-   - Since D-095, risk also runs `get_customer_context` with `ContactId` (L876). Email-identified customers therefore never get the retention bonus (`risk_retention_eligible`, read by Refund at L286), and their escalation cases carry no sentiment.
+   - Since D-095, risk also runs `get_customer_context` with `ContactId` (L876, G-113). Email-identified customers therefore never get the retention bonus (`risk_retention_eligible`, read by Refund at L286), and their escalation cases carry no sentiment.
 
 ## A8. Docs vs code
 
@@ -356,7 +356,7 @@ The script already uses one variable, `customer_id`, for both (L138). Refund, S&
 | Where | Today, for an email-identified customer | Change |
 |---|---|---|
 | Risk, L863 | Checked against the blank `ContactId`, so `UNKNOWN`/0 (G-076) | Pass `customer_id` |
-| Risk, L876 (`get_customer_context`, D-095) | Checked against the blank `ContactId`, so there is no retention bonus and no sentiment on the case | Pass `customer_id` |
+| Risk, L876 (`get_customer_context`, D-095, G-113) | Checked against the blank `ContactId`, so there is no retention bonus and no sentiment on the case | Pass `customer_id` |
 | Order of steps | Risk runs before identify | Gate before risk (B3) |
 | Escalation and settlement-review cases (L422, L1051, `channelContactId`) | The case Flow labels it "Found by email" vs "Verified (signed in to the chat)" (`CARES_Create_Escalation_Case` L195-200). Staff-only label; no behaviour difference | **Decided (R-D2):** pass `customer_id` as `channelContactId`, so both read "Verified" |
 | `VerifiedCustomerId` (L29) | Never set | Set it in the gate, or delete it |
