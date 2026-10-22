@@ -1,6 +1,6 @@
 # Spec: Refund on the Stolen & Delayed standard path (no 0.00 offers, no needless questions)
 
-Status date: 2026-10-22. Status: `PROPOSAL`, decisions taken 2026-10-22 (section 5). Nothing in this file is built yet.
+Status date: 2026-10-22. Status: **built on this branch** (D-099, G-117, G-118). Local compile and `sf agent validate authoring-bundle` pass. The check-only Apex deploy ran `CARES_Refund_ActionsTest` with 53/53 passing. Nothing deployed (section 7).
 
 - **Branch:** `fix/refund-standard-path-offer`.
 - **Source:** `main` at `5ec0d4d`. The agent is unchanged since `efbbe24`, the v10 content.
