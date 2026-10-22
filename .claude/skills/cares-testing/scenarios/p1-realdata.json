@@ -142,12 +142,12 @@
      "stolen_delayed_orders"
     ],
     "no_actions": [
-     "calculate_refund_offer",
      "issue_resolution"
     ]
    },
    "burns": true,
-   "judge": "Late is a complaint: Stolen & Delayed, directly or through Order Status. A plain status answer only is a FAIL."
+   "judge": "Late is a complaint: Stolen & Delayed, directly or through Order Status. A plain status answer only is a FAIL.",
+   "notes": "Since D-100 a late order gets a delay offer from the order's own times, so calculate_refund_offer is allowed; nothing is paid in one turn. FINDING (G-130): when the latest order already shows Delivered, \"still waiting\" counts as LATE, not as never received."
   },
   {
    "id": "B-OS-11",
