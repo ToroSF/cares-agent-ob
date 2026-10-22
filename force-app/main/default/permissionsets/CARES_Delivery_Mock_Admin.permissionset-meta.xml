@@ -14,6 +14,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>CARES_Delivery_Telemetry__c.Minutes_Since_Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>CARES_Delivery_Telemetry__c.Restaurant_Location__c</field>
         <readable>true</readable>
     </fieldPermissions>

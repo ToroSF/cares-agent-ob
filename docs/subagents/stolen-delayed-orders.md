@@ -117,6 +117,48 @@ Refund owner: when `stolen_delayed_handoff_status == "READY_FOR_REFUND"`, refund
 
 A canceled order goes to a person (`ORDER_CANCELED`, D-091). A customer with no app account link escalates as `NO_ACCOUNT_LINK`.
 
+## Delivery timing (D-099, `feature/sd-delivery-timing`)
+
+Before D-099 the only test was "is the order marked Delivered?": anything else went the standard way and Refund asked the customer "stolen or late?", and a delivered order that came late went down the stolen path. Now the order's own times decide.
+
+**What the data says** (1,015 `Order__dlm` rows, 2026-10-22):
+- Pronto's promise is **40 minutes**: `On_Time_Delivery__c` is true exactly when `Delivery_Time_Min__c` ≤ 40 (908 of 908 delivered orders). Late deliveries took 41-60 minutes.
+- Only orders still on their way have an estimate (65 rows, about 39 minutes after ordering).
+- Kitchen (accepted → picked up) takes up to 20 minutes; courier (picked up → delivered) up to 51, median 19.
+
+**Rules** (`CARES_StolenDelayedTiming`, thresholds in `CARES_Stolen_Delayed_Policy__mdt`):
+| Order | Measure | Class |
+|---|---|---|
+| Delivered | minutes taken − 40 | ≤ 0 `ON_TIME`; 1-15 `DELAYED_MINOR`; more `DELAYED_SEVERE` |
+| On its way | now − expected (the estimate, or order time + 40) | ≤ 5 `NOT_LATE_YET`; 6-15 `DELAYED_MINOR`; 16-60 `DELAYED_SEVERE`; more `LIKELY_LOST` |
+| Picked up | now − pickup | over 75 minutes: `LIKELY_LOST` |
+
+**Decision** (after the usual checks: keywords, identity, not found, canceled, fraud, duplicate, over 100 USD):
+| Order | Customer says (`claimType`) | Outcome |
+|---|---|---|
+| Delivered | never arrived / not here, or unsure | Unchanged: photo → trust → geofence matrix |
+| Delivered | it was late | `DELIVERED_ON_TIME` (no money; the agent says it took N minutes and offers a person) or `DELAY` |
+| On its way | anything | `NOT_LATE_YET` (the agent says it should arrive in about N minutes; no money), `DELAY`, or a **lost order**: high trust `FULL_REFUND` (`LOST_IN_TRANSIT`, driver `HOLD_FOR_REVIEW`), low or unknown trust `MANUAL_REVIEW` |
+
+`DELAY` carries a severity and a value: order total × 15% (minor) or 50% (severe) `[$]`. Refund starts from that value and caps it with the tier's `Delayed` policy row (CLEAN unlocks the higher ceiling). Refund no longer asks "stolen or late?" for these. Before this, the standard-path delivery offer was **$0.00** (G-117). `claimType` is the customer's claim, read from their words: it chooses which question is asked of the data, the data decides the answer.
+
+**Demo clock.** The order data is from 2024-2025, so on the real clock every order still on its way is over a year late (`LIKELY_LOST`). `CARES_Delivery_Telemetry__c.Minutes_Since_Order__c` says "the customer writes N minutes after ordering" for one order. Blank means real time (G-119).
+
+**Demo orders** (`scripts/apex/seed-delivery-telemetry.apex`, customers with 5+ orders and no refund on 2026-10-22):
+| Case | Email | Order | Expected |
+|---|---|---|---|
+| Not late yet | wadsworth.power@example.com | PR-240614-8T45OO8 (Preparing, demo clock 20) | "should arrive in about 21 minutes", no offer |
+| Minor delay | shelby.trathen@example.com | PR-240806-Q35G73D (Out for Delivery, 55: 11 late) | Refund: 15% of $36.80 = $5.52, capped by the tier |
+| Severe delay | leeann.lieber@example.com | PR-240714-QGYZQBQ (Preparing, 70: 40 late) | Refund: 50% of $57.90 = $28.95, capped by the tier |
+| Lost in transit | cora.stquintin@example.com | PR-240615-89IDJP1 (Picked up, 160: courier 138 min) | Full $32.70 (refund or credit), driver held for review |
+| Delivered late, minor | darren.gommery@example.com | PR-240831-SO0F85U (took 43) | Say "it was late": Refund, 15% of $48.00 |
+| Delivered late, severe | vic.mouton@example.com | PR-240819-E6PVNNW (took 58) | Say "it was late": Refund, 50% of $39.00 |
+| Delivered on time | abelard.leeder@example.com | PR-240817-Q4ZTFF0 (took ≤ 40) | Say "it was late": "it took N minutes, within the time promised", no money |
+
+The delivered cases need no seed row: their minutes come from the data.
+
+**Changed files.** New: `CARES_StolenDelayedTiming(.Test)`, 7 settings fields (`Promised_Delivery_Minutes__c`, `Delay_Grace_Minutes__c`, `Minor_Delay_Max_Minutes__c`, `Lost_After_Minutes_Late__c`, `Courier_Lost_Minutes__c`, `Minor_Delay_Pct__c`, `Severe_Delay_Pct__c`), `Minutes_Since_Order__c`. Changed: `CARES_OrderData` (3 more columns at the end, read only when present), `CARES_StolenDelayedOrderSource`, `CARES_StolenDelayedTelemetry`, `CARES_StolenDelayedMockTelemetry`, `CARES_StolenDelayedPolicy`, `CARES_StolenDelayedEvaluateAction` (`claimType` in; timing, severity, value, minutes out), `CARES.agent` (Stolen & Delayed: `claimType`, 5 variables, 3 branches; Refund: the `DELAY` hand-off), both permission sets, the layout, the seed script, `CARES_StolenDelayedActionsTest` (an old order on its way is now lost, not the standard path), `CARES_Refund_ActionsTest` (+2 delay offer tests).
+
 ## Mock delivery telemetry (D-096, `feature/sd-mock-telemetry`)
 
 There is no delivery platform, so the matrix rules that need driver data could not fire. Mock records in Salesforce stand in for it. **These values are mock data, not real driver data** (G-110). Pictures are out of scope.

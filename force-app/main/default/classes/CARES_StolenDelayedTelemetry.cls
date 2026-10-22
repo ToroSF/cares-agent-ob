@@ -46,6 +46,18 @@ public with sharing class CARES_StolenDelayedTelemetry {
     return customerPhotoProvided == true || driverPhotoProvided == true;
   }
 
+  // Order timing (D-099), from Order__dlm through CARES_OrderData
+  public Datetime orderCreatedAt;
+  public Datetime acceptedAt;
+  public Datetime pickedUpAt;
+  public Datetime estimatedDeliveryAt;
+  public Datetime deliveredAt;
+  public Decimal deliveryMinutes;
+  // Demo clock (D-099): the customer writes this many minutes after ordering; null means real time
+  public Integer minutesSinceOrder;
+  // What the customer says happened: NOT_RECEIVED, LATE or UNSURE (D-099). Their claim, not a decision
+  public String claimType;
+
   public Boolean hasGeofenceCoordinates() {
     return restaurantLatitude != null &&
       restaurantLongitude != null &&

@@ -36,7 +36,8 @@ public with sharing class CARES_StolenDelayedMockTelemetry {
           Dropoff_Location__Latitude__s,
           Dropoff_Location__Longitude__s,
           Driver_Location__Latitude__s,
-          Driver_Location__Longitude__s
+          Driver_Location__Longitude__s,
+          Minutes_Since_Order__c
         FROM CARES_Delivery_Telemetry__c
         WHERE Order_ID__c = :orderId
         WITH USER_MODE
@@ -63,6 +64,8 @@ public with sharing class CARES_StolenDelayedMockTelemetry {
     t.dropoffLongitude = r.Dropoff_Location__Longitude__s;
     t.driverLatitude = r.Driver_Location__Latitude__s;
     t.driverLongitude = r.Driver_Location__Longitude__s;
+    // Demo clock for the timing check (D-099)
+    t.minutesSinceOrder = toInteger(r.Minutes_Since_Order__c);
     t.driverWaitSeconds = toInteger(r.Driver_Wait_Seconds__c);
     t.driverCallsToCustomer = toInteger(r.Driver_Calls__c);
     t.driverChatsToCustomer = toInteger(r.Driver_Chats__c);

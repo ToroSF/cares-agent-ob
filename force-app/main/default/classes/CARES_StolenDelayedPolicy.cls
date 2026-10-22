@@ -12,7 +12,9 @@
  *   4. Fraud, device or address duplication          -> ESCALATE
  *   5. Order already claimed                         -> ESCALATE
  *   6. Value over the USD limit, or unknown          -> ESCALATE
- *   7. Not marked delivered, or a photo exists       -> STANDARD_PATH
+ *   7. Timing (D-099): not delivered yet -> NOT_LATE_YET, DELAY or, when likely lost, the
+ *      trust check below as a lost order; delivered and the customer says it was late
+ *      -> DELIVERED_ON_TIME or DELAY. Unknown timing, or a photo -> STANDARD_PATH
  *   8. Low-trust customer                            -> MANUAL_REVIEW
  *   9. High-trust customer + excellent driver + GPS match -> LOSS_ABSORPTION
  *  10. High-trust customer                           -> FULL_REFUND
@@ -25,6 +27,18 @@ public with sharing class CARES_StolenDelayedPolicy {
   public static final String MANUAL_REVIEW = 'MANUAL_REVIEW';
   public static final String ESCALATE = 'ESCALATE';
   public static final String ORDER_NOT_FOUND = 'ORDER_NOT_FOUND';
+  // Timing outcomes (D-099)
+  public static final String DELAY = 'DELAY';
+  public static final String NOT_LATE_YET = 'NOT_LATE_YET';
+  public static final String DELIVERED_ON_TIME = 'DELIVERED_ON_TIME';
+
+  // What the customer says happened (D-099)
+  public static final String CLAIM_NOT_RECEIVED = 'NOT_RECEIVED';
+  public static final String CLAIM_LATE = 'LATE';
+  public static final String CLAIM_UNSURE = 'UNSURE';
+
+  public static final String SEVERITY_MINOR = 'MINOR';
+  public static final String SEVERITY_SEVERE = 'SEVERE';
 
   public static final String TRUST_HIGH = 'HIGH';
   public static final String TRUST_MEDIUM = 'MEDIUM';
@@ -64,6 +78,15 @@ public with sharing class CARES_StolenDelayedPolicy {
     public Boolean redispatchEligible = false;
     public String driverCompensation = '';
     public String restaurantReimbursement = '';
+    // Timing (D-099)
+    public String timing = CARES_StolenDelayedTiming.UNKNOWN;
+    public String stage = '';
+    public Integer minutesLate = 0;
+    public Integer minutesUntilExpected = 0;
+    public Decimal deliveryMinutes;
+    // DELAY only: MINOR or SEVERE, and the value Refund starts from (order total x the delay %)
+    public String delaySeverity = '';
+    public Decimal delayValue = 0;
 
     public Outcome(String decision, String reasonCode) {
       this.decision = decision;
@@ -98,6 +121,14 @@ public with sharing class CARES_StolenDelayedPolicy {
     public Boolean platformEnabled = false;
     // Mock telemetry records stand in for the platform, and win over it (D-096)
     public Boolean mockTelemetryEnabled = false;
+    // Timing (D-099). The promise is the data's own on-time line; the rest are team assumptions [$]
+    public Decimal promisedDeliveryMinutes = 40;
+    public Decimal delayGraceMinutes = 5;
+    public Decimal minorDelayMaxMinutes = 15;
+    public Decimal lostAfterMinutesLate = 60;
+    public Decimal courierLostMinutes = 75;
+    public Decimal minorDelayPct = 0.15;
+    public Decimal severeDelayPct = 0.50;
     public List<String> sensitiveKeywords = new List<String>{
       'assault',
       'assaulted',
@@ -184,6 +215,13 @@ public with sharing class CARES_StolenDelayedPolicy {
     );
     s.platformEnabled = r.Platform_Enabled__c == true;
     s.mockTelemetryEnabled = r.Mock_Telemetry_Enabled__c == true;
+    s.promisedDeliveryMinutes = pick(r.Promised_Delivery_Minutes__c, s.promisedDeliveryMinutes);
+    s.delayGraceMinutes = pick(r.Delay_Grace_Minutes__c, s.delayGraceMinutes);
+    s.minorDelayMaxMinutes = pick(r.Minor_Delay_Max_Minutes__c, s.minorDelayMaxMinutes);
+    s.lostAfterMinutesLate = pick(r.Lost_After_Minutes_Late__c, s.lostAfterMinutesLate);
+    s.courierLostMinutes = pick(r.Courier_Lost_Minutes__c, s.courierLostMinutes);
+    s.minorDelayPct = pickPercent(r.Minor_Delay_Pct__c, s.minorDelayPct);
+    s.severeDelayPct = pickPercent(r.Severe_Delay_Pct__c, s.severeDelayPct);
     if (String.isNotBlank(r.Sensitive_Keywords__c)) {
       s.sensitiveKeywords = new List<String>();
       for (String k : r.Sensitive_Keywords__c.split('[,\\n]')) {
@@ -206,6 +244,16 @@ public with sharing class CARES_StolenDelayedPolicy {
     String orderId,
     String customerReport
   ) {
+    // The hand-off's re-check has no claim: UNSURE gives the same full-refund decisions
+    return evaluate(contactId, orderId, customerReport, CLAIM_UNSURE);
+  }
+
+  public static Outcome evaluate(
+    String contactId,
+    String orderId,
+    String customerReport,
+    String claimType
+  ) {
     Settings s = loadSettings();
     String cleanOrderId = orderId == null ? '' : orderId.trim();
     // The escalation case needs the order the customer named, even when no check ran (G-098)
@@ -227,6 +275,7 @@ public with sharing class CARES_StolenDelayedPolicy {
       return withOrderId(new Outcome(src.decision, src.reasonCode), namedOrder);
     }
     CARES_StolenDelayedTelemetry t = src.telemetry;
+    t.claimType = normalizeClaim(claimType);
     if (s.mockTelemetryEnabled) {
       // No row for the order leaves what the platform would add unknown (D-096)
       enrich(t, CARES_StolenDelayedMockTelemetry.forOrder(src.orderId));
@@ -275,11 +324,34 @@ public with sharing class CARES_StolenDelayedPolicy {
     if (usd > s.escalationAmountUsd) {
       return withOrder(new Outcome(ESCALATE, 'HIGH_VALUE'), t);
     }
-    if (t.orderStatus != 'DELIVERED') {
-      return withOrder(new Outcome(STANDARD_PATH, 'NOT_MARKED_DELIVERED'), t);
+    // Timing first (D-099): late, on time and lost are told apart from the order's own times
+    CARES_StolenDelayedTiming.Result timing = CARES_StolenDelayedTiming.classify(t, s, System.now());
+    Boolean delivered = t.orderStatus == CARES_StolenDelayedOrderSource.DELIVERED;
+    Boolean lostInTransit = !delivered && timing.timing == CARES_StolenDelayedTiming.LIKELY_LOST;
+    if (!delivered && !lostInTransit) {
+      if (timing.timing == CARES_StolenDelayedTiming.NOT_LATE_YET) {
+        return withTiming(withOrder(new Outcome(NOT_LATE_YET, 'WITHIN_ESTIMATE'), t), timing, t);
+      }
+      if (timing.isDelay()) {
+        return delay(t, s, timing);
+      }
+      // No order time to measure against: the standard way, as before D-099
+      return withTiming(withOrder(new Outcome(STANDARD_PATH, 'NOT_MARKED_DELIVERED'), t), timing, t);
     }
-    if (t.hasPhotoEvidence()) {
+    if (delivered && t.claimType == CLAIM_LATE) {
+      if (timing.timing == CARES_StolenDelayedTiming.ON_TIME) {
+        return withTiming(withOrder(new Outcome(DELIVERED_ON_TIME, 'DELIVERED_WITHIN_PROMISE'), t), timing, t);
+      }
+      if (timing.isDelay()) {
+        return delay(t, s, timing);
+      }
+      return withTiming(withOrder(new Outcome(STANDARD_PATH, 'DELIVERY_TIME_UNKNOWN'), t), timing, t);
+    }
+    if (delivered && t.hasPhotoEvidence()) {
       return withOrder(new Outcome(STANDARD_PATH, 'PHOTO_EVIDENCE'), t);
+    }
+    if (lostInTransit) {
+      return withTiming(lostOrder(t, s), timing, t);
     }
 
     String trust = customerTrust(t, s);
@@ -306,6 +378,57 @@ public with sharing class CARES_StolenDelayedPolicy {
     d.driverExcellent = excellent;
     d.driverDiligent = diligent;
     return withOrder(d, t);
+  }
+
+  // A late order: Refund offers the delay value, capped by the tier's Delayed policy row (D-099)
+  private static Outcome delay(
+    CARES_StolenDelayedTelemetry t,
+    Settings s,
+    CARES_StolenDelayedTiming.Result timing
+  ) {
+    Boolean minor = timing.timing == CARES_StolenDelayedTiming.DELAYED_MINOR;
+    Outcome d = withOrder(new Outcome(DELAY, minor ? 'MINOR_DELAY' : 'SEVERE_DELAY'), t);
+    d.delaySeverity = minor ? SEVERITY_MINOR : SEVERITY_SEVERE;
+    Decimal total = t.orderTotal == null ? 0 : t.orderTotal;
+    d.delayValue = (total * (minor ? s.minorDelayPct : s.severeDelayPct)).setScale(2);
+    return withTiming(d, timing, t);
+  }
+
+  // Not delivered and far past any normal time: treated like an order that never arrived (POL-P09)
+  private static Outcome lostOrder(CARES_StolenDelayedTelemetry t, Settings s) {
+    String trust = customerTrust(t, s);
+    Outcome d;
+    if (trust == TRUST_LOW) {
+      d = new Outcome(MANUAL_REVIEW, 'LOW_TRUST_CUSTOMER');
+    } else if (trust == TRUST_HIGH) {
+      d = new Outcome(FULL_REFUND, 'LOST_IN_TRANSIT');
+      // No delivered position to judge the driver by: a person decides
+      d.driverCompensation = DRIVER_HOLD_FOR_REVIEW;
+      d.restaurantReimbursement = RESTAURANT_NO_CHANGE;
+    } else {
+      d = new Outcome(MANUAL_REVIEW, 'TRUST_NOT_ESTABLISHED');
+    }
+    d.customerTrust = trust;
+    return withOrder(d, t);
+  }
+
+  private static Outcome withTiming(
+    Outcome d,
+    CARES_StolenDelayedTiming.Result timing,
+    CARES_StolenDelayedTelemetry t
+  ) {
+    d.timing = timing.timing;
+    d.stage = timing.stage;
+    d.minutesLate = timing.minutesLate;
+    d.minutesUntilExpected = timing.minutesUntilExpected;
+    d.deliveryMinutes = t.deliveryMinutes;
+    return d;
+  }
+
+  @TestVisible
+  private static String normalizeClaim(String claimType) {
+    String c = claimType == null ? '' : claimType.trim().toUpperCase();
+    return c == CLAIM_NOT_RECEIVED || c == CLAIM_LATE ? c : CLAIM_UNSURE;
   }
 
   @TestVisible
@@ -514,6 +637,7 @@ public with sharing class CARES_StolenDelayedPolicy {
     t.dropoffLongitude = platform.dropoffLongitude;
     t.driverLatitude = platform.driverLatitude;
     t.driverLongitude = platform.driverLongitude;
+    t.minutesSinceOrder = platform.minutesSinceOrder;
     t.driverWaitSeconds = platform.driverWaitSeconds;
     t.driverCallsToCustomer = platform.driverCallsToCustomer;
     t.driverChatsToCustomer = platform.driverChatsToCustomer;
