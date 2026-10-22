@@ -240,10 +240,10 @@
    "expect": {
     "path": [
      "risk_detection",
-     "refund",
      "identify_customer"
     ],
     "no_actions": [
+     "get_risk_result",
      "find_order",
      "calculate_refund_offer"
     ],
@@ -253,6 +253,39 @@
     "reply_any": [
      "email"
     ]
+   }
+  },
+  {
+   "id": "B-RD-06",
+   "priority": "P0",
+   "mode": "live",
+   "fixture": "FX-NOTCLEAN",
+   "no_contact": true,
+   "turns": [
+    "I want a refund, my order was wrong.",
+    "{email}"
+   ],
+   "expect": {
+    "path": [
+     "risk_detection",
+     "identify_customer",
+     "refund",
+     "risk_detection",
+     "refund"
+    ],
+    "actions": [
+     "find_contact_by_email",
+     "get_risk_result"
+    ],
+    "max_calls": {
+     "get_risk_result": 1
+    },
+    "inputs": {
+     "get_risk_result.contactId": "{cid}"
+    },
+    "outputs": {
+     "get_risk_result.riskStatus": "NOT_CLEAN"
+    }
    }
   },
   {
