@@ -31,6 +31,13 @@ public with sharing class CARES_StolenDelayedOrderSource {
     t.customerMatches = true;
     t.orderStatus = deliveryStatus(l.order.status);
     t.orderTotal = l.order.total;
+    // Timing check (D-100)
+    t.orderCreatedAt = l.order.createdAt;
+    t.acceptedAt = l.order.acceptedAt;
+    t.pickedUpAt = l.order.pickedUpAt;
+    t.estimatedDeliveryAt = l.order.estimatedDeliveryAt;
+    t.deliveredAt = l.order.deliveredAt;
+    t.deliveryMinutes = l.order.deliveryMinutes;
     // Order__dlm has no currency column; same rule as D-082
     t.currencyIsoCode = UserInfo.getDefaultCurrency();
     try {

@@ -23,11 +23,17 @@ public with sharing class CARES_StolenDelayedEvaluateAction {
       description='What the customer said happened, in their own words'
     )
     public String customerReport;
+
+    @InvocableVariable(
+      label='Claim Type'
+      description='What the customer says: NOT_RECEIVED (never arrived or not here), LATE (late or still waiting) or UNSURE'
+    )
+    public String claimType;
   }
 
   public class Result {
     @InvocableVariable(
-      description='STANDARD_PATH, FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE or ORDER_NOT_FOUND'
+      description='STANDARD_PATH, FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE, ORDER_NOT_FOUND, DELAY, NOT_LATE_YET or DELIVERED_ON_TIME'
     )
     public String decision;
     @InvocableVariable(
@@ -58,6 +64,24 @@ public with sharing class CARES_StolenDelayedEvaluateAction {
     public String driverCompensation;
     @InvocableVariable(description='REIMBURSE, NO_CHANGE or blank')
     public String restaurantReimbursement;
+    @InvocableVariable(
+      description='ON_TIME, NOT_LATE_YET, DELAYED_MINOR, DELAYED_SEVERE, LIKELY_LOST or UNKNOWN'
+    )
+    public String timing;
+    @InvocableVariable(description='MINOR or SEVERE for a DELAY, else blank')
+    public String delaySeverity;
+    @InvocableVariable(
+      description='DELAY only: the value Refund offers before its tier ceiling'
+    )
+    public Decimal delayValue;
+    @InvocableVariable(description='Minutes past the expected time')
+    public Integer minutesLate;
+    @InvocableVariable(
+      description='NOT_LATE_YET only: minutes until the expected time'
+    )
+    public Integer minutesUntilExpected;
+    @InvocableVariable(description='Delivered orders: minutes the delivery took')
+    public Decimal deliveryMinutes;
   }
 
   @InvocableMethod(
@@ -72,7 +96,8 @@ public with sharing class CARES_StolenDelayedEvaluateAction {
           CARES_StolenDelayedPolicy.evaluate(
             r.contactId,
             r.orderId,
-            r.customerReport
+            r.customerReport,
+            r.claimType
           )
         )
       );
@@ -93,6 +118,12 @@ public with sharing class CARES_StolenDelayedEvaluateAction {
     r.redispatchEligible = d.redispatchEligible;
     r.driverCompensation = d.driverCompensation;
     r.restaurantReimbursement = d.restaurantReimbursement;
+    r.timing = d.timing;
+    r.delaySeverity = d.delaySeverity;
+    r.delayValue = d.delayValue == null ? 0 : d.delayValue;
+    r.minutesLate = d.minutesLate;
+    r.minutesUntilExpected = d.minutesUntilExpected;
+    r.deliveryMinutes = d.deliveryMinutes == null ? 0 : d.deliveryMinutes;
     return r;
   }
 }

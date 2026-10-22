@@ -22,6 +22,11 @@
         <editable>false</editable>
     </fieldPermissions>
     <fieldPermissions>
+        <field>CARES_Delivery_Telemetry__c.Minutes_Since_Order__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
         <field>CARES_Delivery_Telemetry__c.Restaurant_Location__c</field>
         <readable>true</readable>
         <editable>false</editable>

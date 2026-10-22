@@ -224,12 +224,14 @@ public with sharing class CARES_Refund_CalculateOffer {
         ? policy.Clean_History_Max_Refund__c
         : policy.Max_Refund__c;
       // Stolen and Delayed lose the whole order: the base is the order total, not the affected items,
-      // which log_order_issue always values at 0 for them (G-117, D-099)
+      // which log_order_issue always values at 0 for them (G-117, D-099). A delay Stolen & Delayed
+      // already measured comes with its own value (order total x delay %, D-100): that value is the base
       Boolean deliveryOutcome =
         req.orderOutcome == 'Stolen' || req.orderOutcome == 'Delayed';
-      Decimal base = deliveryOutcome
+      Decimal affected = req.affectedValue == null ? 0 : req.affectedValue;
+      Decimal base = deliveryOutcome && affected <= 0
         ? (req.orderTotalCap == null ? 0 : req.orderTotalCap)
-        : (req.affectedValue == null ? 0 : req.affectedValue);
+        : affected;
       if (deliveryOutcome && base <= 0) {
         r.eligible = false;
         r.ineligibleReason = 'We could not confirm this order\'s value, so we could not calculate an offer. A team member will take it from here.';

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Severe_Delay_Pct__c</fullName>
+    <description>Share of the order total offered for a severe delay, before the tier's Delayed policy ceiling (D-100). [$]</description>
+    <externalId>false</externalId>
+    <fieldManageability>SubscriberControlled</fieldManageability>
+    <label>Severe Delay Pct</label>
+    <precision>5</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <type>Percent</type>
+    <unique>false</unique>
+</CustomField>

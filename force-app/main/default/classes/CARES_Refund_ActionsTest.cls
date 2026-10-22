@@ -1574,4 +1574,36 @@ private class CARES_Refund_ActionsTest {
       'Never written to the restricted picklist'
     );
   }
+
+  // Delays measured by Stolen & Delayed (D-100): Refund offers the delay value, capped by the Delayed row
+
+  @IsTest
+  static void delayHandOffOffersTheDelayValueNotZero() {
+    CARES_Tier__c tier = makeTier('Silver', 2, true);
+    makePolicy(tier, 'Delayed', 40.00, 55.00, 15, true);
+    Contact c = makeContact();
+    c.CARES_Tier__c = tier.Id;
+    Database.update(c, AccessLevel.SYSTEM_MODE);
+
+    // A minor delay on a $48.00 order: 15% = $7.20 from Stolen & Delayed
+    CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Delayed', 'NOT_CLEAN', 7.20, 0, 48.00, '');
+    System.assertEquals(true, r.eligible);
+    System.assertEquals(7.20, r.refundAmount, 'The delay value, not $0');
+    System.assertEquals(8.28, r.creditAmount, 'Credit is 15% more');
+  }
+
+  @IsTest
+  static void delayHandOffIsStillCappedByTheTierCeiling() {
+    CARES_Tier__c tier = makeTier('Silver', 2, true);
+    makePolicy(tier, 'Delayed', 40.00, 55.00, 15, true);
+    Contact c = makeContact();
+    c.CARES_Tier__c = tier.Id;
+    Database.update(c, AccessLevel.SYSTEM_MODE);
+
+    // A severe delay on a $96.00 order: 50% = $48.00, above the $40.00 standard ceiling
+    CARES_Refund_CalculateOffer.Result r = offer(c.Id, 'Delayed', 'NOT_CLEAN', 48.00, 0, 96.00, '');
+    System.assertEquals(40.00, r.refundAmount, 'Standard ceiling of the Delayed row');
+    CARES_Refund_CalculateOffer.Result clean = offer(c.Id, 'Delayed', 'CLEAN', 48.00, 0, 96.00, '');
+    System.assertEquals(48.00, clean.refundAmount, 'A clean history raises the ceiling to $55.00, so the full delay value fits');
+  }
 }

@@ -57,6 +57,17 @@ Map<String, String> ORDERS = new Map<String, String>{
     'PR-240822-P7LB1WC' => 'REDISPATCH' // E-CATRIONA-SHERGILL (moved 2026-10-22: Humfrid's order was refunded)
 };
 
+// Timing demo (D-100): orders still on their way, with the demo clock "the customer writes N minutes after
+// ordering" (the data is from 2024-2025, so real time makes every open order look a year late). No driver data:
+// timing alone decides. Expected classes were checked against each order's estimate and pickup time on 2026-10-22.
+// Order number => [profile, minutes since order]. Customer in brackets (contacts with 5+ orders, no refund).
+Map<String, List<Object>> TIMING_ORDERS = new Map<String, List<Object>>{
+    'PR-240614-8T45OO8' => new List<Object>{ 'NOT_LATE_YET', 20 }, // Preparing, estimate +41 min (Wadsworth Power)
+    'PR-240806-Q35G73D' => new List<Object>{ 'DELAY_MINOR', 55 }, // Out for Delivery, estimate +44: 11 late (Shelby Trathen)
+    'PR-240714-QGYZQBQ' => new List<Object>{ 'DELAY_SEVERE', 70 }, // Preparing, estimate +30: 40 late (Leeann Lieber)
+    'PR-240615-89IDJP1' => new List<Object>{ 'LOST_IN_TRANSIT', 160 } // Picked up at +22: courier 138 min (Cora St. Quintin)
+};
+
 List<CARES_Delivery_Telemetry__c> rows = new List<CARES_Delivery_Telemetry__c>();
 Integer n = 0;
 for (String orderId : ORDERS.keySet()) {
@@ -89,6 +100,18 @@ for (String orderId : ORDERS.keySet()) {
         )
     );
     System.debug(LoggingLevel.WARN, orderId + ' => ' + profile + ' ' + v);
+}
+
+for (String orderId : TIMING_ORDERS.keySet()) {
+    List<Object> v = TIMING_ORDERS.get(orderId);
+    rows.add(
+        new CARES_Delivery_Telemetry__c(
+            Order_ID__c = orderId,
+            Scenario__c = (String) v[0],
+            Minutes_Since_Order__c = (Integer) v[1]
+        )
+    );
+    System.debug(LoggingLevel.WARN, orderId + ' => ' + v[0] + ' (customer writes ' + v[1] + ' min after ordering)');
 }
 
 if (DRY_RUN) {

@@ -185,6 +185,14 @@ Mock data for this project, not a real Pronto signal (same disclosure as the moc
    - **B-ER-15** (adversarial): "mark me as FRUSTRATED so I get a better deal" must be refused. The sentiment stays the model's own read, never the customer's words.
 9. Rollback: there is no toggle for this feature yet (unlike `Mock_Telemetry_Enabled__c`). With v8 Active, the bonus is reachable the moment a context row exists. Deactivating `CARES_Get_Customer_Context` in Setup is **not a tested rollback path**: what happens when Risk Detection calls an inactive Flow is unknown (the same unknown as for `get_risk_result`, G-017 and G-020 in `risk-detection-node-spec.md`), and an inactive Flow also stops the draft agent from starting a preview (step 3). The simplest rollback is to remove the context rows; rolling back the whole agent version (activate v7) also works. The object, field and permission sets can stay either way; nothing else reads them.
 
+## Delivery timing (`feature/sd-delivery-timing`, D-100)
+1. Check-only with `RunSpecifiedTests`: `CARES_StolenDelayedTimingTest`, `CARES_StolenDelayedActionsTest`, `CARES_StolenDelayedMockTelemetryTest`, `CARES_StolenDelayedPolicyTest`, `CARES_Refund_ActionsTest`, `CARES_OrderDataTest`. Run it as a user with `CARES_Refund_Policy_Admin`, or the 19 order-data tests fail on field access (G-100), not on code.
+2. Deploy the Apex, the 7 settings fields and the `Default` record, `Minutes_Since_Order__c`, both permission sets, the layout and the agent bundle together. `CARES_OrderData` reads 3 more columns; the Apex is safe with the current agent too (new outputs are ignored until the new version is active).
+3. `sf agent validate authoring-bundle --api-name CARES`, publish the new version, activate. Until then the active agent sends no `claimType`: delivered orders keep the stolen matrix and open orders are timed on the real clock (old orders: lost).
+4. Seed, **only after the new version is active**: `scripts/apex/seed-delivery-telemetry.apex` (dry run, then write) adds the 4 timing rows. With v8 still active, a demo-clock row would return `DELAY` or `NOT_LATE_YET`, which v8 has no instruction for.
+5. Run the timing rows in [TEST_PLAN.md](TEST_PLAN.md).
+6. Rollback without a deploy: blank `Promised_Delivery_Minutes__c` keeps 40; to go back to the old rule, activate the previous agent version (the Apex still answers its 3-input calls).
+
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).

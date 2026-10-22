@@ -58,4 +58,32 @@
         <field>Sensitive_Keywords__c</field>
         <value xsi:nil="true" />
     </values>
+    <values>
+        <field>Courier_Lost_Minutes__c</field>
+        <value xsi:type="xsd:double">75</value>
+    </values>
+    <values>
+        <field>Delay_Grace_Minutes__c</field>
+        <value xsi:type="xsd:double">5</value>
+    </values>
+    <values>
+        <field>Lost_After_Minutes_Late__c</field>
+        <value xsi:type="xsd:double">60</value>
+    </values>
+    <values>
+        <field>Minor_Delay_Max_Minutes__c</field>
+        <value xsi:type="xsd:double">15</value>
+    </values>
+    <values>
+        <field>Minor_Delay_Pct__c</field>
+        <value xsi:type="xsd:double">15</value>
+    </values>
+    <values>
+        <field>Promised_Delivery_Minutes__c</field>
+        <value xsi:type="xsd:double">40</value>
+    </values>
+    <values>
+        <field>Severe_Delay_Pct__c</field>
+        <value xsi:type="xsd:double">50</value>
+    </values>
 </CustomMetadata>

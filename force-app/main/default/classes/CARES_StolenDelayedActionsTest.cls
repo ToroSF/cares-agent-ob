@@ -144,11 +144,13 @@ private class CARES_StolenDelayedActionsTest {
   }
 
   @IsTest
-  static void orderNotYetDeliveredUsesTheStandardPath() {
+  static void orderStillOnItsWayFarPastItsTimeIsTreatedAsLost() {
+    // On the real clock a 2024 order still on its way is long overdue: likely lost (D-100), no longer the standard path
     customer(6, 'Out for Delivery', '38.50');
     CARES_StolenDelayedEvaluateAction.Result r = evaluate('It is very late');
-    Assert.areEqual(CARES_StolenDelayedPolicy.STANDARD_PATH, r.decision);
-    Assert.areEqual('NOT_MARKED_DELIVERED', r.reasonCode);
+    Assert.areEqual(CARES_StolenDelayedPolicy.FULL_REFUND, r.decision);
+    Assert.areEqual('LOST_IN_TRANSIT', r.reasonCode);
+    Assert.areEqual(CARES_StolenDelayedTiming.LIKELY_LOST, r.timing);
     Assert.areEqual(ORDER_ID, r.orderId);
   }
 

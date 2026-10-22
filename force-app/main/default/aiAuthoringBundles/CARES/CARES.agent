@@ -160,6 +160,16 @@ variables:
         description: "Stolen & Delayed: Pronto order id (PR-...) of the customer's most recent order, any status. Set only by the script."
     stolen_delayed_latest_order_summary: mutable string = ""
         description: "Stolen & Delayed: order, restaurant, status and time of that order, from Order Status's lookup. Named back to the customer."
+    stolen_delayed_timing: mutable string = ""
+        description: "Stolen & Delayed: ON_TIME, NOT_LATE_YET, DELAYED_MINOR, DELAYED_SEVERE, LIKELY_LOST or UNKNOWN, from the order's own times (D-100). Set only by the action."
+    stolen_delayed_delay_severity: mutable string = ""
+        description: "Stolen & Delayed: MINOR or SEVERE for a DELAY decision, else blank (D-100). Context for Refund."
+    stolen_delayed_delay_value: mutable number = 0
+        description: "Stolen & Delayed: DELAY only, the order total times the delay percentage; Refund caps it with the tier's Delayed row (D-100)."
+    stolen_delayed_minutes_until_expected: mutable number = 0
+        description: "Stolen & Delayed: NOT_LATE_YET only, minutes until the order's expected time (D-100)."
+    stolen_delayed_delivery_minutes: mutable number = 0
+        description: "Stolen & Delayed: delivered orders, the minutes the delivery took (D-100)."
 
 knowledge:
     # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-060, D-066, D-067)
@@ -326,6 +336,22 @@ subagent refund:
                 set @variables.refund_offer_amount = 0
                 set @variables.refund_credit_amount = 0
                 set @variables.refund_chosen_resolution = "Store_Credit" if @variables.stolen_delayed_customer_choice == "WALLET_CREDIT" else "Refund"
+            else if @variables.refund_sd_path == "" and @variables.refund_confirmed == False and @variables.refund_issue_attempted == False and @variables.stolen_delayed_needs_person == False and @variables.stolen_delayed_decision == "DELAY" and @variables.stolen_delayed_order_id != @variables.refund_handled_order_id:
+                # A late order (D-100): Stolen & Delayed already measured it, so no "stolen or late?" question and a non-zero offer
+                set @variables.refund_sd_path = "STANDARD"
+                set @variables.refund_order_id = @variables.stolen_delayed_order_id
+                set @variables.refund_order_line_items = ""
+                set @variables.refund_order_outcome = "Delayed"
+                set @variables.refund_affected_value = @variables.stolen_delayed_delay_value
+                set @variables.refund_approved_full_amount = 0
+                set @variables.refund_order_total_cap = @variables.stolen_delayed_order_total
+                set @variables.refund_offer_calculated = False
+                set @variables.refund_offer_eligible = False
+                set @variables.refund_offer_ineligible_reason = ""
+                set @variables.refund_order_already_resolved = False
+                set @variables.refund_offer_amount = 0
+                set @variables.refund_credit_amount = 0
+                set @variables.refund_chosen_resolution = ""
             else if @variables.refund_sd_path == "" and @variables.refund_confirmed == False and @variables.refund_issue_attempted == False and @variables.stolen_delayed_needs_person == False and @variables.stolen_delayed_decision == "STANDARD_PATH" and @variables.stolen_delayed_order_id != @variables.refund_handled_order_id:
                 set @variables.refund_sd_path = "STANDARD"
                 set @variables.refund_order_id = @variables.stolen_delayed_order_id
@@ -765,6 +791,11 @@ subagent stolen_delayed_orders:
             set @variables.stolen_delayed_latest_checked = False
             set @variables.stolen_delayed_latest_order_id = ""
             set @variables.stolen_delayed_latest_order_summary = ""
+            set @variables.stolen_delayed_timing = ""
+            set @variables.stolen_delayed_delay_severity = ""
+            set @variables.stolen_delayed_delay_value = 0
+            set @variables.stolen_delayed_minutes_until_expected = 0
+            set @variables.stolen_delayed_delivery_minutes = 0
         set @variables.router_active_task = "STOLEN_DELAYED"
         # The customer is known: name their most recent order instead of asking for a number. Any status:
         # a late order is Out for Delivery, not Delivered (Order Status's lookup, not Refund's find_order)
@@ -817,9 +848,11 @@ subagent stolen_delayed_orders:
                     is_required: True
                 customerReport: string
                     description: "What the customer said happened, in their own words. Do not summarise or soften it."
+                claimType: string
+                    description: "NOT_RECEIVED if the customer says it never arrived or is not there, LATE if late or still waiting, else UNSURE."
             outputs:
                 decision: string
-                    description: "STANDARD_PATH, FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE or ORDER_NOT_FOUND. Read from the real orders (D-089)."
+                    description: "FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE, ORDER_NOT_FOUND, DELAY, NOT_LATE_YET, DELIVERED_ON_TIME or STANDARD_PATH (D-089, D-100)."
                     filter_from_agent: True
                 reasonCode: string
                     description: "Internal reason code."
@@ -850,6 +883,24 @@ subagent stolen_delayed_orders:
                     filter_from_agent: True
                 restaurantReimbursement: string
                     description: "Restaurant reimbursement recommendation."
+                    filter_from_agent: True
+                timing: string
+                    description: "ON_TIME, NOT_LATE_YET, DELAYED_MINOR, DELAYED_SEVERE, LIKELY_LOST or UNKNOWN."
+                    filter_from_agent: True
+                delaySeverity: string
+                    description: "MINOR or SEVERE for a DELAY."
+                    filter_from_agent: True
+                delayValue: number
+                    description: "DELAY only: value Refund offers before its tier ceiling."
+                    filter_from_agent: True
+                minutesLate: number
+                    description: "Minutes past the expected time."
+                    filter_from_agent: True
+                minutesUntilExpected: number
+                    description: "NOT_LATE_YET only: minutes until the expected time."
+                    filter_from_agent: True
+                deliveryMinutes: number
+                    description: "Delivered orders: minutes the delivery took."
                     filter_from_agent: True
             target: "apex://CARES_StolenDelayedEvaluateAction"
 
@@ -941,6 +992,12 @@ subagent stolen_delayed_orders:
                 | This claim is approved and the customer's choice is recorded. Tell the customer you are finishing it now and use {!@actions.continue_to_refund}.
             if @variables.stolen_delayed_decision == "STANDARD_PATH" and @variables.stolen_delayed_needs_person == False:
                 | The order goes the standard refund way. Tell the customer, in one short sentence, that you will check their refund options now, and use {!@actions.continue_to_refund} in the same reply.
+            if @variables.stolen_delayed_decision == "DELAY" and @variables.stolen_delayed_needs_person == False:
+                | The order is late. Apologise once for the wait, tell the customer you will check what you can offer for the delay, and use {!@actions.continue_to_refund} in the same reply. Do not name an amount yourself.
+            if @variables.stolen_delayed_decision == "NOT_LATE_YET":
+                | The order is still on its way and within its expected time: it should arrive in about {!@variables.stolen_delayed_minutes_until_expected} minutes. Tell the customer kindly, without offering money or a refund, and offer to check again if it has not arrived by then. If they ask for a person, call {!@actions.escalate_for_review}.
+            if @variables.stolen_delayed_decision == "DELIVERED_ON_TIME":
+                | The order was delivered within the time promised: it took {!@variables.stolen_delayed_delivery_minutes} minutes from order to door. Tell the customer kindly, without offering money for a delay. Ask whether something else went wrong, like a missing item or cold food, and if so use {!@actions.go_to_refund_items}. If they disagree or ask for a person, call {!@actions.escalate_for_review}.
             if @variables.stolen_delayed_handoff_status == "BLOCKED" or @variables.stolen_delayed_handoff_status == "FAILED":
                 | Apologise that this could not be completed here. Tell the customer a member of the team will help and call {!@actions.escalate_for_review}.
         actions:
@@ -950,6 +1007,7 @@ subagent stolen_delayed_orders:
                 with contactId = @variables.customer_id
                 with orderId = ...
                 with customerReport = ...
+                with claimType = ...
                 # A check after a re-dispatch starts a new claim
                 set @variables.stolen_delayed_lookups = 1 if @variables.stolen_delayed_handoff_status == "REDISPATCHED" else @variables.stolen_delayed_lookups + 1
                 set @variables.stolen_delayed_handoff_status = ""
@@ -967,6 +1025,11 @@ subagent stolen_delayed_orders:
                 set @variables.stolen_delayed_redispatch_eligible = @outputs.redispatchEligible
                 set @variables.stolen_delayed_driver_compensation = @outputs.driverCompensation
                 set @variables.stolen_delayed_restaurant_reimbursement = @outputs.restaurantReimbursement
+                set @variables.stolen_delayed_timing = @outputs.timing
+                set @variables.stolen_delayed_delay_severity = @outputs.delaySeverity
+                set @variables.stolen_delayed_delay_value = @outputs.delayValue
+                set @variables.stolen_delayed_minutes_until_expected = @outputs.minutesUntilExpected
+                set @variables.stolen_delayed_delivery_minutes = @outputs.deliveryMinutes
             resolve_claim: @actions.handoff_approved_claim
                 description: "Record the customer's choice for an approved claim: REFUND, WALLET_CREDIT or REDISPATCH."
                 available when @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == ""
@@ -989,13 +1052,13 @@ subagent stolen_delayed_orders:
                 description: "Hand the conversation to a person: manual review, an escalation trigger, a failed step, or the customer asks for a person. Escalate to Human logs a case with the claim context first."
             continue_to_refund: @utils.transition to @subagent.refund
                 description: "Continue to the refund options: an approved claim whose choice is recorded, or an order that goes the standard refund way."
-                available when @variables.stolen_delayed_needs_person == False and (@variables.stolen_delayed_handoff_status == "READY_FOR_REFUND" or @variables.stolen_delayed_decision == "STANDARD_PATH")
+                available when @variables.stolen_delayed_needs_person == False and (@variables.stolen_delayed_handoff_status == "READY_FOR_REFUND" or @variables.stolen_delayed_decision == "STANDARD_PATH" or @variables.stolen_delayed_decision == "DELAY")
             go_to_experience_rating: @utils.transition to @subagent.experience_rating
                 description: "Ask for feedback once the order has been re-dispatched."
                 available when @variables.stolen_delayed_handoff_status == "REDISPATCHED"
             go_to_refund_items: @utils.transition to @subagent.refund
                 description: "The order arrived but an item is missing or wrong, or the food is poor quality, or the customer wants money back for that."
-                available when @variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_order_id == ""
+                available when (@variables.stolen_delayed_evaluated == False and @variables.stolen_delayed_order_id == "") or @variables.stolen_delayed_decision == "DELIVERED_ON_TIME"
 
 subagent risk_detection:
     label: "Risk Detection"
