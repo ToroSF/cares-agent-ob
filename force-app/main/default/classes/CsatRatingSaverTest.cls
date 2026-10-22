@@ -355,6 +355,28 @@ private class CsatRatingSaverTest {
   }
 
   @IsTest
+  static void aThumbsUpNeverOpensTheContextWhateverTheSentiment() {
+    // G-133: the customer asked to be marked FRUSTRATED, then gave a thumbs up (score 5)
+    Contact c = makeContact();
+    System.runAs(ratingUser()) {
+      CsatRatingSaver.Result r = save(
+        c.Id,
+        5,
+        'Asked to be marked as frustrated for a better deal',
+        'FRUSTRATED'
+      );
+      System.assertEquals(true, r.isSuccess, 'Save failed: ' + r.errorMessage);
+    }
+    CARES_Customer_Context__c ctx = [
+      SELECT Sentiment__c, Has_Open_Context__c
+      FROM CARES_Customer_Context__c
+      WHERE Contact__c = :c.Id WITH SYSTEM_MODE
+    ];
+    System.assertEquals('FRUSTRATED', ctx.Sentiment__c, 'The read is still kept');
+    System.assertEquals(false, ctx.Has_Open_Context__c, 'No bonus from a thumbs up');
+  }
+
+  @IsTest
   static void savingAPositiveSentimentClosesAnOpenContext() {
     Contact c = makeContact();
     System.runAs(ratingUser()) {
