@@ -202,6 +202,8 @@ Mock data for this project, not a real Pronto signal (same disclosure as the moc
 3. Publish and activate v13 (v12 = rollback). No Apex, Flow or data change: only the agent and the permission set.
 4. Run B-PO-01, B-ER-01, B-ER-02, B-ER-14, B-SD-23, B-RF-12b, B-RD-15 and B-RD-16 live. B-PO-01, B-ER-01, B-ER-02 and B-SD-23 passed on the draft before the publish (2026-10-22). B-ER-14 failed on the draft for another reason (G-132: Refund repeats its offer after "that's all"), not the G-128 rating fix. The last three need step 2.
 
+**Done 2026-10-22:** PRs #63, #64 and #66 merged together as #67 (also G-133, D-102: `CsatRatingSaver` and its test). Deploy `0AfjV000004io8VSAQ` (CARES bundle, `CARES_Risk_Context_Access`, `CsatRatingSaver` and its test; 214/214 tests), View All = `true` after it. PR #68 (an "All records" list view on each CARES Admin tab) deployed `0AfjV000004il2YSAQ`. **CARES v13 published and active**; v12 is the rollback. Step 4 plus B-ER-15: 7 of 9 pass live. B-ER-14 fails on G-132 (open). B-ER-15 fails its check because the model still saves FRUSTRATED, but the context stays closed, so the G-133 fix holds. PR #65 (the customer's own words on the escalation Case) is not in v13: the model did not call `add_case_details` (0 of 3), and the transfer gate waits until after the freeze.
+
 ## If something goes wrong
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).
