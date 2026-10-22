@@ -17,6 +17,10 @@ public with sharing class CsatRatingSaver {
     'NEGATIVE',
     'FRUSTRATED'
   };
+  // Only the customer's own thumbs down opens the context (score 2; thumbs up is 5). The
+  // sentiment is the model's read, so a customer who asks to be marked FRUSTRATED on a
+  // thumbs up must not unlock the retention bonus (G-133, D-101)
+  private static final Decimal OPEN_CONTEXT_MAX_SCORE = 2;
   @InvocableMethod(
     label='Save CSAT Rating'
     description='Saves a customer satisfaction rating (1-5, mapped from a thumbs up/down choice) and the agent\'s own written summary for a resolved CARES interaction, linked to the customer Contact.'
@@ -62,6 +66,7 @@ public with sharing class CsatRatingSaver {
     List<Integer> insertPositions = new List<Integer>();
     List<Id> insertContactIds = new List<Id>();
     List<String> insertSentiments = new List<String>();
+    List<Decimal> insertScores = new List<Decimal>();
 
     for (Integer i = 0; i < requests.size(); i++) {
       Request req = requests[i];
@@ -97,6 +102,7 @@ public with sharing class CsatRatingSaver {
       insertPositions.add(i);
       insertContactIds.add(relatedContact.Id);
       insertSentiments.add(req.sentiment);
+      insertScores.add(req.score);
     }
 
     if (!ratingsToInsert.isEmpty()) {
@@ -111,6 +117,7 @@ public with sharing class CsatRatingSaver {
         upsertCustomerContext(
           insertContactIds,
           insertSentiments,
+          insertScores,
           ratingsToInsert
         );
       } catch (Exception e) {
@@ -130,6 +137,7 @@ public with sharing class CsatRatingSaver {
   private static void upsertCustomerContext(
     List<Id> contactIds,
     List<String> sentiments,
+    List<Decimal> scores,
     List<CSAT_Rating__c> insertedRatings
   ) {
     try {
@@ -150,9 +158,9 @@ public with sharing class CsatRatingSaver {
           ctx = new CARES_Customer_Context__c(Contact__c = contactIds[i]);
         }
         ctx.Sentiment__c = sentiments[i];
-        ctx.Has_Open_Context__c = OPEN_CONTEXT_SENTIMENTS.contains(
-          sentiments[i]
-        );
+        ctx.Has_Open_Context__c =
+          OPEN_CONTEXT_SENTIMENTS.contains(sentiments[i]) &&
+          scores[i] <= OPEN_CONTEXT_MAX_SCORE;
         ctx.Last_Interaction_Date__c = Datetime.now();
         ctx.Source_Rating__c = insertedRatings[i].Id;
         toUpsert.add(ctx);
