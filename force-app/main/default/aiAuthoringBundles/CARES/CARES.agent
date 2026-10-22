@@ -661,6 +661,9 @@ subagent refund:
                     description: "Order total the refund must not exceed; 0 when unknown"
                 orderCurrency: string
                     description: "ISO currency code of the order from Stolen & Delayed Orders; blank when unknown"
+                # Declared so the value reaches the Apex: an undeclared "with" input is dropped (G-125)
+                retentionEligible: boolean
+                    description: "True only when Risk Detection found an open customer context (D-083). Set by the script, never by the model."
             outputs:
                 eligible: boolean
                     filter_from_agent: True
@@ -849,7 +852,8 @@ subagent stolen_delayed_orders:
                 customerReport: string
                     description: "What the customer said happened, in their own words. Do not summarise or soften it."
                 claimType: string
-                    description: "NOT_RECEIVED if the customer says it never arrived or is not there, LATE if late or still waiting, else UNSURE."
+                    description: "Always set. LATE if the order came late or the customer is still waiting for it, NOT_RECEIVED if it never arrived or is not there, else UNSURE."
+                    is_required: True
             outputs:
                 decision: string
                     description: "FULL_REFUND, LOSS_ABSORPTION, MANUAL_REVIEW, ESCALATE, ORDER_NOT_FOUND, DELAY, NOT_LATE_YET, DELIVERED_ON_TIME or STANDARD_PATH (D-089, D-100)."
@@ -980,7 +984,7 @@ subagent stolen_delayed_orders:
             if @variables.stolen_delayed_needs_person == True:
                 | This case needs a person. Tell the customer, kindly, that a member of the support team will review it and continue the conversation. Do not promise any outcome or amount. Call {!@actions.escalate_for_review}.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "":
-                | Apologise. Tell the customer they can get the full order value back as a refund to the original payment method: {!@variables.stolen_delayed_order_total} {!@variables.stolen_delayed_currency}. Or they can take credit in the app wallet, which is worth a little more; the exact credit amount is confirmed in the next step. Ask which they prefer.
+                | Apologise. Tell the customer they can get the full order value back as a refund to the original payment method: {!@variables.stolen_delayed_order_total} {!@variables.stolen_delayed_currency}, written with two decimals (for example 52.70). Or they can take credit in the app wallet, which is worth a little more; the exact credit amount is confirmed in the next step. Ask which they prefer.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "" and @variables.stolen_delayed_redispatch_eligible == True:
                 | You may also offer to send the order again instead.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "":

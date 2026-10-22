@@ -275,7 +275,7 @@ public with sharing class CARES_StolenDelayedPolicy {
       return withOrderId(new Outcome(src.decision, src.reasonCode), namedOrder);
     }
     CARES_StolenDelayedTelemetry t = src.telemetry;
-    t.claimType = normalizeClaim(claimType);
+    t.claimType = claimFrom(claimType, customerReport);
     if (s.mockTelemetryEnabled) {
       // No row for the order leaves what the platform would add unknown (D-096)
       enrich(t, CARES_StolenDelayedMockTelemetry.forOrder(src.orderId));
@@ -423,6 +423,27 @@ public with sharing class CARES_StolenDelayedPolicy {
     d.minutesUntilExpected = timing.minutesUntilExpected;
     d.deliveryMinutes = t.deliveryMinutes;
     return d;
+  }
+
+  // The model can leave the claim type empty (G-126). Then the customer's own words decide: a plain "it came
+  // late", with nothing that says it never came, is LATE, so a late delivery is never paid as a lost one.
+  // Anything else stays UNSURE, as before
+  private static final Pattern LATE_WORDS = Pattern.compile(
+    '\\b(late|delay(ed)?|took (so |too |very )?long|waited|waiting|slow|forever|ages)\\b'
+  );
+  private static final Pattern NOT_RECEIVED_WORDS = Pattern.compile(
+    '\\b(never|not|didn\'t|hasn\'t|haven\'t|wasn\'t|isn\'t|missing|stolen|nothing)\\b'
+  );
+
+  @TestVisible
+  private static String claimFrom(String claimType, String customerReport) {
+    if (String.isNotBlank(claimType)) {
+      return normalizeClaim(claimType);
+    }
+    String report = customerReport == null ? '' : customerReport.toLowerCase();
+    return LATE_WORDS.matcher(report).find() && !NOT_RECEIVED_WORDS.matcher(report).find()
+      ? CLAIM_LATE
+      : CLAIM_UNSURE;
   }
 
   @TestVisible
