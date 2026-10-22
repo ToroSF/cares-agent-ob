@@ -75,11 +75,11 @@ public with sharing class CARES_StolenDelayedEvaluateAction {
     )
     public Decimal delayValue;
     @InvocableVariable(description='Minutes past the expected time')
-    public Integer minutesLate;
+    public Decimal minutesLate;
     @InvocableVariable(
       description='NOT_LATE_YET only: minutes until the expected time'
     )
-    public Integer minutesUntilExpected;
+    public Decimal minutesUntilExpected;
     @InvocableVariable(description='Delivered orders: minutes the delivery took')
     public Decimal deliveryMinutes;
   }
