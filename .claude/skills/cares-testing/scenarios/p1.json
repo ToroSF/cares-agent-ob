@@ -216,12 +216,14 @@
     "no_actions": [
      "find_order",
      "calculate_refund_offer",
-     "issue_resolution"
+     "issue_resolution",
+     "get_risk_result"
     ],
     "reply_any": [
      "email"
     ]
-   }
+   },
+   "notes": "v9+ router (PR #53): Refund first; with no contact, Risk Detection sends the customer to Identify Customer before the risk check (G-113), so Refund is not reached and get_risk_result does not run on this turn."
   },
   {
    "id": "B-RF-17",

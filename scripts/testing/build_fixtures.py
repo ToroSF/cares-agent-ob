@@ -35,12 +35,15 @@ POOLS = {
     "R-PREP": ["Delmore Decroix", "Ellery Collopy", "Corie Fairleigh"],
     "R-CANC": ["Rubia A'Barrow", "Karena Cowburn", "Evanne Fosberry", "Candace Pigford"],
 }
+# Pool each named fixture comes from, to swap it when its order is already paid (G-108)
+NAMED_POOL = {"FX-EXP": "R-EXP", "FX-EXP-2": "R-EXP", "FX-INS": "R-INS", "FX-INS-2": "R-INS", "FX-PP": "R-PP",
+              "FX-PP-2": "R-PP", "FX-ONE": "R-ONE", "FX-OFD": "R-OFD", "FX-PREP": "R-PREP", "FX-CANC": "R-CANC"}
 REVIEW_AT = 3  # risk_review_threshold: this many issue cases go to PATTERN_REVIEW (D-062)
 RETENTION_BONUS_PCT = 5  # Retention_Bonus_Pct__c seeded by seed-refund-tiers.apex (D-083, mock data, [$])
 # Mock sentiment context (D-083): contact name => Has_Open_Context__c is true. These are the two
 # contacts scripts/apex/seed-customer-context.apex seeds. Risk status still decides eligibility:
 # a PATTERN_REVIEW contact here (Alex Morgan) never reaches the context read at all.
-CONTEXT_CONTACTS = {"Boyce Antrag", "Alex Morgan"}
+CONTEXT_CONTACTS = {"Boyce Antrag", "Alex Morgan", "Barclay Scarsbrooke"}
 ESC_SIZE = 41  # contacts with no cases: FX-CLEAN (an Insider), then one each for scenarios that issue or create Cases
 ESC_LOW_SIZE = 8  # contacts Stolen & Delayed does not trust, for the "never arrived" scenarios that escalate
 # Stolen & Delayed trusts a customer only with this many non-canceled orders and a claim rate at most this
@@ -85,7 +88,8 @@ def parse(raw):
             orders.setdefault(f[1], []).append({"id": f[2], "st": f[3], "cr": f[4], "tot": f[5], "items": f[6]})
         elif f[0] == "FXC" and len(f) >= 7:
             contacts[f[5]] = {"cid": f[1], "name": f[2], "email": f[3], "tier": f[4], "cases": int(f[6]),
-                              "issues": int(f[7]) if len(f) > 7 else int(f[6])}
+                              "issues": int(f[7]) if len(f) > 7 else int(f[6]),
+                              "open_ctx": f[8] == "1" if len(f) > 8 else None}
     return contacts, orders
 
 
@@ -136,7 +140,8 @@ def fixture(c, orders):
     clean = c["issues"] == 0
     # Retention bonus (D-083): only when the contact has a seeded context row AND is not NOT_CLEAN
     # by pattern - "pay to keep a customer, not to have one". Mirrors Risk Detection's gate exactly.
-    fx["has_context"] = c["name"] in CONTEXT_CONTACTS
+    # The real open context row when the dump has it: the agent writes one on every saved rating
+    fx["has_context"] = c["open_ctx"] if c.get("open_ctx") is not None else c["name"] in CONTEXT_CONTACTS
     retention_eligible = fx["has_context"] and fx["risk"] != "NOT_CLEAN" and fx["risk"] != "PATTERN_REVIEW"
     fx["retention_eligible"] = retention_eligible
     fx["offer_one"], fx["credit_one"] = offer(c["tier"], it[0][1], total, clean, retention_eligible)
@@ -162,18 +167,34 @@ def main():
         app, c = by_name[name]
         out["fixtures"][key] = fixture(c, orders[app])
 
-    for key, name in NAMED.items():
+    paid, claims = (set(), {}) if args.from_log else resolved(args.org)
+    # G-108: a named fixture whose latest delivered order was already paid gets "already has a refund";
+    # swap it for a clean contact of the same pool whose order is still unpaid
+    named = dict(NAMED)
+    for key, pool in NAMED_POOL.items():
+        app, c = by_name[named[key]]
+        if fixture(c, orders[app])["order"] not in paid:
+            continue
+        spare = [n for n in POOLS[pool] if n not in named.values() and n in by_name and by_name[n][0] in orders
+                 and c["tier"] == by_name[n][1]["tier"] and by_name[n][1]["issues"] == 0
+                 and not by_name[n][1].get("open_ctx")
+                 and fixture(by_name[n][1], orders[by_name[n][0]])["order"] not in paid]
+        if spare:
+            print(f"{key}: {named[key]}'s order is paid, using {spare[0]}")
+            named[key] = spare[0]
+        else:
+            print(f"WARNING: {key}: {named[key]}'s order is paid and {pool} has no unpaid spare")
+    for key, name in named.items():
         add(key, name)
     for pool, names in POOLS.items():
         out["pools"][pool] = []
         for n in names:
-            key = next((k for k, v in NAMED.items() if v == n), key_for("P", n))
+            key = next((k for k, v in named.items() if v == n), key_for("P", n))
             if key not in out["fixtures"]:
                 add(key, n)
             out["pools"][pool].append(key)
-    used = set(NAMED.values()) | {n for ns in POOLS.values() for n in ns}
+    used = set(named.values()) | {n for ns in POOLS.values() for n in ns}
     # FX-CLEAN and the ESC pool need no cases and no payout yet, so earlier live runs never leak into them
-    paid, claims = (set(), {}) if args.from_log else resolved(args.org)
     def low_trust(app, c):
         ok = fixture(c, orders[app])["orders_ok"]
         return ok < HIGH_TRUST_MIN_ORDERS or Decimal(claims.get(c["cid"], 0)) / ok > HIGH_TRUST_MAX_CLAIM_RATE
@@ -183,7 +204,9 @@ def main():
     # ESC: trusted contacts, so a "never arrived" claim is not sent to a person for lack of trust. Any tier:
     # the offers are computed per tier. FX-CLEAN stays an Insider
     trusted = [n for n, app, c in fresh if not low_trust(app, c)]
-    clean = next(n for n in trusted if by_name[n][1]["tier"] == "Insider")
+    # FX-CLEAN shows the clean cap with no retention bonus, so prefer a contact with no open context
+    clean = next((n for n in trusted if by_name[n][1]["tier"] == "Insider" and not by_name[n][1].get("open_ctx")),
+                 next(n for n in trusted if by_name[n][1]["tier"] == "Insider"))
     esc = [clean] + [n for n in trusted if n != clean][:ESC_SIZE - 1]
     # ESC-LOW: any tier, but Stolen & Delayed does not trust them (too few orders or too many claims),
     # so a "never arrived" claim always goes to a person. The pools never share a contact
@@ -194,7 +217,10 @@ def main():
            if 0 < c["issues"] < REVIEW_AT and n not in used and app in orders
            and fixture(c, orders[app])["order"] not in paid
            and Decimal(fixture(c, orders[app])["total"]) > POLICY[c["tier"]][1]]
-    add("FX-NOTCLEAN", low[0])
+    if low:
+        add("FX-NOTCLEAN", low[0])
+    else:  # Risk Flow v3 skips CARES's own escalation Cases (D-082), so the org may have no 1-2 issue contact
+        print("WARNING: no FX-NOTCLEAN contact (1-2 issue Cases); its scenarios will have no fixture")
     esc = esc[1:]
     for pool, names in (("ESC", esc), ("ESC-LOW", esc_low)):
         out["pools"][pool] = []

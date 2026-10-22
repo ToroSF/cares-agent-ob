@@ -350,6 +350,8 @@ def resolve_fixture(name, fixtures, alloc, sc, run):
                 if sc.get("burns"):
                     alloc["used"].add(free[0])
             name = alloc["taken"][key]
+    if name not in fixtures["fixtures"]:  # e.g. no FX-NOTCLEAN contact in the org (build_fixtures.py warns)
+        raise LookupError(f"fixture {name} is not in fixtures.json")
     fx = dict(fixtures["fixtures"][name])
     fx["fixture"] = name
     fx.update(fixtures.get("globals", {}))
@@ -368,6 +370,10 @@ def run_one(sc, run, args, fixtures, alloc):
         cid, fx = resolve_fixture(sc.get("fixture"), fixtures, alloc, sc, run)
     except RuntimeError as e:
         return {"scenario": sc["id"], "run": run, "outcome": "BLOCKED", "problems": [str(e)]}
+    except LookupError as e:
+        log(f"{'N/A':<16} {sc['id']} r{run} {e}")
+        return {"scenario": sc["id"], "run": run, "priority": sc.get("priority"), "outcome": "N/A",
+                "problems": [str(e)]}
     fx.update(fixtures.get("globals", {}))
     if sc.get("no_contact"):  # the fixture's data, but no ContactId: the customer gives the email (web chat)
         cid = None

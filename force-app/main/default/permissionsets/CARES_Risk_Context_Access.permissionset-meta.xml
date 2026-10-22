@@ -2,7 +2,7 @@
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <label>CARES Risk Context Access</label>
     <description
-  >Lets the CARES agent user run CARES_Get_Customer_Context (Risk Detection's read of the mock sentiment context, D-083). Read only, no Create/Edit/Delete. Assigning it is an explicit rollout step.</description>
+  >Lets the CARES agent user run CARES_Get_Customer_Context (D-083). Read only. View All because the object is Private and the context rows belong to whoever wrote them, not the agent user (G-122). Assigning it is a rollout step.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <objectPermissions>
         <object>CARES_Customer_Context__c</object>
@@ -10,7 +10,7 @@
         <allowRead>true</allowRead>
         <allowEdit>false</allowEdit>
         <allowDelete>false</allowDelete>
-        <viewAllRecords>false</viewAllRecords>
+        <viewAllRecords>true</viewAllRecords>
         <modifyAllRecords>false</modifyAllRecords>
     </objectPermissions>
     <fieldPermissions>

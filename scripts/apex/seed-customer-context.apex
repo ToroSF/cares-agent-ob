@@ -1,23 +1,25 @@
-// Seed CARES_Customer_Context__c rows for the two stable named test fixtures (D-083).
+// Seed CARES_Customer_Context__c rows for the three stable named test fixtures (D-083).
 // Run once after CARES_Customer_Context__c and its permission sets are deployed:
 //   sf apex run --file scripts/apex/seed-customer-context.apex --target-org <team org>
 // Safe to run again: rows are upserted by Contact__c, matching CsatRatingSaver's own upsert key.
 // Set DRY_RUN = true to print what would change without writing.
 //
 // All sentiment labels here are mock data for this project (D-083) - there is no real Pronto
-// sentiment feed. The two contacts seeded are the repo's existing stable NAMED fixtures
-// (scripts/testing/build_fixtures.py), reused here instead of inventing a third test persona:
+// sentiment feed. The contacts seeded are the repo's existing stable NAMED fixtures
+// (scripts/testing/build_fixtures.py), reused here instead of inventing new test personas:
 //   - Boyce Antrag (FX-CLEAN-BIG): CLEAN risk status, seeded FRUSTRATED + Has_Open_Context__c =
 //     true. Proves the retention bonus path (B-RD-15): PATTERN_REVIEW does not fire for this
 //     contact, so the context read runs and the bonus applies.
 //   - Alex Morgan (FX-DIRTY): already the PATTERN_REVIEW fixture (5+ issue cases). Seeded
 //     FRUSTRATED + Has_Open_Context__c = true anyway, specifically to prove the abuse gate wins:
 //     the trace should show PATTERN_REVIEW firing and get_customer_context never even running.
+//   - Barclay Scarsbrooke (FX-NOTCLEAN, NOT_CLEAN from the ordinary issue Case seeded by
+//     seed-risk-fixture.apex): seeded FRUSTRATED + Has_Open_Context__c = true to prove the bonus never
+//     stacks with an existing NOT_CLEAN result (B-RD-16): get_customer_context finds the row, but
+//     risk_retention_eligible stays False.
 //
-// FX-NOTCLEAN (B-RD-16, proves the bonus never stacks with an existing NOT_CLEAN result) is
-// picked dynamically at test-build time (scripts/testing/build_fixtures.py), not a fixed name, so
-// it is not seeded here - overlay a context row on whichever contact that run resolves to, or
-// extend build_fixtures.py to call the seed logic per-run if this scenario needs to be automated.
+// The agent user reads these rows through CARES_Risk_Context_Access, which has View All (read) because
+// the object is Private and the rows belong to whoever runs this script (G-122).
 //
 // The person who runs it needs the CARES_Experience_Rating_Access permission set (Create/Edit on
 // CARES_Customer_Context__c, same access CsatRatingSaver itself uses).
@@ -26,7 +28,8 @@ Boolean DRY_RUN = false;
 
 Map<String, String> CONTEXT_BY_NAME = new Map<String, String>{
     'Boyce Antrag' => 'FRUSTRATED',
-    'Alex Morgan' => 'FRUSTRATED'
+    'Alex Morgan' => 'FRUSTRATED',
+    'Barclay Scarsbrooke' => 'FRUSTRATED'
 };
 
 Map<Id, Contact> contactsByName = new Map<Id, Contact>();
