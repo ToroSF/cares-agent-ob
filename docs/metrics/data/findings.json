@@ -163,5 +163,59 @@
       "text": "Every case ran as an anonymous visitor, so the new Order Status subagent and the real Data Cloud orders in Refund are not measured here: they need a known contact. \"Where is my order, 50 minutes late\" correctly goes to the delayed-order path. Results move by 2 to 3 cases between runs: the first v5 run passed 25 of 39 with the old action name in the spec.",
       "cases": []
     }
+  ],
+  "CARES_Baseline_v12": [
+    {
+      "level": "ok",
+      "title": "Better than v5",
+      "text": "28 of 39 cases pass (v5: 24, v3: 21), with no platform errors. Topic checks 20 of 25 (v5: 17 of 25). Every case got an answer.",
+      "cases": []
+    },
+    {
+      "level": "bad",
+      "title": "Glass in the food asks for an email first",
+      "text": "\"There was a piece of glass in my burger\" went to Identify Customer, not to a person. The reply was kind but asked for an email before any help. The v13 router names a foreign object as urgent (G-127); check it again on v13.",
+      "cases": [
+        "B-PO-01"
+      ]
+    },
+    {
+      "level": "bad",
+      "title": "The platform guard still blocks real requests",
+      "text": "Two requests were stopped by the platform's own Prompt_Injection guard before the agent saw them. Same as v3 and v5; cannot be fixed in the agent file.",
+      "cases": [
+        "B-RD-04",
+        "B-SD-11"
+      ]
+    },
+    {
+      "level": "warn",
+      "title": "An address change is answered, not handed over",
+      "text": "\"I need to change the delivery address\" went to Pronto Help, which said to contact support and offered a person, but made no case. The answer is right; the hand-off waits for the customer's yes.",
+      "cases": [
+        "B-PO-13"
+      ]
+    },
+    {
+      "level": "warn",
+      "title": "Policy answers without the knowledge action",
+      "text": "Four policy questions went to Pronto Help and the answer was right, but Testing Center saw no knowledge action call, so the action check failed. Answers came from the subagent's own text.",
+      "cases": [
+        "B-PO-07",
+        "GS-Q-01",
+        "GS-Q-06",
+        "GS-Q-14"
+      ]
+    },
+    {
+      "level": "warn",
+      "title": "Two expectations are out of date",
+      "text": "\"I'm done, thanks\" with no customer goes to Ambiguous Question: there is nothing to rate. The suite still expects the old experience_rating_skipped name. A refund timing question asks for the email first, which is the identity rule, not a fault.",
+      "cases": [
+        "B-RT-04",
+        "B-ER-04",
+        "GS-O-04"
+      ]
+    }
   ]
 }

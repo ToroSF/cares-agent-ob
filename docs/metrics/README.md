@@ -62,6 +62,7 @@ The Salesforce fonts (Avant Garde for Salesforce, Salesforce Sans) and brand art
 |---|---|---|---|
 | `CARES_Baseline_v3` | v3 | 2026-10-20 | 21/39 (54%); 19/25 on cases v3 was meant to handle |
 | `CARES_Baseline_v5` | v5 | 2026-10-21 | 24/39 (62%); policy-branch target cases 6/14 (v3: 2/14). Results move by 2 to 3 cases between runs |
+| `CARES_Baseline_v12` | v12 | 2026-10-22 | 28/39 (72%), no platform errors; topic checks 20/25. Fails: glass asks for an email first (G-127, fixed in v13), platform guard (2), knowledge action not called on 4 right answers, 3 stale expectations |
 
 v5 uses the same 39 utterances. The only expectation changed is the Pronto Help action name (`AnswerQuestionsWithKnowledge`, the name Testing Center reports). The dashboard shows the newest run in detail and compares it with the one before.
 
