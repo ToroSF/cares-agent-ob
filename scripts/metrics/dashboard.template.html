@@ -5,189 +5,483 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CARES · Agent metrics</title>
 <style>
+  /* Salesforce 2026 palette (web-design skill · brand.salesforce.com, Color): only these values, plus white and opacity.
+     Text is Electric Blue 15; muted text is Electric Blue 15 at 72% on white (6.6:1). Small accent text is Electric Blue 30,
+     4.5:1 on white and on Cloud Blue 95. Electric Blue 50 is for big numbers, fills and buttons; Cloud Blue 68/80 never carry text on light.
+     Licensed fonts and brand art are not in this file (public repo): presentation.html adds them from docs/metrics/brand/. */
   :root {
-    --bg:#f4f6fb; --card:#fff; --ink:#0f172a; --mute:#64748b; --line:#e2e8f0;
-    --brand:#4f46e5; --brand2:#06b6d4; --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626; --gray:#94a3b8;
+    --eb15:#001E5B; --eb30:#022AC0; --electric:#066AFE;
+    --cloud:#00B3FF; --cloud80:#90D0FE; --sky:#EAF5FE; --black:#000B2E; --white:#fff;
+    --gray40:#3E3E3C; --gray60:#706E6B; --gray80:#DDDBDA; --gray95:#F3F2F2;
+    --ok:#2E844A; --warn:#DD7A01; --violet:#9050E9; --pink:#FF538A;
+    --ink:var(--eb15); --title:var(--eb15); --mute:#475D89; --link:var(--eb30);
+    --line:rgba(0,30,91,.12); --track:var(--gray95);
+    --t-flow:var(--sky); --t-apex:rgba(144,80,233,.14); --t-std:rgba(0,179,255,.18);
+    --t-ok:rgba(46,132,74,.14); --t-bad:rgba(255,83,138,.16); --t-warn:rgba(221,122,1,.16);
+    --g-morning:linear-gradient(180deg,#EAF5FE 0%,#FFFFFF 100%);
+    --g-dusk:linear-gradient(180deg,#022AC0 0%,#001E5B 100%);
+    --g-evening:linear-gradient(180deg,#001E5B 0%,#000B2E 100%);
+    --sh-card:0 2px 6px rgba(0,30,91,.05), 0 26px 50px -30px rgba(0,30,91,.32);
+    --sh-glow:0 0 20px rgba(6,106,254,.15);
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:24px;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --body:"Salesforce Sans", "SalesforceSans-Regular", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    --display:"AvantGarde for Salesforce", "AvantGardeForSalesforce-Demi", "ITC Avant Garde Gothic", "AvantGarde-Demi", "Salesforce Sans", -apple-system, sans-serif;
   }
   * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif; background:var(--bg); color:var(--ink); }
-  header.hero { background:linear-gradient(120deg,#0f172a 0%,#312e81 55%,#0e7490 100%); color:#fff; padding:40px 0 96px; }
-  .wrap { max-width:1200px; margin:0 auto; padding:0 28px; }
-  .hero h1 { margin:0; font-size:34px; letter-spacing:-.02em; }
-  .hero .sub { opacity:.8; margin-top:6px; }
-  .hero .meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
-  .chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:99px; font-size:12px; font-weight:600; background:rgba(255,255,255,.14); }
-  nav { position:sticky; top:0; z-index:5; background:rgba(244,246,251,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); }
-  nav .wrap { display:flex; gap:4px; overflow-x:auto; }
-  nav a { padding:12px 14px; color:var(--mute); text-decoration:none; font-weight:600; font-size:14px; white-space:nowrap; border-bottom:2px solid transparent; }
-  nav a:hover { color:var(--ink); border-color:var(--brand); }
-  .kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-top:-64px; }
-  .kpi { background:var(--card); border-radius:14px; padding:16px 18px; box-shadow:0 8px 24px rgba(15,23,42,.08); }
-  .kpi .label { color:var(--mute); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
-  .kpi .value { font-size:30px; font-weight:750; letter-spacing:-.02em; margin-top:4px; }
-  .kpi .hint { color:var(--mute); font-size:12px; margin-top:2px; }
-  section { margin-top:40px; }
-  section > h2 { font-size:22px; margin:0 0 4px; letter-spacing:-.01em; }
-  section > p.lead { color:var(--mute); margin:0 0 16px; }
-  .grid { display:grid; gap:14px; }
-  .g5 { grid-template-columns:repeat(5,minmax(0,1fr)); }
-  .finding { border-left:4px solid; border-radius:10px; padding:12px 14px; font-size:13px; }
-  .finding b { display:block; font-size:14px; margin-bottom:4px; }
-  .g2 { grid-template-columns:repeat(2,minmax(0,1fr)); } .g3 { grid-template-columns:repeat(3,minmax(0,1fr)); } .g4 { grid-template-columns:repeat(4,minmax(0,1fr)); }
-  .card { background:var(--card); border-radius:14px; padding:18px 20px; box-shadow:0 1px 3px rgba(15,23,42,.06); min-width:0; }
-  .card h3 { margin:0 0 12px; font-size:15px; }
-  .card .note { color:var(--mute); font-size:13px; margin-top:10px; }
-  .empty { border:2px dashed var(--line); border-radius:12px; padding:22px; text-align:center; color:var(--mute); }
-  .empty b { display:block; color:var(--ink); margin-bottom:4px; }
-  .legend { display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--mute); margin-top:10px; }
-  .legend i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
-  .hbar { display:grid; grid-template-columns:minmax(90px,38%) 1fr 44px; gap:10px; align-items:center; font-size:13px; margin:7px 0; }
-  .hbar .track { background:#eef2f7; border-radius:6px; height:12px; overflow:hidden; display:flex; }
-  .hbar .track span { display:block; height:100%; }
-  .hbar .n { text-align:right; font-variant-numeric:tabular-nums; color:var(--mute); }
+  html { scroll-behavior:smooth; }
+  body { margin:0; font:16px/1.5 var(--body); color:var(--ink); background:var(--white); -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1200px; margin:0 auto; padding:0 40px; position:relative; z-index:1; }
+  code { font-size:.9em; background:rgba(0,30,91,.07); padding:1px 6px; border-radius:4px; }
+
+  /* ---------- slides: white for dense content, Morning for short ideas, Dusk and Evening for the cover, divider and close ---------- */
+  .slide { padding:80px 0; position:relative; overflow:hidden; }
+  .slide.white { background:var(--white); }
+  .slide.sky { background:var(--g-morning); }
+  .slide.title, .slide.dusk { color:#fff; }
+  .slide.title { background:var(--g-evening); }
+  .slide.dusk { background:var(--g-dusk); }
+  .eyebrow { font:700 12px/1 var(--body); letter-spacing:.12em; text-transform:uppercase; color:var(--eb30); margin:0 0 16px; display:flex; align-items:center; gap:10px; }
+  .eyebrow::before { content:""; width:24px; height:2px; border-radius:2px; background:var(--electric); flex:none; }
+  .title .eyebrow, .dusk .eyebrow { color:var(--cloud80); }
+  .title .eyebrow::before, .dusk .eyebrow::before { background:var(--cloud); }
+  h1, h2, .display { font-family:var(--display); font-weight:600; letter-spacing:-.015em; }
+  .slide h2 { font-size:36px; line-height:1.15; margin:0; color:var(--eb15); max-width:30ch; text-wrap:balance; }
+  .title h2, .dusk h2 { color:#fff; }
+  .slide .sub { font-size:18px; color:var(--mute); margin:14px 0 40px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .title .sub, .dusk .sub { color:var(--sky); }
+
+  /* brand art: sparkles on the left and right edges only, never over content */
+  .spark { position:absolute; z-index:0; pointer-events:none; user-select:none; animation:float 9s ease-in-out infinite; }
+  @keyframes float { 50% { transform:translateY(-6px) rotate(var(--rot2,4deg)); } }
+  @media (max-width:1320px) { .spark { display:none; } }
+
+  /* cover */
+  .cover { min-height:86vh; display:flex; flex-direction:column; justify-content:center; padding:96px 0; }
+  .cover .wrap { width:100%; }
+  .cobrand { display:flex; align-items:center; gap:12px; font:700 19px var(--body); color:#fff; margin-bottom:56px; }
+  .cobrand .bx { width:1px; height:28px; background:#fff; }
+  .cobrand svg { height:21px; width:auto; color:var(--cloud); display:block; }
+  .cover h1 { font-size:96px; line-height:.95; margin:0; letter-spacing:-.02em; }
+  .cover .promise { font-size:24px; line-height:1.35; margin:22px 0 0; max-width:30ch; color:var(--sky); }
+  .cover .art { position:absolute; right:-120px; top:50%; transform:translateY(-50%); width:620px; height:620px; z-index:0; }
+  .cover .ball { position:absolute; right:7%; top:50%; width:340px; transform:translateY(-50%); z-index:0; filter:drop-shadow(0 30px 60px rgba(0,11,46,.6)); }
+  .chips { display:flex; flex-wrap:wrap; gap:10px; margin-top:40px; }
+  .chip { display:inline-flex; align-items:center; gap:8px; padding:7px 16px; border-radius:99px; font-size:14px; font-weight:700; color:#fff;
+    background:rgba(0,30,91,.6); border:1px solid rgba(6,106,254,.45); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+  .chip.on { background:#fff; color:var(--eb15); border-color:#fff; }
+  .chip.on::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--ok); }
+
+  /* nav: frosted glass */
+  nav { position:sticky; top:0; z-index:10; background:rgba(255,255,255,.72); backdrop-filter:saturate(1.2) blur(20px); -webkit-backdrop-filter:saturate(1.2) blur(20px); border-bottom:1px solid var(--line); }
+  nav .wrap { display:flex; align-items:center; gap:2px; overflow-x:auto; }
+  nav a { padding:15px 10px 13px; color:var(--mute); text-decoration:none; font-weight:700; font-size:14px; white-space:nowrap; border-bottom:2px solid transparent; transition:color .2s, border-color .2s; }
+  nav a:hover, nav a:focus-visible, nav a.on { color:var(--eb15); border-color:var(--electric); outline:none; }
+  nav .sep { width:1px; height:20px; background:var(--line); margin:0 8px; flex:none; }
+  nav .tag-eng { font-size:12px; text-transform:uppercase; letter-spacing:.1em; padding-left:4px; padding-right:4px; }
+  .btn { margin-left:auto; flex:none; border:0; border-radius:99px; padding:9px 18px; font:700 14px var(--body); background:var(--electric); color:#fff; cursor:pointer; box-shadow:var(--sh-glow); transition:background .2s, transform .2s var(--ease); }
+  .btn:hover, .btn:focus-visible { background:var(--eb30); transform:translateY(-1px); outline:2px solid var(--eb15); outline-offset:2px; }
+
+  /* value chain */
+  .chain { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; margin-top:8px; }
+  .step { background:#fff; border-radius:var(--r-lg); padding:24px 22px 20px; margin-right:32px; position:relative; box-shadow:var(--sh-card); border:1px solid rgba(0,30,91,.06); }
+  .step:last-child { margin-right:0; background:var(--g-dusk); color:#fff; border-color:transparent; }
+  .step:not(:last-child)::after { content:""; position:absolute; right:-26px; top:50%; width:20px; height:2px; background:var(--electric); }
+  .step:not(:last-child)::before { content:""; position:absolute; right:-27px; top:calc(50% - 4px); width:8px; height:8px; border-top:2px solid var(--electric); border-right:2px solid var(--electric); transform:rotate(45deg); transform-origin:center; }
+  .step .k { font:700 12px var(--body); letter-spacing:.12em; text-transform:uppercase; color:var(--eb30); }
+  .step .k span { color:var(--electric); margin-right:6px; }
+  .step:last-child .k, .step:last-child .k span { color:var(--cloud80); }
+  .step .t { font:600 20px/1.25 var(--display); margin:10px 0 12px; color:var(--eb15); }
+  .step:last-child .t { color:#fff; }
+  .step .m { font-size:14px; color:var(--mute); border-top:1px solid var(--line); padding-top:12px; }
+  .step:last-child .m { color:var(--sky); border-color:rgba(255,255,255,.25); }
+  .story { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:36px; }
+  .quote { background:rgba(255,255,255,.7); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,.5); box-shadow:var(--sh-card); border-radius:var(--r-lg); padding:18px 22px 18px 24px; font-size:16px; position:relative; }
+  .quote::before { content:""; position:absolute; left:0; top:18px; bottom:18px; width:3px; border-radius:3px; background:var(--electric); }
+  .quote b { display:block; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--eb30); margin-bottom:6px; }
+
+  /* big stats */
+  .stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px; }
+  .stat { padding-top:20px; position:relative; }
+  .stat::before { content:""; position:absolute; left:0; top:0; width:48px; height:4px; border-radius:4px; background:var(--electric); }
+  .stat .n { font:600 64px/1 var(--display); color:var(--electric); letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+  .stat .l { font-size:20px; font-weight:700; margin-top:12px; color:var(--eb15); }
+  .stat .c { font-size:15px; color:var(--mute); margin-top:6px; }
+  .stat.later { background:var(--g-morning); border:1px dashed rgba(6,106,254,.45); border-radius:var(--r-lg); padding:20px 22px; }
+  .stat.later::before { display:none; }
+  .stat.later .n { font-size:40px; color:var(--eb30); }
+  .badge { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:4px 12px; border-radius:99px; background:#fff; color:var(--eb30); border:1px solid rgba(6,106,254,.3); margin-bottom:12px; }
+  .row-label { font:700 12px var(--body); letter-spacing:.12em; text-transform:uppercase; color:var(--mute); margin:48px 0 18px; display:flex; align-items:center; gap:12px; }
+  .row-label::after { content:""; flex:1; height:1px; background:var(--line); }
+
+  /* headline metric */
+  .headline { display:grid; grid-template-columns:auto 1fr; gap:44px; align-items:end; }
+  .headline .big { font:600 128px/0.9 var(--display); color:var(--electric); letter-spacing:-.04em; }
+  .terms { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; margin-top:48px; }
+  .term { background:#fff; border-radius:var(--r-lg); padding:22px 24px; box-shadow:var(--sh-card); border:1px solid rgba(0,30,91,.06); }
+  .term .op { font:600 28px var(--display); color:var(--electric); }
+  .term .t { font-weight:700; font-size:18px; margin:6px 0 6px; }
+  .term .f { font-size:14px; color:var(--mute); }
+
+  /* cards and grids */
+  .grid { display:grid; gap:20px; }
+  .g2 { grid-template-columns:repeat(2,minmax(0,1fr)); } .g3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .g4 { grid-template-columns:repeat(4,minmax(0,1fr)); } .g5 { grid-template-columns:repeat(5,minmax(0,1fr)); }
+  .span2 { grid-column:span 2; }
+  .card, .kpi, .finding, .sub-card { background:#fff; border:1px solid rgba(0,30,91,.08); border-radius:var(--r-lg); box-shadow:var(--sh-card); min-width:0; transition:transform .25s var(--ease), box-shadow .25s; }
+  .card { padding:24px 26px; }
+  .sky :is(.card,.kpi,.finding,.sub-card) { background:rgba(255,255,255,.7); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-color:rgba(255,255,255,.6); }
+  :is(.kpi,.finding,.sub-card):hover { transform:translateY(-2px); box-shadow:var(--sh-card), var(--sh-glow); }
+  .card h3 { margin:0 0 16px; font-size:15px; font-weight:700; color:var(--eb15); }
+  .note { color:var(--mute); font-size:14px; margin-top:12px; }
+  .kpi { padding:20px 22px; }
+  .kpi .label { color:var(--mute); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
+  .kpi .value { font:600 36px/1.1 var(--display); color:var(--electric); margin-top:8px; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .kpi .hint { color:var(--mute); font-size:14px; margin-top:4px; }
+  .empty { border:1px dashed rgba(6,106,254,.4); border-radius:var(--r-md); padding:22px; text-align:center; color:var(--mute); background:rgba(234,245,254,.5); }
+  .empty b { display:block; color:var(--eb15); margin-bottom:4px; }
+
+  /* charts */
+  .legend { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:13px; color:var(--mute); margin-top:14px; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:0; }
+  .hbar { display:grid; grid-template-columns:minmax(100px,36%) 1fr 56px; gap:12px; align-items:center; font-size:14px; margin:10px 0; }
+  .hbar .track { background:var(--track); border-radius:99px; height:22px; overflow:hidden; display:flex; }
+  .hbar .track span { display:flex; align-items:center; justify-content:center; height:100%; font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; }
+  .hbar .track span + span { box-shadow:inset 2px 0 0 #fff; }
+  .hbar .n { text-align:right; font-variant-numeric:tabular-nums; font-weight:700; color:var(--eb15); }
   .hbar .lbl { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .sub-card { border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
-  .sub-card.new { border-color:var(--brand); background:#eef2ff; }
-  .sub-card h4 { margin:0; font-size:14px; display:flex; justify-content:space-between; gap:8px; }
-  .sub-card .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
-  .tag { font-size:11px; padding:2px 8px; border-radius:99px; background:#f1f5f9; color:#334155; font-weight:600; }
-  .tag.flow { background:#dbeafe; color:#1d4ed8; } .tag.apex { background:#ede9fe; color:#6d28d9; } .tag.standard { background:#cffafe; color:#0e7490; }
-  .tag.ok { background:#dcfce7; color:var(--ok); } .tag.bad { background:#fee2e2; color:var(--bad); } .tag.warn { background:#fef3c7; color:#b45309; }
-  .tag.go { background:#f8fafc; border:1px solid var(--line); color:var(--mute); }
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
-  th { color:var(--mute); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; position:sticky; top:0; background:var(--card); }
-  .scroll { max-height:520px; overflow:auto; }
-  .filters { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
-  .filters button { border:1px solid var(--line); background:#fff; border-radius:99px; padding:4px 12px; font-size:12px; font-weight:600; color:var(--mute); cursor:pointer; }
-  .filters button.on { background:var(--ink); border-color:var(--ink); color:#fff; }
-  .donut-wrap { display:flex; align-items:center; gap:18px; }
-  .big-center { font-size:26px; font-weight:750; }
-  footer { margin:48px 0 40px; color:var(--mute); font-size:13px; }
-  footer code { background:#e2e8f0; padding:1px 6px; border-radius:5px; }
-  @media (max-width:1000px) { .kpis { grid-template-columns:repeat(3,1fr); } .g3,.g4,.g5 { grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:640px) { .kpis,.g2,.g3,.g4,.g5 { grid-template-columns:1fr; } }
-  @media print { nav { display:none; } .scroll { max-height:none; } section { break-inside:avoid; } }
+  .hbar.stack { grid-template-columns:1fr 56px; row-gap:4px; margin:12px 0; }
+  .hbar.stack .lbl { grid-column:1 / -1; white-space:normal; }
+  .hbar.wide { grid-template-columns:minmax(100px,52%) 1fr 56px; }
+  .donut-wrap { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+  .donut-wrap .legend { flex-direction:column; gap:6px; margin:0; font-size:14px; }
+  .donut-wrap .legend div { display:flex; align-items:center; white-space:nowrap; }
+  .donut-wrap .legend b { margin-left:6px; color:var(--eb15); }
+
+  /* tags, tables */
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .tag { font-size:12px; padding:2px 10px; border-radius:99px; background:var(--track); color:var(--eb15); font-weight:700; max-width:100%; overflow-wrap:break-word; }
+  .legend .tag { font-size:13px; }
+  .tag.flow { background:var(--t-flow); } .tag.flow { color:var(--eb30); }
+  .tag.apex { background:var(--t-apex); } .tag.standard { background:var(--t-std); }
+  .tag.ok { background:var(--t-ok); } .tag.bad { background:var(--t-bad); } .tag.warn { background:var(--t-warn); }
+  .tag.go { background:#fff; border:1px solid var(--line); color:var(--mute); }
+  .sub-card { padding:16px 18px; }
+  .sub-card.new { border-color:var(--electric); background:var(--sky); }
+  .sub-card h4 { margin:0; font-size:15px; display:flex; justify-content:space-between; gap:8px; color:var(--eb15); }
+  .sub-card .goes { font-size:13px; color:var(--mute); margin-top:10px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--mute); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.06em; background:#fff; position:sticky; top:0; }
+  td.num { font-variant-numeric:tabular-nums; font-weight:700; white-space:nowrap; }
+  td.pending { color:var(--eb30); font-weight:700; white-space:nowrap; }
+  td.pending::before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; border:2px solid var(--electric); margin-right:8px; vertical-align:0; }
+  .scroll { max-height:560px; overflow:auto; }
+  .finding { border-left:4px solid; padding:16px 18px; font-size:14px; }
+  .finding b { display:block; font-size:15px; margin-bottom:4px; color:var(--eb15); }
+  .finding .lvl { font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--mute); display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .finding .lvl i { width:8px; height:8px; border-radius:50%; flex:none; }
+  .filters { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .filters button { border:1px solid var(--line); background:#fff; border-radius:99px; padding:6px 14px; font:700 13px var(--body); color:var(--mute); cursor:pointer; }
+  .filters button.on { background:var(--eb15); border-color:var(--eb15); color:#fff; }
+  details > summary { cursor:pointer; font:700 18px var(--body); color:var(--eb30); list-style:none; }
+  details > summary::before { content:"＋ "; }
+  details[open] > summary::before { content:"－ "; }
+  footer.slide { padding:64px 0; font-size:15px; color:var(--sky); }
+  footer.slide code { background:rgba(255,255,255,.12); color:#fff; }
+
+  /* motion: one entrance per slide, quiet after; nothing moves for reduced motion or print */
+  html.motion .slide:not(.cover) .wrap > * { opacity:0; transform:translateY(16px); transition:opacity .6s var(--ease), transform .6s var(--ease); }
+  html.motion .slide.in .wrap > * { opacity:1; transform:none; }
+  html.motion .slide.in .wrap > :nth-child(2) { transition-delay:.06s; } html.motion .slide.in .wrap > :nth-child(3) { transition-delay:.12s; }
+  html.motion .slide.in .wrap > :nth-child(n+4) { transition-delay:.18s; }
+  html.motion .cover .wrap > * { animation:rise 1.1s var(--ease) both; }
+  html.motion .cover .wrap > :nth-child(2) { animation-delay:.08s; } html.motion .cover .wrap > :nth-child(3) { animation-delay:.16s; }
+  html.motion .cover .wrap > :nth-child(n+4) { animation-delay:.26s; }
+  html.motion .cover .ball { animation:pop 1.3s .2s var(--ease) both; }
+  @keyframes rise { from { opacity:0; transform:translateY(28px); } }
+  @keyframes pop { from { opacity:0; transform:translateY(-50%) scale(.86); } }
+
+  /* ---------- presentation mode ---------- */
+  .counter { display:none; position:fixed; right:20px; bottom:16px; z-index:20; color:#fff; font:700 14px var(--body); padding:6px 14px; border-radius:99px;
+    background:rgba(0,30,91,.6); border:1px solid rgba(6,106,254,.3); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+  .hint-keys { display:none; position:fixed; left:20px; bottom:16px; z-index:20; color:var(--mute); font-size:13px; padding:5px 12px; border-radius:99px;
+    background:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.5); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+  body.present nav { display:none; }
+  body.present .counter, body.present .hint-keys { display:block; }
+  html:has(body.present) { scroll-snap-type:y proximity; }
+  body.present .slide { padding:40px 0; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; justify-content:center; scroll-snap-align:start; }
+  body.present .slide > .wrap { width:100%; }
+  body.present .scroll { max-height:60vh; }
+
+  @media (max-width:1000px) {
+    .g3,.g4,.g5,.stats,.terms { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .chain { grid-template-columns:1fr 1fr; gap:20px; } .step { margin-right:0; } .step::after, .step::before { display:none; }
+    .cover .art, .cover .ball { opacity:.3; } .slide .sub { white-space:normal; } .headline { grid-template-columns:1fr; }
+  }
+  @media (max-width:640px) { .g2,.g3,.g4,.g5,.stats,.terms,.chain,.story { grid-template-columns:1fr; } .span2 { grid-column:auto; } .cover h1 { font-size:64px; } }
+  @media print {
+    @page { size:landscape; margin:0; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    nav, .counter, .hint-keys { display:none !important; }
+    .slide { break-after:page; min-height:100vh; }
+    .scroll { max-height:none; }
+    html.motion .slide .wrap > * { opacity:1 !important; transform:none !important; animation:none !important; }
+  }
+  @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .spark { animation:none; } }
 </style>
 </head>
 <body>
-<header class="hero"><div class="wrap">
-  <h1>CARES · Agent metrics</h1>
-  <div class="sub">Pronto customer care agent: quality, policy alignment, architecture and what runs in the org.</div>
-  <div class="meta" id="meta"></div>
-</div></header>
-<div class="wrap"><div class="kpis" id="kpis"></div></div>
-<nav><div class="wrap">
-  <a href="#quality">Quality</a><a href="#batch">Live batch</a><a href="#policy">Policy alignment</a><a href="#architecture">Architecture</a>
-  <a href="#runtime">In the org</a><a href="#governance">Decisions &amp; gaps</a><a href="#sources">Sources</a>
+
+<!-- 1. Cover -->
+<header class="slide title cover" id="top">
+  <svg class="art" id="cover-art" viewBox="0 0 620 620" aria-hidden="true">
+    <circle cx="310" cy="310" r="300" fill="none" stroke="#00B3FF" stroke-opacity=".3" stroke-width="2"/>
+    <circle cx="310" cy="310" r="230" fill="none" stroke="#90D0FE" stroke-opacity=".35" stroke-width="2"/>
+    <circle cx="310" cy="310" r="160" fill="#066AFE" fill-opacity=".45"/>
+    <circle cx="310" cy="310" r="90" fill="#00B3FF" fill-opacity=".7"/>
+  </svg>
+  <div class="wrap">
+    <div class="cobrand" id="cobrand">Pronto</div>
+    <p class="eyebrow">Agentforce capstone · customer care agent</p>
+    <h1>CARES</h1>
+    <p class="promise">Fixes stolen and late orders in the chat, inside policy, so customers keep ordering with Pronto.</p>
+    <div class="chips" id="meta"></div>
+  </div>
+</header>
+
+<nav aria-label="Sections"><div class="wrap">
+  <a href="#why">Why</a><a href="#kpis">Business KPIs</a><a href="#value">Headline KPI</a>
+  <span class="sep"></span><a href="#engineering" class="tag-eng">Engineering</a>
+  <a href="#quality">Tests</a><a href="#batch">Live batch</a><a href="#policy">Policy</a><a href="#architecture">Architecture</a>
+  <a href="#runtime">In the org</a><a href="#governance">Governance</a>
+  <button class="btn" id="present" type="button" aria-keyshortcuts="P">Present ▸</button>
 </div></nav>
 
-<main class="wrap">
-  <section id="quality">
-    <h2>Quality: Testing Center</h2>
-    <p class="lead">Each suite is pinned to one agent version, so a re-run on a new version can be compared with the one before.</p>
+<main>
+  <!-- 2. Why it matters -->
+  <section class="slide sky" id="why"><div class="wrap">
+    <p class="eyebrow">The customer problem</p>
+    <h2>A stolen or late order is the moment a customer switches apps</h2>
+    <p class="sub">Switching apps is free. CARES resolves it in the first chat, so retention is the KPI that matters.</p>
+    <div class="story">
+      <div class="quote"><b>Job story</b>When my order is stolen or late, I want it checked and fixed right away, so I keep ordering with Pronto.</div>
+      <div class="quote"><b>Internal customer</b>Pronto customer support: sees only the cases that need a person, and pays for every refund.</div>
+    </div>
+    <div class="chain" id="chain"></div>
+  </div></section>
+
+  <!-- 3. Business KPIs -->
+  <section class="slide white" id="kpis"><div class="wrap">
+    <p class="eyebrow">Business value · measured today</p>
+    <h2 id="kpis-title">What CARES delivers on the active version</h2>
+    <p class="sub">Read-only counts from the team org. Most traffic is our own testing, not real customers yet.</p>
+    <div class="stats" id="stats-now"></div>
+    <div class="row-label">Next to measure</div>
+    <div class="stats" id="stats-next"></div>
+  </div></section>
+
+  <!-- 4. Headline KPI -->
+  <section class="slide sky" id="value"><div class="wrap">
+    <p class="eyebrow">Headline KPI · retention</p>
+    <div class="headline"><div class="big" id="headline-n">$ —</div>
+      <div><h2 id="headline-l">a year kept by retaining customers after a complaint</h2>
+      <p class="sub" id="headline-s" style="margin-bottom:0">Placeholder: sized after the market research.</p></div></div>
+    <div class="terms" id="terms"></div>
+  </div></section>
+
+  <!-- 5. Sizing -->
+  <section class="slide white" id="sizing"><div class="wrap">
+    <p class="eyebrow">How we size it</p>
+    <h2 id="sizing-title">Every input has a market benchmark or a labelled assumption</h2>
+    <p class="sub" id="formula"></p>
+    <div class="card"><table><thead><tr><th>Input</th><th>Low</th><th>Base</th><th>High</th><th>Source</th></tr></thead><tbody id="inputs"></tbody></table>
+      <div class="note">Benchmarks and sources: <code>docs/MARKET_BENCHMARKS.md</code>. <code>[$]</code> marks a team assumption. None is a Pronto figure: Pronto is a fictional company.</div></div>
+  </div></section>
+
+  <!-- 6. Divider -->
+  <section class="slide dusk" id="engineering"><div class="wrap">
+    <p class="eyebrow">Part two</p>
+    <h2 style="font-size:56px">Engineering evidence</h2>
+    <p class="sub" style="margin-bottom:0">How we know the numbers above hold: tests, policy, architecture and what runs in the org.</p>
+  </div></section>
+
+  <!-- 7. Testing Center -->
+  <section class="slide white" id="quality"><div class="wrap">
+    <p class="eyebrow">Quality · Testing Center</p>
+    <h2 id="tc-title">Testing Center baseline</h2>
+    <p class="sub">The same 39 cases on each agent version, so a re-run shows exactly what changed.</p>
     <div id="tc"></div>
-  </section>
+  </div></section>
 
-  <section id="batch">
-    <h2>Quality: live batch runs</h2>
-    <p class="lead">Persona scenarios run by <code>scripts/testing/run_batch.py</code> against the active agent with live actions and real demo orders. Each scenario runs at least twice; the result is read from the trace (subagent path, actions, inputs, outputs, amounts), not only from the reply. EXPECTED_FAIL = a documented gap the test proves.</p>
-    <div id="batch-kpis" class="grid g4" style="margin-bottom:14px"></div>
-    <div class="grid g3">
-      <div class="card" style="grid-column:span 2"><h3>Each run</h3><div id="batch-runs"></div><div class="legend" id="batch-legend"></div></div>
-      <div class="card"><h3>Latest result, by persona</h3><div id="batch-personas"></div></div>
-    </div>
-  </section>
+  <!-- 8. Findings: what fails -->
+  <section class="slide sky" id="findings"><div class="wrap">
+    <p class="eyebrow">Quality · what the baseline found</p>
+    <h2 id="findings-title">What still fails</h2>
+    <p class="sub">Our reading of the run: what still fails and what we watch, each with the cases that show it.</p>
+    <div id="tc-findings"></div>
+  </div></section>
 
-  <section id="coverage">
-    <h2>Test coverage we planned</h2>
-    <p class="lead">Scenarios written in the repo, by persona. P0 = must pass before anything else is trusted.</p>
-    <div class="grid g3">
-      <div class="card" style="grid-column:span 2"><h3>Scenarios by persona</h3><div id="personas"></div></div>
-      <div class="card"><h3>At a glance</h3><div id="coverage-kpis"></div></div>
-    </div>
-  </section>
+  <!-- 9. Findings: what works -->
+  <section class="slide white" id="works"><div class="wrap">
+    <p class="eyebrow">Quality · what the baseline found</p>
+    <h2 id="works-title">What works</h2>
+    <p class="sub">What improved since the last version, and what this suite does not cover.</p>
+    <div id="tc-works"></div>
+  </div></section>
 
-  <section id="policy">
-    <h2>Policy alignment</h2>
-    <p class="lead">Every rule in Pronto's 4 official documents, checked against CARES before (v0, <code>main</code>) and after (v1) the grounding work.</p>
+  <!-- 10. Live batch: runs -->
+  <section class="slide sky" id="batch"><div class="wrap">
+    <p class="eyebrow">Quality · live batch runs</p>
+    <h2 id="batch-title">Live persona scenarios on the active agent</h2>
+    <p class="sub">Real demo orders and live actions. Each scenario runs at least twice and is read from the trace.</p>
+    <div id="batch-kpis" class="grid g4" style="margin-bottom:20px"></div>
+    <div class="card"><h3>Each run, in order: fix, re-run, compare</h3><div id="batch-runs"></div><div class="legend" id="batch-legend"></div></div>
+  </div></section>
+
+  <!-- 11. Live batch: personas -->
+  <section class="slide white" id="personas"><div class="wrap">
+    <p class="eyebrow">Quality · live batch, by persona</p>
+    <h2 id="personas-title">Latest result for each persona</h2>
+    <p class="sub">Each persona is a group of scenarios from the test plan. Right column: passed / scenarios.</p>
+    <div class="grid g2" id="batch-personas"></div>
+  </div></section>
+
+  <!-- 12. Policy -->
+  <section class="slide sky" id="policy"><div class="wrap">
+    <p class="eyebrow">Grounding · policy alignment</p>
+    <h2 id="policy-title">Policy alignment</h2>
+    <p class="sub">Every rule in Pronto's 4 official documents, checked before (v0) and after (v1) the grounding work.</p>
     <div class="grid g3">
-      <div class="card" style="grid-column:span 2"><h3>Rules by status</h3><div id="policy-bars"></div><div class="legend" id="policy-legend"></div></div>
+      <div class="card span2"><h3>Rules by status</h3><div id="policy-bars"></div><div class="legend" id="policy-legend"></div></div>
       <div class="card"><h3>Critical rules</h3><div id="policy-critical"></div></div>
     </div>
-  </section>
+  </div></section>
 
-  <section id="architecture">
-    <h2>Architecture</h2>
-    <p class="lead">Router plus specialist subagents. Money, identity and limits live in Flows and Apex, not in the prompt.</p>
+  <!-- 13. Architecture -->
+  <section class="slide white" id="architecture"><div class="wrap">
+    <p class="eyebrow">Configure · architecture</p>
+    <h2 id="arch-title">Router plus specialist subagents</h2>
+    <p class="sub">Money, identity and limits live in Flows and Apex, not in the prompt.</p>
     <div class="grid g3">
       <div class="card"><h3>Actions by implementation</h3><div id="action-donut"></div></div>
-      <div class="card" style="grid-column:span 2"><h3>Size</h3><div id="arch-kpis" class="grid g4"></div><div class="note" id="arch-note"></div></div>
+      <div class="card span2"><h3>Size</h3><div id="arch-kpis" class="grid g4"></div><div class="note" id="arch-note"></div></div>
     </div>
-    <div class="card" style="margin-top:14px"><h3>Subagents</h3><div id="subagents" class="grid g3"></div><div class="legend"><span><i style="background:#eef2ff;border:1px solid var(--brand)"></i>new in the compared branch</span></div></div>
-  </section>
+  </div></section>
 
-  <section id="runtime">
-    <h2>In the org</h2>
-    <p class="lead">Read-only snapshot. All numbers are counts: no record ids, names or message text.</p>
-    <div id="conv-kpis" class="grid g4" style="margin-bottom:14px"></div>
-    <div class="grid g3" style="margin-bottom:14px">
-      <div class="card"><h3>Conversations by agent version</h3><div id="conv-version"></div></div>
+  <!-- 14. Subagents -->
+  <section class="slide sky" id="subagents-slide"><div class="wrap">
+    <p class="eyebrow">Configure · subagents</p>
+    <h2>Each subagent owns only the actions it needs</h2>
+    <p class="sub">The router owns none. Hand-off targets show on hover.</p>
+    <div id="subagents" class="grid g5"></div>
+    <div class="legend"><span id="new-legend"><i style="background:var(--sky);border:1px solid var(--electric)"></i>new in the compared branch</span>
+      <span class="tag flow">Flow</span><span class="tag apex">Apex</span><span class="tag standard">Standard action</span></div>
+  </div></section>
+
+  <!-- 15. Conversations -->
+  <section class="slide white" id="runtime"><div class="wrap">
+    <p class="eyebrow">In the org · conversations</p>
+    <h2 id="conv-title">Conversations in the team org</h2>
+    <p class="sub">From the platform's session log. Counts only: no record ids, names or message text.</p>
+    <div id="conv-kpis" class="grid g4" style="margin-bottom:20px"></div>
+    <div class="grid g3">
+      <div class="card"><h3>Hand-off rate by agent version</h3><div id="conv-version"></div></div>
       <div class="card"><h3>Where conversations came from</h3><div id="conv-mode"></div></div>
       <div class="card"><h3>Customer messages per conversation</h3><div id="conv-turns"></div></div>
     </div>
-    <div class="card" style="margin-bottom:14px" id="conv-note"></div>
-    <div class="grid g2">
+    <div class="note" id="conv-note"></div>
+  </div></section>
+
+  <!-- 16. Cases -->
+  <section class="slide sky" id="cases"><div class="wrap">
+    <p class="eyebrow">In the org · cases, refunds and ratings</p>
+    <h2 id="cases-title">Cases, refunds and ratings</h2>
+    <p class="sub">What CARES left behind in the org: cases for the support team, refunds and credits, customer ratings.</p>
+    <div class="grid g3">
       <div class="card"><h3>Cases logged by CARES, per day</h3><div id="cases-day"></div></div>
-      <div class="card"><h3>Agent versions</h3><div id="versions"></div></div>
       <div class="card"><h3>Cases by priority</h3><div id="cases-priority"></div></div>
       <div class="card"><h3>Cases by type</h3><div id="cases-type"></div></div>
-      <div class="card"><h3>Messaging sessions, per day</h3><div id="sessions-day"></div></div>
+      <div class="card"><h3>Refunds and credits issued</h3><div id="resolutions"></div></div>
       <div class="card"><h3>Customer rating (CSAT)</h3><div id="csat"></div></div>
+      <div class="card"><h3>Agent versions</h3><div id="versions"></div></div>
     </div>
-  </section>
+  </div></section>
 
-  <section id="governance">
-    <h2>Decisions, gaps and risks</h2>
-    <p class="lead">Everything is written down in the repo: what we chose, what is still missing, what can go wrong.</p>
+  <!-- 17. Governance -->
+  <section class="slide white" id="governance"><div class="wrap">
+    <p class="eyebrow">Risk &amp; safeguards · governance</p>
+    <h2 id="gov-title">Decisions, gaps and risks</h2>
+    <p class="sub">Everything is written down in the repo: what we chose, what is still missing, what can go wrong.</p>
     <div class="grid g4">
       <div class="card"><h3>Decisions</h3><div id="decisions"></div></div>
       <div class="card"><h3>Gaps</h3><div id="gaps"></div></div>
       <div class="card"><h3>Risks</h3><div id="risks"></div></div>
       <div class="card"><h3>Test run log</h3><div id="runlog"></div></div>
     </div>
-  </section>
+  </div></section>
 
-  <footer id="sources"></footer>
+  <!-- 18. Appendix -->
+  <section class="slide sky" id="appendix"><div class="wrap">
+    <p class="eyebrow">Appendix</p>
+    <h2>Every Testing Center case</h2>
+    <p class="sub">Synthetic test utterances only. Open to inspect each case and compare it with the previous version.</p>
+    <details id="tc-cases"><summary>Show the case table</summary><div id="tc-table" style="margin-top:16px"></div></details>
+  </div></section>
 </main>
+
+<footer class="slide title" id="sources"><div class="wrap" id="sources-body"></div></footer>
+<div class="counter" id="counter" aria-live="polite"></div>
+<div class="hint-keys">← → move · Esc exits</div>
 
 <script>
 const D = /*__DATA__*/null;
+// Licensed fonts and brand art, only in presentation.html (null in the committed index.html)
+const BRAND = /*__BRAND__*/null;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const sum = (o) => Object.values(o || {}).reduce((a, b) => a + b, 0);
 const pct = (a, b) => (b ? Math.round((100 * a) / b) : 0);
-const PALETTE = ["#4f46e5","#06b6d4","#16a34a","#f59e0b","#dc2626","#8b5cf6","#0ea5e9","#64748b","#ec4899","#84cc16"];
+const usd = (n, d = 2) => n == null ? "—" : `$${Number(n).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })}`;
+const compactUsd = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 }).format(n);
+// Salesforce 2026 palette only (see the CSS tokens)
+const C = { electric:"#066AFE", cloud:"#00B3FF", cloud80:"#90D0FE", eb30:"#022AC0", title:"#001E5B", ok:"#2E844A", warn:"#DD7A01", bad:"#FF538A", purple:"#9050E9", gray:"#706E6B", light:"#DDDBDA", pale:"#F3F2F2", rose:"#FF538A" };
+const PALETTE = [C.electric, C.title, C.cloud, C.ok, C.warn, C.purple, C.bad, C.gray];
 const POLICY = {
-  "✅": ["Aligned", "#16a34a"], "🟡": ["Partial", "#f59e0b"], "🔴": ["Different", "#dc2626"], "⬜": ["Missing", "#94a3b8"],
-  "❓": ["To decide", "#8b5cf6"], "∅": ["No source", "#475569"], "🚫": ["Out of scope", "#cbd5e1"], "?": ["Unclassified", "#e2e8f0"],
+  "✅": ["Aligned", C.ok], "🟡": ["Partial", C.warn], "🔴": ["Different", C.bad], "⬜": ["Missing", C.gray],
+  "❓": ["To decide", C.purple], "∅": ["No source", "#3E3E3C"], "🚫": ["Out of scope", C.light], "?": ["Unclassified", C.pale],
 };
 const METRIC = {
   topic_assertion: "Right subagent", actions_assertion: "Right actions", output_validation: "Right answer (LLM judge)",
   coherence: "Coherent (LLM judge)", completeness: "Complete (LLM judge)",
 };
-const STATUS_COLOR = { DECIDED:"#16a34a", PROPOSAL:"#f59e0b", OPEN:"#dc2626", CLOSED:"#16a34a", "PARTLY CLOSED":"#06b6d4", SUPERSEDED:"#94a3b8", OTHER:"#cbd5e1" };
+const STATUS_COLOR = { DECIDED:C.ok, PROPOSAL:C.warn, OPEN:C.bad, CLOSED:C.title, "PARTLY CLOSED":C.cloud, BUILT:C.cloud80, MITIGATED:C.electric, SUPERSEDED:C.gray, OTHER:C.light };
+
+// Text colour with the higher contrast on a fill, so segment labels stay readable
+function inkOn(hex) {
+  const v = parseInt(hex.slice(1), 16);
+  const L = [16, 8, 0].map((s) => ((v >> s) & 255) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)).reduce((a, c, i) => a + c * [0.2126, 0.7152, 0.0722][i], 0);
+  // Electric Blue 15 has a relative luminance of 0.0168
+  return 1.05 / (L + 0.05) >= (L + 0.05) / 0.0668 ? "#fff" : "#001E5B";
+}
 
 function empty(title, text) { return `<div class="empty"><b>${esc(title)}</b>${esc(text)}</div>`; }
 
-function hbars(rows, { max, suffix = "" } = {}) {
+// Horizontal bars. Each segment is labelled in the bar when it is wide enough (colour is never the only signal)
+// stack: label on its own line above the bar, for narrow cards with long labels
+function hbars(rows, { max, suffix = "", stack = false, wide = false } = {}) {
   if (!rows.length) return empty("No data", "Nothing to show yet.");
-  const m = max ?? Math.max(...rows.map((r) => r.parts ? sum(Object.fromEntries(r.parts.map((p, i) => [i, p.value]))) : r.value), 1);
+  const totalOf = (r) => (r.parts ? r.parts.reduce((a, p) => a + p.value, 0) : r.value);
+  const m = max ?? Math.max(...rows.map(totalOf), 1);
   return rows.map((r) => {
-    const parts = r.parts || [{ value: r.value, color: r.color || PALETTE[0] }];
-    const total = parts.reduce((a, p) => a + p.value, 0);
-    const bars = parts.map((p) => `<span title="${esc(p.label || "")}: ${p.value}" style="width:${(100 * p.value) / m}%;background:${p.color}"></span>`).join("");
-    return `<div class="hbar"><div class="lbl" title="${esc(r.label)}">${esc(r.label)}</div><div class="track">${bars}</div><div class="n">${r.display ?? total}${suffix}</div></div>`;
+    const parts = r.parts || [{ value: r.value, color: r.color || C.electric, label: r.label }];
+    const bars = parts.filter((p) => p.value).map((p) => {
+      const w = (100 * p.value) / m;
+      const text = w >= 34 && p.short ? `${p.value} ${p.short}` : w >= 7 && r.parts ? p.value : "";
+      return `<span title="${esc(p.label || "")}: ${p.value}" style="width:${w}%;background:${p.color};color:${inkOn(p.color)}">${esc(text)}</span>`;
+    }).join("");
+    const aria = parts.map((p) => `${p.label || ""} ${p.value}`).join(", ");
+    return `<div class="hbar${stack ? " stack" : wide ? " wide" : ""}" role="img" aria-label="${esc(r.label)}: ${esc(aria)}"><div class="lbl" title="${esc(r.label)}">${esc(r.label)}</div><div class="track">${bars}</div><div class="n">${r.display ?? totalOf(r)}${suffix}</div></div>`;
   }).join("");
 }
 
@@ -198,97 +492,167 @@ function donut(segments, center = "", centerLabel = "") {
   let off = 0;
   const arcs = segments.filter((s) => s.value).map((s) => {
     const len = (s.value / total) * c;
-    const a = `<circle r="${r}" cx="70" cy="70" fill="none" stroke="${s.color}" stroke-width="18" stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-off}"><title>${esc(s.label)}: ${s.value}</title></circle>`;
+    const a = `<circle r="${r}" cx="70" cy="70" fill="none" stroke="${s.color}" stroke-width="20" stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-off}"><title>${esc(s.label)}: ${s.value}</title></circle>`;
     off += len;
     return a;
   }).join("");
-  const legend = segments.filter((s) => s.value).map((s) => `<div><i style="background:${s.color}"></i>${esc(s.label)} <b style="color:var(--ink)">${s.value}</b></div>`).join("");
-  return `<div class="donut-wrap"><svg width="140" height="140" viewBox="0 0 140 140" style="transform:rotate(-90deg)">${arcs}</svg>
-    <div><div class="big-center">${esc(center || total)}</div><div style="color:var(--mute);font-size:12px;margin-bottom:6px">${esc(centerLabel)}</div><div class="legend" style="flex-direction:column;gap:4px;margin:0">${legend}</div></div></div>`;
+  const legend = segments.filter((s) => s.value).map((s) => `<div><i style="background:${s.color}"></i>${esc(s.label)}<b>${s.value}</b></div>`).join("");
+  const aria = segments.filter((s) => s.value).map((s) => `${s.label} ${s.value}`).join(", ");
+  // The total sits inside the ring; the legend carries every number, so colour is never the only signal
+  return `<div class="donut-wrap"><svg width="140" height="140" viewBox="0 0 140 140" style="flex:none" role="img" aria-label="${esc(`${center || total} ${centerLabel}: ${aria}`)}">
+      <g transform="rotate(-90 70 70)">${arcs}</g>
+      <text x="70" y="72" text-anchor="middle" font-size="30" font-weight="700" fill="#001E5B" style="font-family:var(--display)">${esc(center || total)}</text>
+      <text x="70" y="92" text-anchor="middle" font-size="12" fill="#475D89">${esc(centerLabel)}</text></svg>
+    <div class="legend">${legend}</div></div>`;
 }
 
 function columns(byDay) {
   const days = Object.keys(byDay || {}).sort();
   if (!days.length) return empty("No data", "Nothing recorded yet.");
   const max = Math.max(...days.map((d) => byDay[d]));
-  const W = 560, slot = W / days.length, bw = Math.min(56, slot * 0.7);
+  const W = 360, slot = W / days.length, bw = Math.min(64, slot * 0.6);
   const bars = days.map((d, i) => {
     const h = (byDay[d] / max) * 110, x = i * slot + (slot - bw) / 2;
-    return `<g><rect x="${x}" y="${134 - h}" width="${bw}" height="${h}" rx="5" fill="url(#g)"><title>${d}: ${byDay[d]}</title></rect>
-      <text x="${x + bw / 2}" y="${128 - h}" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">${byDay[d]}</text>
-      <text x="${x + bw / 2}" y="152" text-anchor="middle" font-size="11" fill="#64748b">${d.slice(5)}</text></g>`;
+    return `<g><rect x="${x}" y="${134 - h}" width="${bw}" height="${h}" rx="6" fill="${C.electric}"><title>${d}: ${byDay[d]}</title></rect>
+      <text x="${x + bw / 2}" y="${126 - h}" text-anchor="middle" font-size="14" font-weight="700" fill="#001E5B">${byDay[d]}</text>
+      <text x="${x + bw / 2}" y="154" text-anchor="middle" font-size="13" fill="#475D89">${d.slice(5)}</text></g>`;
   }).join("");
-  return `<svg width="100%" height="160" viewBox="0 0 ${W} 160" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><line x1="0" x2="${W}" y1="134" y2="134" stroke="#e2e8f0"/>${bars}</svg>`;
+  return `<svg width="100%" height="164" viewBox="0 0 ${W} 164" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(days.map((d) => `${d}: ${byDay[d]}`).join(", "))}"><line x1="0" x2="${W}" y1="134" y2="134" stroke="#DDDBDA"/>${bars}</svg>`;
 }
 
 function kpi(label, value, hint = "") {
   return `<div class="kpi"><div class="label">${esc(label)}</div><div class="value">${value}</div><div class="hint">${hint}</div></div>`;
 }
+function stat(n, label, caption) {
+  return `<div class="stat"><div class="n">${esc(n)}</div><div class="l">${esc(label)}</div><div class="c">${caption}</div></div>`;
+}
+function later(target, label, caption, badge = "Measured from v6") {
+  return `<div class="stat later"><span class="badge">${esc(badge)}</span><div class="n">${esc(target)}</div><div class="l">${esc(label)}</div><div class="c">${caption}</div></div>`;
+}
 function objRows(o, colorFn) {
   return Object.entries(o || {}).sort((a, b) => b[1] - a[1]).map(([k, v], i) => ({ label: k, value: v, color: colorFn ? colorFn(k, i) : PALETTE[i % PALETTE.length] }));
 }
 
-// ---------- header + KPIs ----------
+// ---------- shared numbers ----------
 const active = D.org?.versions?.find((v) => v.status === "Active");
 const latest = D.testing[D.testing.length - 1];
+const first = D.testing[0];
 const pol = D.docs.policy;
 const aligned = (o) => (o?.["✅"] || 0);
-$("meta").innerHTML = [
-  `Generated ${new Date(D.generatedAt).toLocaleString()}`,
-  `Commit ${esc(D.commit)} · ${esc(D.branch)}`,
-  D.docsRef !== "working tree" ? `Docs from ${esc(D.docsRef)}` : "",
-  D.org ? `Org read ${new Date(D.org.readAt).toLocaleString()}` : "Org not read",
-].filter(Boolean).map((t) => `<span class="chip">${t}</span>`).join("");
+const cv = D.org?.conversations;
+const activeConv = active && cv?.byVersion?.[`v${active.version}`];
+const contained = activeConv ? { n: activeConv.sessions - activeConv.escalated, of: activeConv.sessions } : null;
+const res = D.org?.resolutions;
+const csat = D.org?.csat;
+const thumbsUp = csat?.byScore?.["5"] || 0;
 
-const openGaps = D.docs.gaps.byStatus.OPEN || 0;
-$("kpis").innerHTML = [
-  kpi("Active version", active ? `v${active.version}` : "—", active ? `since ${active.date}` : "org not read"),
-  kpi("Test pass rate", latest ? `${pct(latest.totals.passed, latest.totals.cases)}%` : "—", latest ? `${latest.totals.passed}/${latest.totals.cases} · v${latest.agentVersion}` : "no Testing Center run yet"),
-  kpi("Policy rules aligned", pol.rules ? `${aligned(pol.v1)}/${pol.rules}` : "—", pol.rules ? `was ${aligned(pol.v0)} before grounding` : "matrix not in this checkout"),
-  kpi("Subagents", D.agent?.subagents.length ?? "—", `${D.agent?.actionCount ?? 0} actions`),
-  kpi("Cases logged", D.org?.cases?.total ?? "—", "by CARES in the org"),
-  kpi("Open gaps", openGaps, `of ${D.docs.gaps.total} written down`),
+// ---------- cover ----------
+$("meta").innerHTML = [
+  active ? `<span class="chip on">Agent v${active.version} active</span>` : "",
+  `<span class="chip">Generated ${new Date(D.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>`,
+  `<span class="chip">Commit ${esc(D.commit)}</span>`,
+  D.org ? `<span class="chip">Org read ${new Date(D.org.readAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>` : `<span class="chip">Org not read</span>`,
 ].join("");
+
+// ---------- why: value → system → outcome → $ ----------
+$("chain").innerHTML = [
+  ["Value", "The customer keeps ordering", "KPI: orders again within 30 days of a complaint"],
+  ["System", "CARES checks the order and history, then refunds or credits inside policy", res?.limitUsd ? `KPI: compensation per case, ${usd(res.limitUsd, 0)} auto-approval limit` : "KPI: compensation per case vs the policy limit"],
+  ["Outcome", "Support only sees the cases that need a person", "KPI: resolved without a person · customer rating"],
+  ["Dollar", "Retention kept + support cost saved − extra compensation − agent cost", "Sized with market benchmarks · docs/MARKET_BENCHMARKS.md"],
+].map(([k, t, m], i) => `<div class="step"><div class="k"><span>0${i + 1}</span>${k}</div><div class="t">${esc(t)}</div><div class="m">${esc(m)}</div></div>`).join("");
+
+// ---------- business KPIs ----------
+if (active) $("kpis-title").textContent = `What CARES delivers on v${active.version}`;
+$("stats-now").innerHTML = [
+  contained
+    ? stat(`${pct(contained.n, contained.of)}%`, "resolved without a person", `${contained.n} of ${contained.of} v${active.version} conversations ended without a hand‑off`)
+    : stat("—", "resolved without a person", "Build without --offline to read the org"),
+  res?.total
+    ? stat(usd(res.amount.mean), "average refund or credit", `${res.total} issued${res.limitUsd != null ? ` · ${res.withinLimit} of ${res.total} under the ${usd(res.limitUsd, 0)} limit where a person decides` : ""}`)
+    : stat("—", "average refund or credit", res ? "No refund or credit issued yet" : "Not read from the org"),
+  csat?.total
+    ? stat(`${pct(thumbsUp, csat.total)}%`, "thumbs up from customers", `${thumbsUp} of ${csat.total} ratings · small sample, read with care`)
+    : stat("—", "thumbs up from customers", "No rating saved yet"),
+].join("");
+const cn = D.batch?.caseNumberInReply;
+const al = D.org?.alerts;
+$("stats-next").innerHTML = [
+  cn ? stat(`${pct(cn.passed, cn.scenarios)}%`, "escalations with the case number in the reply", `${cn.passed} of ${cn.scenarios} escalation scenarios · live batch, latest run · target 100%`)
+    : later("100%", "escalations with the case number in the reply", "Target. Hard check on every escalation scenario in the live batch: the reply carries a real case number, never a placeholder."),
+  al?.total ? stat(`${pct(al.sent, al.total)}%`, "escalation alerts delivered", `${al.sent} of ${al.total} escalations alerted the team · ${al.slackSent ?? 0} also on Slack · ${al.failed} failed`)
+    : later("100%", "escalation alerts delivered", "Target. Every escalation records Sent or Failed on the case, so no case waits without an owner."),
+  later("30d", "customers who order again after a complaint", "The headline KPI. Needs Pronto order data for 30 days after each case, compared with a baseline.", "Needs Pronto order data"),
+].join("");
+
+// ---------- headline KPI and sizing ----------
+(function value() {
+  const V = D.value;
+  const inputs = V?.inputs || {};
+  const needed = ["complaintsPerYear", "churnAfterBadOrder", "retainedByCares", "ordersPerCustomerYear", "avgOrderValue", "margin", "costPerHumanCase", "resolvedWithoutPerson", "extraCompensationPerCase", "agentCostPerConversation"];
+  const SCEN = { low: "low", base: "value", high: "high" };
+  const ready = (s) => V && needed.every((k) => typeof inputs[k]?.[SCEN[s]] === "number");
+  const size = (s) => {
+    const v = (k) => inputs[k][SCEN[s]];
+    const n = v("complaintsPerYear");
+    const resolved = n * v("resolvedWithoutPerson");
+    const kept = n * v("churnAfterBadOrder") * v("retainedByCares") * v("ordersPerCustomerYear") * v("avgOrderValue") * v("margin");
+    const saved = resolved * v("costPerHumanCase");
+    const extra = resolved * v("extraCompensationPerCase");
+    const agent = n * v("agentCostPerConversation");
+    return { kept, saved, extra, agent, total: kept + saved - extra - agent };
+  };
+  const base = ready("base") ? size("base") : null;
+  if (V?.headline) $("headline-l").textContent = V.headline;
+  if (base) {
+    $("headline-n").textContent = compactUsd(base.total);
+    const range = ready("low") && ready("high") ? `Range ${compactUsd(size("low").total)} to ${compactUsd(size("high").total)}. ` : "";
+    $("headline-s").textContent = `${range}Base case from market benchmarks and team assumptions, not a Pronto figure.`;
+  }
+  const amt = (x) => (base ? compactUsd(x) : "Pending");
+  $("terms").innerHTML = [
+    ["+", "Retention kept", "Customers kept × orders a year × order value × margin", base?.kept],
+    ["+", "Support cost saved", "Cases without a person × cost of a human case", base?.saved],
+    ["−", "Extra compensation", "Cases CARES resolves × compensation above what a person would pay", base?.extra],
+    ["−", "Agent cost", "Conversations × Agentforce cost per conversation", base?.agent],
+  ].map(([op, t, f, x]) => `<div class="term"><div class="op">${op} ${esc(amt(x))}</div><div class="t">${t}</div><div class="f">${f}</div></div>`).join("");
+  $("formula").textContent = "Value = retention kept + support cost saved − extra compensation − agent cost";
+  const fmt = (v, unit) => typeof v !== "number" ? "—" : unit === "usd" ? usd(v) : unit === "pct" ? `${Math.round(v * 1000) / 10}%` : Number(v).toLocaleString("en-US");
+  const cell = (v, unit) => typeof v === "number" ? `<td class="num">${esc(fmt(v, unit))}</td>` : `<td class="pending">Pending</td>`;
+  const rows = needed.map((k) => `<tr><td>${esc(inputs[k]?.label || k)}</td>${cell(inputs[k]?.low, inputs[k]?.unit)}${cell(inputs[k]?.value, inputs[k]?.unit)}${cell(inputs[k]?.high, inputs[k]?.unit)}<td style="color:var(--mute)">${esc(inputs[k]?.source || "Market research (planned)")}</td></tr>`);
+  const ref = (l, v, unit, src) => `<tr><td>${esc(l)}</td><td></td><td class="num">${esc(fmt(v, unit))}</td><td></td><td style="color:var(--mute)">${esc(src)}</td></tr>`;
+  if (contained) rows.push(ref("Measured: resolved without a person", contained.n / contained.of, "pct", `Reference only · v${active.version} conversations, mostly test traffic`));
+  if (res?.amount?.mean != null) rows.push(ref("Measured: average refund or credit", res.amount.mean, "usd", "Reference only · refunds and credits CARES issued in the team org"));
+  $("inputs").innerHTML = rows.join("");
+})();
 
 // ---------- Testing Center ----------
 (function testing() {
   if (!D.testing.length) {
     $("tc").innerHTML = `<div class="card">${empty("No Testing Center run yet", "Run a suite, save the normalized result in docs/metrics/data/testing-center/, then rebuild this page.")}</div>`;
+    $("tc-findings").innerHTML = $("tc-works").innerHTML = "";
     return;
   }
   const run = latest;
+  const passPct = (r) => pct(r.totals.passed, r.totals.cases);
+  $("tc-title").textContent = D.testing.length > 1
+    ? `${passPct(run)}% of ${run.totals.cases} cases pass on v${run.agentVersion}, up from ${passPct(first)}% on v${first.agentVersion}`
+    : `${passPct(run)}% of ${run.totals.cases} cases pass on v${run.agentVersion}`;
+  const PASSED = { label: "passed", color: C.ok }, FAILED = { label: "failed", color: C.rose };
   const metricRows = Object.entries(run.byMetric || {}).map(([k, v]) => ({
     label: METRIC[k] || k, display: `${pct(v.passed, v.passed + v.failed)}%`,
-    parts: [{ label: "passed", value: v.passed, color: "#16a34a" }, { label: "failed", value: v.failed, color: "#fca5a5" }],
+    parts: [{ ...PASSED, value: v.passed }, { ...FAILED, value: v.failed }],
   }));
   const failed = (c) => typeof c.casePass === "boolean" ? !c.casePass : c.outcomePass === false || c.topicPass === false || c.actionPass === false;
   // Tag target_behavior_not_in_v3 means "not in v3": it is out of scope for runs on v3 or older, in scope for later versions
   const notInVersion = (c, r = run) => (c.tags || []).some((t) => { const m = /not_in_v(\d+)/.exec(t); return m ? Number(m[1]) >= r.agentVersion : t.includes("not_in"); });
   const inScope = run.cases.filter((c) => !notInVersion(c));
   const inScopePassed = inScope.filter((c) => !failed(c)).length;
-  const byPersona = {};
-  for (const c of run.cases) {
-    const k = c.persona || "other";
-    byPersona[k] ??= { p: 0, f: 0 };
-    failed(c) ? byPersona[k].f++ : byPersona[k].p++;
-  }
-  const personaRows = Object.entries(byPersona).map(([k, v]) => ({
-    label: k, display: `${v.p}/${v.p + v.f}`,
-    parts: [{ label: "passed", value: v.p, color: "#16a34a" }, { label: "failed", value: v.f, color: "#fca5a5" }],
-  }));
   const lat = run.cases.map((c) => c.latencyMs).filter((n) => typeof n === "number").sort((a, b) => a - b);
   const q = (p) => lat[Math.min(lat.length - 1, Math.floor(p * lat.length))];
   const latKpi = run.latencyMs?.median
-    ? kpi("Response time", `${(run.latencyMs.median / 1000).toFixed(1)}s`, `median · p90 ${(run.latencyMs.p90 / 1000).toFixed(1)}s · max ${(run.latencyMs.max / 1000).toFixed(1)}s`)
+    ? kpi("Response time", `${(run.latencyMs.median / 1000).toFixed(1)}s`, `median · p90 ${(run.latencyMs.p90 / 1000).toFixed(1)}s`)
     : kpi("Response time", lat.length ? `${(q(0.5) / 1000).toFixed(1)}s` : "—", lat.length ? `median · p95 ${(q(0.95) / 1000).toFixed(1)}s` : "not in the results");
-  const FIND = { bad: ["#dc2626", "#fef2f2"], warn: ["#f59e0b", "#fffbeb"], ok: ["#16a34a", "#f0fdf4"], info: ["#64748b", "#f8fafc"] };
-  const findings = (run.findings || []).length
-    ? `<div class="card" style="margin-top:14px"><h3>What the baseline found</h3><div class="grid g3">${run.findings.map((f) => `
-        <div class="finding" style="border-left-color:${(FIND[f.level] || FIND.info)[0]};background:${(FIND[f.level] || FIND.info)[1]}">
-          <b>${esc(f.title)}</b><div>${esc(f.text)}</div>
-          ${f.cases.length ? `<div class="tags">${f.cases.map((id) => `<span class="tag">${esc(id)}</span>`).join("")}</div>` : ""}
-        </div>`).join("")}</div></div>`
-    : "";
   const prev = D.testing.length > 1 ? D.testing[D.testing.length - 2] : null;
   const prevById = Object.fromEntries((prev?.cases || []).map((c) => [c.id, c]));
   const runStats = (r) => {
@@ -299,40 +663,58 @@ $("kpis").innerHTML = [
     return { sc: `${n(sc)}/${sc.length}`, tg: `${n(tg)}/${tg.length}`, topic: chk("topic_assertion"), act: chk("actions_assertion"), out: chk("output_validation") };
   };
   const runsCompare = D.testing.length > 1
-    ? `<div class="card"><h3>Pass rate by agent version</h3>${hbars(D.testing.map((r, i) => ({ label: `v${r.agentVersion} · ${String(r.runAt).slice(0, 10)}`, value: pct(r.totals.passed, r.totals.cases), color: PALETTE[i % PALETTE.length] })), { max: 100, suffix: "%" })}
-        <table style="margin-top:10px"><thead><tr><th></th>${D.testing.map((r) => `<th>v${r.agentVersion}</th>`).join("")}</tr></thead><tbody>${[["Cases passed", (r) => `${r.totals.passed}/${r.totals.cases}`], ["In scope for that version", (r) => runStats(r).sc], ["Policy-branch target cases", (r) => runStats(r).tg], ["Subagent checks", (r) => runStats(r).topic], ["Action checks", (r) => runStats(r).act], ["Outcome checks", (r) => runStats(r).out]].map(([l, f]) => `<tr><td>${l}</td>${D.testing.map((r) => `<td>${f(r)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
+    ? `<div class="card"><h3>Version by version</h3>${hbars(D.testing.map((r) => ({ label: `v${r.agentVersion} · ${String(r.runAt).slice(5, 10)}`, value: passPct(r), color: r === run ? C.electric : C.cloud })), { max: 100, suffix: "%" })}
+        <table style="margin-top:12px"><thead><tr><th></th>${D.testing.map((r) => `<th>v${r.agentVersion}</th>`).join("")}</tr></thead><tbody>${[["Cases passed", (r) => `${r.totals.passed}/${r.totals.cases}`], ["In scope for that version", (r) => runStats(r).sc], ["Policy-branch targets", (r) => runStats(r).tg], ["Subagent checks", (r) => runStats(r).topic], ["Action checks", (r) => runStats(r).act], ["Outcome checks", (r) => runStats(r).out]].map(([l, f]) => `<tr><td>${l}</td>${D.testing.map((r) => `<td class="num">${f(r)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
     : `<div class="card"><h3>Before / after</h3>${empty("One run so far", "Re-run the same suite on the next agent version to see what changed.")}</div>`;
+  $("tc").innerHTML = `
+    <div class="grid g4" style="margin-bottom:20px">
+      ${kpi("Cases", run.totals.cases, `${run.totals.passed} passed · ${run.totals.failed} failed${run.totals.error ? ` · ${run.totals.error} error` : ""}`)}
+      ${kpi("Pass rate, all", `${passPct(run)}%`, "every declared check must pass")}
+      ${inScope.length < run.cases.length
+        ? kpi("Pass rate, in scope", `${pct(inScopePassed, inScope.length)}%`, `${inScopePassed}/${inScope.length} · without behavior v${run.agentVersion} does not have yet`)
+        : kpi("Policy-branch targets", runStats(run).tg, `cases for behavior added after v${first.agentVersion}`)}
+      ${latKpi}
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>By check · ${esc(run.suite)}</h3>${hbars(metricRows)}<div class="legend"><span><i style="background:${C.ok}"></i>passed</span><span><i style="background:${C.rose}"></i>failed</span></div>
+        <div class="note">Coherence and completeness are scored by an LLM judge and do not decide pass or fail.</div></div>
+      ${runsCompare}
+    </div>`;
+
+  // findings: what fails and what we watch on one slide, what works and what is not covered on the next
+  const FIND = { bad: [C.bad, "Still fails"], warn: [C.warn, "Watch"], ok: [C.ok, "Works"], info: [C.gray, "Not covered"] };
+  const fs = run.findings || [];
+  const n = (lvl) => fs.filter((f) => f.level === lvl).length;
+  const cards = (list, none) => list.length
+    ? `<div class="grid g3">${list.map((f) => { const [col, word] = FIND[f.level] || FIND.info; return `
+        <div class="finding" style="border-left-color:${col}"><div class="lvl"><i style="background:${col}"></i>${word}</div>
+          <b>${esc(f.title)}</b><div>${esc(f.text)}</div>
+          ${f.cases.length ? `<div class="tags">${f.cases.map((id) => `<span class="tag">${esc(id)}</span>`).join("")}</div>` : ""}
+        </div>`; }).join("")}</div>`
+    : `<div class="card">${empty(...none)}</div>`;
+  const fails = fs.filter((f) => f.level === "bad" || f.level === "warn");
+  const works = fs.filter((f) => f.level !== "bad" && f.level !== "warn");
+  $("findings-title").textContent = fs.length ? `${n("bad")} still fail and ${n("warn")} to watch on v${run.agentVersion}` : "What the latest run taught us";
+  $("works-title").textContent = fs.length ? `${n("ok")} things work on v${run.agentVersion}` : "What works";
+  $("tc-findings").innerHTML = cards(fails, fs.length ? ["Nothing fails", "Every finding for this run is in the next section."] : ["No findings written", "Add our reading of the run to data/findings.json."]);
+  $("tc-works").innerHTML = cards(works, ["No findings written", "Add our reading of the run to data/findings.json."]);
+
+  // appendix table
   const ok = (v) => v === true ? `<span class="tag ok">pass</span>` : v === false ? `<span class="tag bad">fail</span>` : `<span class="tag">—</span>`;
   const rows = (filter) => run.cases.filter(filter).map((c) => `<tr>
       <td><b>${esc(c.id)}</b><div style="color:var(--mute)">${esc(c.persona || "")}</div>${(c.tags || []).map((t) => `<span class="tag ${t.includes("not_in") ? "warn" : ""}">${esc(t)}</span>`).join(" ")}</td>
       <td>${esc(c.utterance)}</td>
-      <td>${ok(c.topicPass)}<div style="color:var(--mute);font-size:12px">${esc(c.subagentExpected || "")} → ${esc(c.subagentActual || "")}</div></td>
+      <td>${ok(c.topicPass)}<div style="color:var(--mute);font-size:13px">${esc(c.subagentExpected || "")} → ${esc(c.subagentActual || "")}</div></td>
       <td>${ok(c.actionPass)}</td><td>${ok(c.outcomePass)}</td>
       ${prev ? `<td>${prevById[c.id] ? ok(prevById[c.id].casePass) : ok(null)}</td>` : ""}
       <td style="color:var(--mute)">${esc(c.responseExcerpt)}</td></tr>`).join("");
   const filters = { All: () => true, Failed: failed, "In this version": (c) => !notInVersion(c), "Target not in this version": notInVersion };
-  $("tc").innerHTML = `
-    <div class="grid g5" style="margin-bottom:14px">
-      ${kpi("Suite", `<span style="font-size:18px">${esc(run.suite)}</span>`, `agent v${run.agentVersion} · ${String(run.runAt).slice(0, 16).replace("T", " ")}`)}
-      ${kpi("Cases", run.totals.cases, `${run.totals.passed} passed · ${run.totals.failed} failed${run.totals.error ? ` · ${run.totals.error} error` : ""}`)}
-      ${kpi("Pass rate, all", `${pct(run.totals.passed, run.totals.cases)}%`, "a case passes when every declared check passes")}
-      ${kpi("Pass rate, in scope", `${pct(inScopePassed, inScope.length)}%`, `${inScopePassed}/${inScope.length} · leaves out ${run.cases.length - inScope.length} cases for behavior v${run.agentVersion} does not have yet`)}
-      ${latKpi}
-    </div>
-    <div class="grid g3">
-      <div class="card"><h3>By check</h3>${hbars(metricRows)}<div class="legend"><span><i style="background:#16a34a"></i>passed</span><span><i style="background:#fca5a5"></i>failed</span></div>
-        <div class="note">Subagent and action checks count only where the case declared one. Coherence and completeness are scored by an LLM judge and do not decide pass or fail.</div></div>
-      <div class="card"><h3>By persona</h3>${hbars(personaRows)}</div>
-      ${runsCompare}
-    </div>
-    ${findings}
-    <div class="card" style="margin-top:14px"><h3>Every case</h3>
-      <div class="filters" id="tc-filters">${Object.keys(filters).map((k, i) => `<button class="${i ? "" : "on"}" data-k="${esc(k)}">${esc(k)} (${run.cases.filter(filters[k]).length})</button>`).join("")}</div>
-      <div class="scroll"><table><thead><tr><th>Case</th><th>Customer says</th><th>Subagent</th><th>Actions</th><th>Outcome</th>${prev ? `<th>Case on v${prev.agentVersion}</th>` : ""}<th>Agent replied</th></tr></thead><tbody id="tc-rows">${rows(filters.All)}</tbody></table></div>
-    </div>`;
+  $("tc-table").innerHTML = `
+    <div class="filters" id="tc-filters">${Object.keys(filters).map((k, i) => `<button type="button" class="${i ? "" : "on"}" aria-pressed="${!i}" data-k="${esc(k)}">${esc(k)} (${run.cases.filter(filters[k]).length})</button>`).join("")}</div>
+    <div class="scroll"><table><thead><tr><th>Case</th><th>Customer says</th><th>Subagent</th><th>Actions</th><th>Outcome</th>${prev ? `<th>On v${prev.agentVersion}</th>` : ""}<th>Agent replied</th></tr></thead><tbody id="tc-rows">${rows(filters.All)}</tbody></table></div>`;
   $("tc-filters").addEventListener("click", (e) => {
     const k = e.target.dataset?.k; if (!k) return;
-    [...e.currentTarget.children].forEach((b) => b.classList.toggle("on", b === e.target));
+    [...e.currentTarget.children].forEach((b) => { b.classList.toggle("on", b === e.target); b.setAttribute("aria-pressed", b === e.target); });
     $("tc-rows").innerHTML = rows(filters[k]);
   });
 })();
@@ -340,40 +722,42 @@ $("kpis").innerHTML = [
 // ---------- live batch ----------
 (function batch() {
   const B = D.batch;
-  if (!B?.runs?.length) { $("batch-kpis").innerHTML = `<div class="card">${empty("No live batch run yet", "Run scripts/testing/run_batch.py and record it in test-results.json.")}</div>`; return; }
-  const COLOR = { PASS: "#16a34a", EXPECTED_FAIL: "#f59e0b", FLAKY: "#8b5cf6", FAIL: "#dc2626", UNEXPECTED_PASS: "#06b6d4", "N/A": "#cbd5e1" };
-  const parts = (o) => B.outcomes.filter((k) => o[k]).map((k) => ({ label: k, value: o[k], color: COLOR[k] }));
+  if (!B?.runs?.length) { $("batch-kpis").innerHTML = `<div class="card" style="grid-column:1/-1">${empty("No live batch run yet", "Run scripts/testing/run_batch.py and record it in test-results.json.")}</div>`; return; }
+  const OUT = { PASS: [C.ok, "pass"], EXPECTED_FAIL: [C.warn, "known gap"], FLAKY: [C.purple, "flaky"], FAIL: [C.bad, "fail"], UNEXPECTED_PASS: [C.cloud, "unexpected pass"], "N/A": [C.light, "n/a"] };
+  const parts = (o) => B.outcomes.filter((k) => o[k]).map((k) => ({ label: k, short: OUT[k][1], value: o[k], color: OUT[k][0] }));
   const L = B.latest.byOutcome;
+  const sc = D.docs.scenarios;
+  $("batch-title").textContent = `${pct(L.PASS || 0, B.latest.total)}% of ${B.latest.total} live scenarios pass; ${L.EXPECTED_FAIL || 0} known gaps proven`;
   $("batch-kpis").innerHTML = [
-    kpi("Machine-checked", `${B.checkedScenarios}/${D.docs.scenarios.total}`, "scenarios the runner checks from the trace"),
-    kpi("Pass, latest", `${pct(L.PASS || 0, B.latest.total)}%`, `${L.PASS || 0}/${B.latest.total} scenarios · their latest run`),
-    kpi("Known gaps proven", L.EXPECTED_FAIL || 0, "EXPECTED_FAIL: fails as a written gap says"),
-    kpi("Fail or flaky", (L.FAIL || 0) + (L.FLAKY || 0), `${L.FAIL || 0} fail · ${L.FLAKY || 0} flaky · ${B.totalSessions} preview sessions in ${B.runs.length} runs`),
+    kpi("Machine-checked", `${B.checkedScenarios}/${sc.total}`, `scenarios written · ${sc.p0} are P0 · golden set ${D.docs.goldenQuestions || "—"}`),
+    kpi("Pass, latest", `${pct(L.PASS || 0, B.latest.total)}%`, `${L.PASS || 0}/${B.latest.total} scenarios, their latest run`),
+    kpi("Known gaps proven", L.EXPECTED_FAIL || 0, "fails exactly as a written gap says"),
+    kpi("Fail or flaky", (L.FAIL || 0) + (L.FLAKY || 0), `${L.FAIL || 0} fail · ${L.FLAKY || 0} flaky · ${B.totalSessions} sessions in ${B.runs.length} runs`),
   ].join("");
-  $("batch-runs").innerHTML = hbars(B.runs.map((r) => ({ label: `${r.at.slice(5, 16).replace("T", " ")} · ${r.file}`, display: `${r.byOutcome.PASS || 0}/${r.scenarios}`, parts: parts(r.byOutcome) })));
-  $("batch-legend").innerHTML = B.outcomes.map((k) => `<span><i style="background:${COLOR[k]}"></i>${k}</span>`).join("");
-  $("batch-personas").innerHTML = hbars(Object.entries(B.byPersona).sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })).map(([k, o]) => ({ label: k, display: `${o.PASS || 0}/${sum(o)}`, parts: parts(o) })));
+  $("batch-runs").innerHTML = hbars(B.runs.map((r) => ({ label: `${r.at.slice(5, 16).replace("T", " ")} · ${r.file}`, display: `${r.byOutcome.PASS || 0}/${r.scenarios}`, parts: parts(r.byOutcome) })), { wide: true });
+  $("batch-legend").innerHTML = B.outcomes.map((k) => `<span><i style="background:${OUT[k][0]}"></i>${OUT[k][1]}</span>`).join("") + `<span>Right column: passed / scenarios</span>`;
+  // Personas in two cards side by side, so the slide fits one screen
+  const personas = Object.entries(B.byPersona).sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
+    .map(([k, o]) => ({ label: k.replace(/^P\d+ /, ""), display: `${o.PASS || 0}/${sum(o)}`, parts: parts(o) }));
+  const max = Math.max(...Object.values(B.byPersona).map(sum));
+  const half = Math.ceil(personas.length / 2);
+  $("personas-title").textContent = `${Object.values(B.byPersona).filter((o) => (o.PASS || 0) + (o.EXPECTED_FAIL || 0) === sum(o)).length} of ${personas.length} personas pass or fail only on known gaps`;
+  $("batch-personas").innerHTML = [personas.slice(0, half), personas.slice(half)].map((rows) => `<div class="card">${hbars(rows, { max, wide: true })}</div>`).join("") +
+    `<div class="legend" style="grid-column:1/-1">${B.outcomes.map((k) => `<span><i style="background:${OUT[k][0]}"></i>${OUT[k][1]}</span>`).join("")}</div>`;
 })();
-
-// ---------- coverage ----------
-const sc = D.docs.scenarios;
-$("personas").innerHTML = hbars(objRows(sc.byPersona).sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true })).map((r) => ({ ...r, color: "#4f46e5" })));
-$("coverage-kpis").innerHTML = `<div class="grid" style="gap:10px">
-  ${kpi("Scenarios", sc.total, `${sc.p0} are P0`)}
-  ${kpi("Golden set", D.docs.goldenQuestions || "—", Object.entries(D.docs.goldenByKind || {}).map(([k, v]) => `${v} ${k}`).join(" · ") || "grounding questions")}
-  ${kpi("Executed", latest ? latest.totals.cases : 0, "in Testing Center (latest run)")}</div>`;
 
 // ---------- policy ----------
 if (!pol.rules) {
   $("policy-bars").innerHTML = empty("No policy matrix in this checkout", "docs/POLICY_ALIGNMENT.md arrives with the grounding PR.");
 } else {
+  $("policy-title").textContent = `${aligned(pol.v1)} of ${pol.rules} policy rules aligned, up from ${aligned(pol.v0)} before grounding`;
   const order = ["✅", "🟡", "🔴", "⬜", "❓", "∅", "🚫", "?"];
-  const row = (label, o) => ({ label, display: `${aligned(o)} ✅`, parts: order.filter((k) => o[k]).map((k) => ({ label: POLICY[k][0], value: o[k], color: POLICY[k][1] })) });
+  const row = (label, o) => ({ label, display: `${aligned(o)} ✅`, parts: order.filter((k) => o[k]).map((k) => ({ label: POLICY[k][0], short: POLICY[k][0].toLowerCase(), value: o[k], color: POLICY[k][1] })) });
   $("policy-bars").innerHTML = hbars([row("v0 · before", pol.v0), row("v1 · after", pol.v1)], { max: pol.rules }) +
-    `<div style="margin-top:18px">${hbars(objRows(pol.bySource).map((r) => ({ ...r, label: ({ P: "Playbook (internal)", F: "Delivery FAQ", T: "Terms", M: "Merchant standards", N: "Numbers" })[r.label] || r.label })))}</div>`;
+    `<h3 style="margin-top:24px">Rules by source document</h3>${hbars(objRows(pol.bySource, () => C.electric).map((r) => ({ ...r, label: ({ P: "Playbook (internal)", F: "Delivery FAQ", T: "Terms", M: "Merchant standards", N: "Numbers" })[r.label] || r.label })))}`;
   $("policy-legend").innerHTML = order.filter((k) => pol.v0[k] || pol.v1[k]).map((k) => `<span><i style="background:${POLICY[k][1]}"></i>${k} ${POLICY[k][0]}</span>`).join("");
   $("policy-critical").innerHTML = pol.critical.length
-    ? pol.critical.map((c) => `<div class="hbar" style="grid-template-columns:1fr auto"><b>${esc(c.id)}</b><span>${c.v0} → ${c.v1}</span></div>`).join("") + `<div class="note">Food safety and allergens: missing before, built now. They count as aligned only after a live test.</div>`
+    ? `<table><tbody>${pol.critical.map((c) => `<tr><td><b>${esc(c.id)}</b></td><td class="num">${c.v0} → ${c.v1}</td></tr>`).join("")}</tbody></table><div class="note">Food safety and allergens: missing before, built now. They count as aligned only after a live test.</div>`
     : empty("None flagged", "");
 }
 
@@ -383,21 +767,26 @@ if (!pol.rules) {
   if (!a) { $("subagents").innerHTML = empty("No agent file", ""); return; }
   const shown = cmp || a;
   const base = new Set(a.subagents.map((s) => s.name));
-  const T = { flow: "#2563eb", apex: "#7c3aed", standard: "#0891b2" };
-  $("action-donut").innerHTML = donut(objRows(shown.actionsByType, (k, i) => T[k] || PALETTE[i]), shown.actionCount, "actions");
-  const delta = (k) => cmp && cmp[k] !== a[k] ? ` <span style="font-size:13px;color:var(--brand)">(${cmp[k] - a[k] > 0 ? "+" : ""}${cmp[k] - a[k]})</span>` : "";
+  const T = { flow: C.electric, apex: C.title, standard: C.cloud };
+  const N = { flow: "Flow", apex: "Apex", standard: "Standard" };
+  $("arch-title").textContent = `${shown.subagents.length} subagents and ${shown.actionCount} actions; the money rules live in code`;
+  $("action-donut").innerHTML = donut(objRows(shown.actionsByType, (k, i) => T[k] || PALETTE[i]).map((r) => ({ ...r, label: N[r.label] || r.label })), shown.actionCount, "actions");
+  const delta = (k) => cmp && cmp[k] !== a[k] ? ` <span style="font-size:14px;color:var(--link)">(${cmp[k] - a[k] > 0 ? "+" : ""}${cmp[k] - a[k]})</span>` : "";
   $("arch-kpis").innerHTML = [
-    kpi("Subagents", shown.subagents.length + (cmp ? `<span style="font-size:13px;color:var(--brand)"> (+${cmp.subagents.length - a.subagents.length})</span>` : "")),
+    kpi("Subagents", shown.subagents.length + (cmp ? `<span style="font-size:14px;color:var(--link)"> (+${cmp.subagents.length - a.subagents.length})</span>` : "")),
     kpi("Actions", shown.actionCount + delta("actionCount")),
     kpi("Variables", shown.variables + delta("variables")),
-    kpi("Hand-offs", shown.transitions + delta("transitions"), "transitions between subagents"),
+    kpi("Hand-offs", shown.transitions + delta("transitions"), "between subagents"),
   ].join("");
   $("arch-note").innerHTML = cmp ? `Showing <code>${esc(cmp.ref)}</code>; numbers in brackets are the change from the current checkout.` : `Showing the current checkout. Data Library grounding: ${a.hasKnowledge ? "yes" : "no"}.`;
+  if (!cmp) $("new-legend").remove();
+  // Actions only; the hand-off targets stay in the tooltip so the slide stays short
+  const labelOf = (g) => (shown.subagents.find((t) => t.name === g) || {}).label || g;
   $("subagents").innerHTML = shown.subagents.map((s) => `
     <div class="sub-card ${cmp && !base.has(s.name) ? "new" : ""}">
-      <h4><span>${esc(s.label)}</span><span style="color:var(--mute);font-weight:500">${s.start ? "entry" : ""}</span></h4>
-      <div class="tags">${s.actions.map((x) => `<span class="tag ${x.type}">${esc(x.name)}</span>`).join("") || `<span class="tag">no own actions</span>`}</div>
-      ${s.goesTo.length ? `<div class="tags">${s.goesTo.map((g) => `<span class="tag go">→ ${esc((shown.subagents.find((t) => t.name === g) || {}).label || g)}</span>`).join("")}</div>` : ""}
+      <h4><span>${esc(s.label)}</span><span style="color:var(--mute);font-weight:500;font-size:13px">${s.start ? "entry" : ""}</span></h4>
+      <div class="tags">${s.actions.map((x) => `<span class="tag ${x.type}" title="${esc(N[x.type] || x.type)}">${esc(x.name).replace(/_/g, "_<wbr>").replace(/([a-z])([A-Z])/g, "$1<wbr>$2")}</span>`).join("") || `<span class="tag">routes only</span>`}</div>
+      ${s.goesTo.length ? `<div class="goes" title="${esc(s.goesTo.map(labelOf).join(", "))}">→ hands off to ${s.goesTo.length} subagent${s.goesTo.length > 1 ? "s" : ""}</div>` : ""}
     </div>`).join("");
 })();
 
@@ -406,56 +795,153 @@ if (!pol.rules) {
   const o = D.org;
   const none = (t) => empty("Not read", t || "Run the build without --offline to read the org.");
   $("cases-day").innerHTML = o?.cases ? columns(o.cases.byDay) : none();
-  $("cases-priority").innerHTML = o?.cases ? hbars(objRows(o.cases.byPriority, (k) => ({ High: "#dc2626", Medium: "#f59e0b", Low: "#16a34a" })[k] || "#94a3b8")) : none();
-  const oneType = o?.cases && Object.keys(o.cases.byType).length === 1;
-  $("cases-type").innerHTML = o?.cases ? hbars(objRows(o.cases.byType)) + `<div class="note">${oneType
-    ? "Every case has the same Type, Reason and Priority: the org still runs the escalation Flow that fills fixed values. The new Flow sets them by category (see GAPS)."
-    : `"(none)" = cases logged before the escalation Flow sets a Type.`}</div>` : none();
-  $("sessions-day").innerHTML = o?.sessions ? columns(o.sessions.byDay) : none();
+  $("cases-priority").innerHTML = o?.cases ? hbars(objRows(o.cases.byPriority, (k) => ({ High: C.bad, Medium: C.warn, Low: C.ok })[k] || C.gray)) : none();
+  $("cases-type").innerHTML = o?.cases ? hbars(objRows(o.cases.byType), { stack: true }) : none();
+  $("resolutions").innerHTML = !o?.resolutions ? none() : o.resolutions.total
+    ? hbars(Object.entries(o.resolutions.byType).sort((a, b) => b[1].count - a[1].count).map(([k, v], i) => ({ label: `${k.replace("_", " ")} · ${v.count}`, value: v.amount, display: usd(v.amount, 0), color: [C.electric, C.cloud][i % 2] })))
+      + `<div class="note">${o.resolutions.total} issued · ${usd(o.resolutions.amount.total)} in total · largest ${usd(o.resolutions.amount.max)}. Right column: amount.</div>`
+    : empty("None issued yet", "Refunds and credits appear here once CARES issues one.");
   $("csat").innerHTML = !o?.csat ? none() : o.csat.total
-    ? hbars(Object.entries(o.csat.byScore).sort().map(([k, v]) => ({ label: k === "5" ? "👍 thumbs up (5)" : k === "2" ? "👎 thumbs down (2)" : k, value: v, color: k === "5" ? "#16a34a" : "#dc2626" })))
+    ? hbars(Object.entries(o.csat.byScore).sort().reverse().map(([k, v]) => ({ label: k === "5" ? "👍 Up" : k === "2" ? "👎 Down" : k, value: v, color: k === "5" ? C.ok : C.bad })))
+      + `<div class="note">${o.csat.total} ratings. Thumbs up is saved as 5, thumbs down as 2.</div>`
     : empty("No ratings yet", "Experience Rating saves a rating only for an identified customer; none was saved so far.");
   $("versions").innerHTML = o?.versions?.length
     ? `<table><thead><tr><th>Version</th><th>Status</th><th>Last change</th></tr></thead><tbody>${o.versions.map((v) => `<tr><td><b>v${v.version}</b></td><td><span class="tag ${v.status === "Active" ? "ok" : ""}">${esc(v.status)}</span></td><td>${esc(v.date)}</td></tr>`).join("")}</tbody></table>`
     : none();
-  const cv = o?.conversations;
+  if (o?.cases) $("cases-title").textContent = `${o.cases.total} cases for the support team${o.resolutions?.total ? `, ${o.resolutions.total} refunds and credits issued` : ""}`;
   if (!cv) {
     $("conv-kpis").innerHTML = `<div class="card" style="grid-column:1/-1">${none("Conversation counts come from the org's session log.")}</div>`;
     ["conv-version", "conv-mode", "conv-turns"].forEach((id) => ($(id).innerHTML = none()));
     $("conv-note").remove();
     return;
   }
+  $("conv-title").textContent = `${cv.sessions} conversations, ${pct(cv.escalated, cv.sessions)}% sent to a person`;
   $("conv-kpis").innerHTML = [
     kpi("Conversations", cv.sessions, `${cv.engaged} with a customer message`),
-    kpi("Sent to a person", `${pct(cv.escalated, cv.sessions)}%`, `${cv.escalated} conversations reached the hand-off`),
+    kpi("Sent to a person", `${pct(cv.escalated, cv.sessions)}%`, `${cv.escalated} reached the hand-off`),
     kpi("Transfers completed", cv.transferred, "a service rep picked it up"),
-    kpi("Messages per conversation", cv.customerMessages?.median ?? "—", cv.customerMessages ? `median · mean ${cv.customerMessages.mean} · max ${cv.customerMessages.max}` : ""),
+    kpi("Messages per chat", cv.customerMessages?.median ?? "—", cv.customerMessages ? `median · mean ${cv.customerMessages.mean} · max ${cv.customerMessages.max}` : ""),
   ].join("");
   const split = (g) => Object.entries(g).sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })).map(([k, v]) => ({
     label: `${k} · ${v.sessions}`, display: `${pct(v.escalated, v.sessions)}%`,
-    parts: [{ label: "sent to a person", value: v.escalated, color: "#f59e0b" }, { label: "handled by the agent", value: v.sessions - v.escalated, color: "#4f46e5" }],
+    parts: [{ label: "handled by the agent", value: v.sessions - v.escalated, color: C.electric }, { label: "sent to a person", value: v.escalated, color: C.warn }],
   }));
-  const legend = `<div class="legend"><span><i style="background:#4f46e5"></i>handled by the agent</span><span><i style="background:#f59e0b"></i>sent to a person (the % on the right)</span></div>`;
+  const legend = `<div class="legend"><span><i style="background:${C.electric}"></i>handled by the agent</span><span><i style="background:${C.warn}"></i>sent to a person (% on the right)</span></div>`;
   $("conv-version").innerHTML = hbars(split(cv.byVersion)) + legend;
-  $("conv-mode").innerHTML = hbars(split(cv.byMode)) + legend;
-  $("conv-turns").innerHTML = hbars(Object.entries(cv.turnsHistogram).sort().map(([k, v]) => ({ label: k === "5" ? "5 or more" : k === "1" ? "1 message" : `${k} messages`, value: v, color: "#06b6d4" })));
-  $("conv-note").innerHTML = `<h3>What this does not show yet</h3><div class="note" style="margin:0">
-    Most conversations are our own tests in the builder preview, so read these as test traffic, not customers.
-    Which subagent ran, which actions fired and how long each turn took live in Session Tracing (Data Cloud), which is not turned on in the team org.
-    With it on, this page can show the same checks as Testing Center on real conversations.</div>`;
+  $("conv-mode").innerHTML = hbars(split(cv.byMode), { stack: true }) + legend;
+  $("conv-turns").innerHTML = hbars(Object.entries(cv.turnsHistogram).sort().map(([k, v]) => ({ label: k === "5" ? "5 or more" : k === "1" ? "1 message" : `${k} messages`, value: v, color: C.cloud })));
+  $("conv-note").textContent = "Most conversations are our own builder-preview tests. Session Tracing (Data Cloud) would add per-turn subagent, actions and latency on real conversations; it is not on in the team org.";
 })();
 
 // ---------- governance ----------
-const st = (o) => objRows(o, (k, i) => STATUS_COLOR[k] || PALETTE[i]);
-$("decisions").innerHTML = donut(st(D.docs.decisions.byStatus), D.docs.decisions.total, "decisions");
-$("gaps").innerHTML = donut(st(D.docs.gaps.byStatus), D.docs.gaps.total, "gaps");
-$("risks").innerHTML = donut(st(D.docs.risks.byStatus), D.docs.risks.total, "risks");
-$("runlog").innerHTML = donut(objRows(D.docs.runLog.byResult, (k) => ({ Pass: "#16a34a", Fail: "#dc2626", Open: "#f59e0b" })[k] || "#94a3b8"), D.docs.runLog.total, "checks logged");
+const sentence = (s) => s.charAt(0) + s.slice(1).toLowerCase();
+const st = (o) => objRows(o, (k, i) => STATUS_COLOR[k] || PALETTE[i]).map((r) => ({ ...r, label: sentence(r.label) }));
+const dg = D.docs;
+$("gov-title").textContent = `${dg.decisions.total} decisions, ${dg.gaps.total} gaps and ${dg.risks.total} risks, all written down`;
+$("decisions").innerHTML = donut(st(dg.decisions.byStatus), dg.decisions.total, "decisions");
+$("gaps").innerHTML = donut(st(dg.gaps.byStatus), dg.gaps.total, "gaps");
+$("risks").innerHTML = donut(st(dg.risks.byStatus), dg.risks.total, "risks");
+$("runlog").innerHTML = donut(objRows(dg.runLog.byResult, (k) => ({ Pass: C.ok, Fail: C.bad, Open: C.warn })[k] || C.gray), dg.runLog.total, "checks");
 
-$("sources").innerHTML = `<b>Sources.</b> Repo: <code>CARES.agent</code>, DECISIONS, GAPS, RISKS, POLICY_ALIGNMENT, TEST_PLAN, the persona scenarios and the golden set.
-  Org: SOQL counts, read only (agent versions, the session log, cases, messaging sessions, CSAT). Testing Center: normalized results in <code>docs/metrics/data/testing-center/</code>, our reading in <code>findings.json</code>.
-  Rebuild: <code>node scripts/metrics/build-dashboard.mjs --target-org &lt;alias&gt;</code> (add <code>--offline</code> to skip the org).
-  A simulated or Testing Center pass shows routing and actions, not live behavior with real data.`;
+$("sources-body").innerHTML = `<p class="eyebrow">Sources</p>
+  <p style="margin:0 0 10px">Repo: <code>CARES.agent</code>, DECISIONS, GAPS, RISKS, POLICY_ALIGNMENT, TEST_PLAN, the persona scenarios, the golden set and <code>data/value.json</code> (business case inputs).
+  Org: SOQL counts, read only (agent versions, the session log, cases, refunds and credits, CSAT). Testing Center: normalized results in <code>docs/metrics/data/testing-center/</code>, our reading in <code>findings.json</code>.</p>
+  <p style="margin:0 0 10px">Rebuild: <code>node scripts/metrics/build-dashboard.mjs --target-org &lt;alias&gt;</code> (add <code>--offline</code> to skip the org). Present: press <b>P</b>.</p>
+  <p style="margin:0;opacity:.9">A Testing Center or preview pass shows routing and actions, not live behavior with real customers. Commit ${esc(D.commit)} · ${esc(D.branch)}${D.docsRef !== "working tree" ? ` · docs from ${esc(D.docsRef)}` : ""}.</p>`;
+
+// ---------- brand: fonts, co-brand logo, Agentforce ball, sparkles on the edges ----------
+(function brand() {
+  if (!BRAND) return;
+  const f = BRAND.fonts || {};
+  const faces = [
+    f.display && `@font-face { font-family:"AvantGarde for Salesforce"; src:url(${f.display}) format("woff"); font-weight:100 900; font-display:block; }`,
+    f.regular && `@font-face { font-family:"Salesforce Sans"; src:url(${f.regular}) format("woff"); font-weight:400; font-display:block; }`,
+    f.bold && `@font-face { font-family:"Salesforce Sans"; src:url(${f.bold}) format("woff"); font-weight:600 900; font-display:block; }`,
+  ].filter(Boolean).join("\n");
+  document.head.insertAdjacentHTML("beforeend", `<style>${faces}</style>`);
+  if (BRAND.logo) $("cobrand").innerHTML = `Pronto<span class="bx" aria-hidden="true"></span>${BRAND.logo}`;
+  if (BRAND.ball) {
+    $("cover-art").remove();
+    $("top").insertAdjacentHTML("afterbegin", `<img class="ball" src="${BRAND.ball}" alt="" aria-hidden="true">`);
+  }
+  // Original sparkle files only. Two per slide (four on the tall ones), left and right edges, sizes and turns varied
+  const sp = BRAND.sparkles || [];
+  if (!sp.length) return;
+  const blue = sp.filter((x) => x.name.includes("blue")), yellow = sp.filter((x) => x.name.includes("yellow"));
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  document.querySelectorAll(".slide").forEach((el, i) => {
+    const n = el.classList.contains("cover") || el.offsetHeight > 0.8 * innerHeight ? 4 : 2;
+    for (let k = 0; k < n; k++) {
+      const left = k % 2 === 0, pool = (i + k) % 2 ? yellow : blue;
+      const img = (pool.length ? pool : sp)[Math.floor(rnd() * (pool.length || sp.length))];
+      const size = Math.round(28 + rnd() * (left ? 56 : 68));
+      const top = k < 2 ? (left ? 12 + rnd() * 18 : 58 + rnd() * 24) : (left ? 64 + rnd() * 20 : 10 + rnd() * 16);
+      const rot = Math.round(-25 + rnd() * 50);
+      const gap = Math.round(12 + rnd() * 40);
+      el.insertAdjacentHTML("afterbegin", `<img class="spark" src="${img.src}" alt="" aria-hidden="true" style="width:${size}px;top:${top.toFixed(1)}%;${left ? "left" : "right"}:${gap}px;transform:rotate(${rot}deg);--rot2:${rot + 4}deg;animation-delay:-${(rnd() * 9).toFixed(1)}s">`);
+    }
+  });
+})();
+
+// ---------- motion: each slide fades up once as it enters; the nav marks where you are ----------
+// A segment label shows only when it fits its segment; re-checked when fonts load and on resize
+(function fitLabels() {
+  const fit = () => document.querySelectorAll(".hbar .track span").forEach((el) => {
+    el.dataset.t ??= el.textContent;
+    el.textContent = el.dataset.t;
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    if (r.getBoundingClientRect().width + 8 > el.clientWidth) el.textContent = "";
+  });
+  fit();
+  document.fonts?.ready.then(fit);
+  addEventListener("resize", fit);
+})();
+
+(function motion() {
+  if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.documentElement.classList.add("motion");
+  const links = Object.fromEntries([...document.querySelectorAll("nav a[href^='#']")].map((a) => [a.hash.slice(1), a]));
+  const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add("in");
+    if (links[e.target.id]) { Object.values(links).forEach((a) => a.classList.remove("on")); links[e.target.id].classList.add("on"); }
+  }), { threshold: 0.2 });
+  document.querySelectorAll(".slide").forEach((el) => io.observe(el));
+})();
+
+// ---------- presentation mode ----------
+(function present() {
+  const slides = [...document.querySelectorAll(".slide")];
+  const counter = $("counter");
+  const current = () => {
+    const y = window.scrollY + window.innerHeight * 0.3;
+    let i = 0;
+    slides.forEach((s, k) => { if (s.offsetTop <= y) i = k; });
+    return i;
+  };
+  const show = () => { counter.textContent = `${current() + 1} / ${slides.length}`; };
+  const go = (d) => { const i = Math.max(0, Math.min(slides.length - 1, current() + d)); slides[i].scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const set = (on) => {
+    document.body.classList.toggle("present", on);
+    $("present").textContent = on ? "Exit ▪" : "Present ▸";
+    if (on) { document.documentElement.requestFullscreen?.().catch(() => {}); slides[current()].scrollIntoView({ block: "start" }); show(); }
+    else if (document.fullscreenElement) document.exitFullscreen?.();
+  };
+  $("present").addEventListener("click", () => set(!document.body.classList.contains("present")));
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("present")) set(false); });
+  window.addEventListener("scroll", () => document.body.classList.contains("present") && show(), { passive: true });
+  document.addEventListener("keydown", (e) => {
+    if (e.target.closest("input, textarea, select, button, summary") && e.key !== "Escape") return;
+    const on = document.body.classList.contains("present");
+    if (e.key === "p" || e.key === "P") { set(!on); e.preventDefault(); return; }
+    if (!on) return;
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) { go(1); e.preventDefault(); }
+    else if (["ArrowLeft", "PageUp"].includes(e.key)) { go(-1); e.preventDefault(); }
+    else if (e.key === "Escape") set(false);
+  });
+})();
 </script>
 </body>
 </html>
