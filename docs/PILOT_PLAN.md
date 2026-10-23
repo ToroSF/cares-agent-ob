@@ -26,7 +26,7 @@ The four KPIs are the ones in [SPEC.md](SPEC.md). "Pause" means CARES traffic go
 | KPI | Type | Baseline `[$]` | Pilot target | Pause line | Why this target |
 |---|---|---|---|---|---|
 | Reorder within 30 days after a complaint | Headline | 72% | **≥ 74%** (+2 pts vs the control group) | CARES group below control | A complaint costs 8 points (80% → 72%). In the Uber experiment, a credit sent right away won back about 2 points of a 5–10 point loss. +2 points is that same 30% share (`retainedByCares` base) and is what the $362K "customers kept" line assumes |
-| Payouts inside policy | Guardrail | Not measured today | **100%** inside the policy cap, **0** over $100 without human review, average **≤ $15** | Any single breach | The amount is computed in code (D-004), so the right number is 100%, not "most". Average at or under a person's keeps "extra compensation" at $0, as the business case assumes. With a ~5% margin, one wrong $90 refund erases ~58 orders of profit |
+| Payouts inside policy | Guardrail | Not measured today | **100%** of amounts from the policy table in code, human review above $100 on Stolen & Delayed, average **≤ $15** | Any single breach | The amount is computed in code (D-004), so the right number is 100%, not "most". Average at or under a person's keeps "extra compensation" at $0, as the business case assumes. With a ~5% margin, one wrong $90 refund erases ~58 orders of profit |
 | Resolved without a person | Efficiency | 0% | **≥ 70%** | Under 50% for a full week | 70% is the business case base, 50% its cautious case. Under 50% the support saving falls below the low case |
 | Thumbs up after resolution | Quality | 40% | **≥ 60%** | Under 40% two weeks in a row | +20 points: an instant fair answer should beat a 3–5 day ticket clearly. Under 40% CARES is worse than today, so we stop |
 
@@ -80,6 +80,6 @@ Two health checks support the KPIs. They are not KPIs.
 
 ## 7. What is measured vs mocked
 
-- **Measured in testing** (test traffic, not customers; see the dashboard): payouts under the $100 line, average payout, share resolved without a person, thumbs up, Testing Center pass rate.
+- **Measured in testing** (test traffic, not customers; see the dashboard, snapshot 2026-10-23 00:50 UTC): 65 of 65 payouts under $100 (57 refunds, 8 store credits), average $12.84, max $92.20; 87% resolved without a person (390 of 447 conversations); thumbs up 16 of 28; Testing Center v13 37 of 39; live run on v13 156 PASS of 170 scenarios. The Refund path has no $100 review line yet (G-135).
 - **Public benchmark:** problem rate, cost per human case, margin, orders per customer, spend lost after a bad order.
 - **Mock `[$]`:** order volume, the 50% that contact support, 80%/72% reorder, 40% thumbs up, $15 average human payout, 0% resolved without a person today.
