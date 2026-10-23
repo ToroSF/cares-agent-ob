@@ -6944,6 +6944,1587 @@
           ]
         }
       }
+    },
+    {
+      "tier": "L",
+      "configHash": "a8e8bb1881578c9e",
+      "agentVersion": "v13 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p0.json",
+      "timestamp": "2026-10-23T00:44:45Z",
+      "commit": "b082c40",
+      "runner": "scripts/testing/run_batch.py --runs 1 --workers 2 --pace 2, via /tmp/v13-run.sh (probe every 5 min after a block); scenarios lost to the G-090 block or a local CLI error re-run with 1 worker",
+      "why": "Final version: P0 on CARES v13",
+      "personas": {
+        "v13-p0": {
+          "name": "p0 on v13",
+          "mode": "live",
+          "totalScenarios": 84,
+          "passed": 81,
+          "failed": 1,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "status": "PASS 81/84",
+          "results": [
+            {
+              "scenario": "B-AD-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-16",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-CT-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-CT-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-FL-01",
+              "repeats": 1,
+              "outcomes": [
+                "N/A"
+              ],
+              "result": "N/A",
+              "notes": "N/A since 2026-10-20: main was deployed before the baseline ran"
+            },
+            {
+              "scenario": "B-FL-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-FL-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-09",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-02",
+              "repeats": 1,
+              "outcomes": [
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "path missing urgent_escalation (got ['refund', 'risk_detection', 'refund', 'refund', 'Prompt_Injection'])"
+            },
+            {
+              "scenario": "B-PO-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-08",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-14",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-12a",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-12b",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-18",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-19",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-20",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-22",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-23",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-24",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-25",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-27",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-03",
+              "repeats": 1,
+              "outcomes": [
+                "UNEXPECTED_PASS"
+              ],
+              "result": "UNEXPECTED_PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-12",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-14",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-20",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-21",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-22",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-23",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-24",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-25",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-26",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-27",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-01",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-02",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SM-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            }
+          ]
+        }
+      },
+      "summary": {
+        "scenarios": 84,
+        "PASS": 81,
+        "N/A": 1,
+        "FAIL": 1,
+        "UNEXPECTED_PASS": 1,
+        "runs": 84,
+        "runsLostToPlatform": 0
+      }
+    },
+    {
+      "tier": "L",
+      "configHash": "a8e8bb1881578c9e",
+      "agentVersion": "v13 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p1.json",
+      "timestamp": "2026-10-23T00:44:45Z",
+      "commit": "b082c40",
+      "runner": "scripts/testing/run_batch.py --runs 1 --workers 2 --pace 2, via /tmp/v13-run.sh (probe every 5 min after a block); scenarios lost to the G-090 block or a local CLI error re-run with 1 worker",
+      "why": "Final version: P1 on CARES v13. Not run, kept at their v12 result: B-ES-05, B-ES-06, B-ES-08, B-ES-09, B-ES-10, B-PO-12, B-PO-13 (the ESC pool of clean escalation contacts was empty)",
+      "personas": {
+        "v13-p1": {
+          "name": "p1 on v13",
+          "mode": "live",
+          "totalScenarios": 46,
+          "passed": 39,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 4,
+          "blocked": 0,
+          "status": "PASS 39/46",
+          "results": [
+            {
+              "scenario": "B-AD-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-08",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-09",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-10",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-11",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-12",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-13",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-14",
+              "repeats": 1,
+              "outcomes": [
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "notes": ""
+            },
+            {
+              "scenario": "B-AD-15",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-CT-03",
+              "repeats": 1,
+              "outcomes": [
+                "UNEXPECTED_PASS"
+              ],
+              "result": "UNEXPECTED_PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-CT-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-CT-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-CT-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-CT-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-CT-08",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ES-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-09",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-10",
+              "repeats": 1,
+              "outcomes": [
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-11",
+              "repeats": 1,
+              "outcomes": [
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-15",
+              "repeats": 1,
+              "outcomes": [
+                "EXPECTED_FAIL"
+              ],
+              "result": "EXPECTED_FAIL",
+              "notes": ""
+            },
+            {
+              "scenario": "B-PO-16",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-08",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-09",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-10",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-11",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-13",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-14",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-15",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-16",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-17",
+              "repeats": 1,
+              "outcomes": [
+                "N/A"
+              ],
+              "result": "N/A",
+              "notes": "BLOCKED live: every real customer has a tier and all 12 policy rows exist, so none is ineligible"
+            },
+            {
+              "scenario": "B-RT-04",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-08",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-09",
+              "repeats": 1,
+              "outcomes": [
+                "UNEXPECTED_PASS"
+              ],
+              "result": "UNEXPECTED_PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-10",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RT-11",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-08",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-09",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-10",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-11",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-12",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            }
+          ]
+        }
+      },
+      "summary": {
+        "scenarios": 46,
+        "PASS": 39,
+        "EXPECTED_FAIL": 4,
+        "UNEXPECTED_PASS": 2,
+        "N/A": 1,
+        "runs": 46,
+        "runsLostToPlatform": 0
+      }
+    },
+    {
+      "tier": "L",
+      "configHash": "a8e8bb1881578c9e",
+      "agentVersion": "v13 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p1-rest.json",
+      "timestamp": "2026-10-23T00:44:45Z",
+      "commit": "b082c40",
+      "runner": "scripts/testing/run_batch.py --runs 1 --workers 2 --pace 2, via /tmp/v13-run.sh (probe every 5 min after a block); scenarios lost to the G-090 block or a local CLI error re-run with 1 worker",
+      "why": "Final version: P1-REST on CARES v13. Not run, kept at their v12 result: B-CX-03, B-CX-04, B-CX-05 (the ESC pool of clean escalation contacts was empty)",
+      "personas": {
+        "v13-p1-rest": {
+          "name": "p1-rest on v13",
+          "mode": "live",
+          "totalScenarios": 23,
+          "passed": 20,
+          "failed": 1,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "status": "PASS 20/23",
+          "results": [
+            {
+              "scenario": "B-CX-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-06",
+              "repeats": 1,
+              "outcomes": [
+                "UNEXPECTED_PASS"
+              ],
+              "result": "UNEXPECTED_PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-09",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-10",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-11",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-12",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-13",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-ER-14",
+              "repeats": 1,
+              "outcomes": [
+                "FAIL"
+              ],
+              "result": "FAIL",
+              "notes": "From the 22:09 v13 run (same code): the full-run tries hit 'preview session not found'. G-132 open"
+            },
+            {
+              "scenario": "B-ER-15",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-FL-10",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-05",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-10",
+              "repeats": 1,
+              "outcomes": [
+                "UNEXPECTED_PASS"
+              ],
+              "result": "UNEXPECTED_PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-IN-14",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-06",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-07",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-08",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-11",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-15",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-16",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RD-17",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-13",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-SD-15",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            }
+          ]
+        }
+      },
+      "summary": {
+        "scenarios": 23,
+        "PASS": 20,
+        "UNEXPECTED_PASS": 2,
+        "FAIL": 1,
+        "runs": 23,
+        "runsLostToPlatform": 0
+      }
+    },
+    {
+      "tier": "L",
+      "configHash": "a8e8bb1881578c9e",
+      "agentVersion": "v13 (active)",
+      "scenarioFile": ".claude/skills/cares-testing/scenarios/p1-realdata.json",
+      "timestamp": "2026-10-23T00:44:45Z",
+      "commit": "b082c40",
+      "runner": "scripts/testing/run_batch.py --runs 1 --workers 2 --pace 2, via /tmp/v13-run.sh (probe every 5 min after a block); scenarios lost to the G-090 block or a local CLI error re-run with 1 worker",
+      "why": "Final version: P1-REALDATA on CARES v13",
+      "personas": {
+        "v13-p1-realdata": {
+          "name": "p1-realdata on v13",
+          "mode": "live",
+          "totalScenarios": 8,
+          "passed": 8,
+          "failed": 0,
+          "flaky": 0,
+          "expectedFail": 0,
+          "blocked": 0,
+          "status": "PASS 8/8",
+          "results": [
+            {
+              "scenario": "B-OS-03",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-08",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-10",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-11",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-12",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-OS-13",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-21",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            },
+            {
+              "scenario": "B-RF-26",
+              "repeats": 1,
+              "outcomes": [
+                "PASS"
+              ],
+              "result": "PASS",
+              "notes": ""
+            }
+          ]
+        }
+      },
+      "summary": {
+        "scenarios": 8,
+        "PASS": 8,
+        "runs": 8,
+        "runsLostToPlatform": 0
+      }
     }
   ]
 }
