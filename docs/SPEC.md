@@ -20,12 +20,14 @@ Status: `PROPOSAL` (draft for the team to edit). Numbers marked `[$]` need Pront
 
 **KPIs.**
 
-| KPI                                                                                   | Type       | How to measure                                           |
-| ------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------- |
-| Customer retention after a complaint (for example orders in the 30 days after a case) | Headline   | Compare customers served by CARES with a baseline `[$]`  |
-| Compensation cost per case vs policy                                                  | Guardrail  | Total credit and refunds / cases, against the policy cap |
-| Share of cases solved without a person                                                | Efficiency | Cases closed by CARES / all CARES cases                  |
-| Customer rating after resolution                                                      | Quality    | Experience Rating score                                  |
+| KPI                                                                                   | Type       | How to measure                                           | Pilot target (D-104)                          |
+| ------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------- | --------------------------------------------- |
+| Customer retention after a complaint (for example orders in the 30 days after a case) | Headline   | Compare customers served by CARES with a baseline `[$]`  | 30-day reorder ≥ 74% (+2 pts vs control)      |
+| Compensation cost per case vs policy                                                  | Guardrail  | Total credit and refunds / cases, against the policy cap | 100% inside policy, average ≤ a person's ($15) |
+| Share of cases solved without a person                                                | Efficiency | Cases closed by CARES / all CARES cases                  | ≥ 70% (pause under 50%)                       |
+| Customer rating after resolution                                                      | Quality    | Experience Rating score                                  | ≥ 60% thumbs up (baseline 40% `[$]`)          |
+
+Baselines, pause lines, pilot design and the go/no-go rule: [PILOT_PLAN.md](PILOT_PLAN.md).
 
 **Value -> system -> outcome -> dollar.**
 
