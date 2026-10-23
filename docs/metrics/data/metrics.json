@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-22T23:33:34.236Z",
-  "commit": "baea55a",
-  "branch": "docs/v13-live",
+  "generatedAt": "2026-10-23T00:50:49.681Z",
+  "commit": "b082c40",
+  "branch": "docs/v13-full-run",
   "docsRef": "working tree",
   "agent": {
     "lines": 1670,
@@ -468,17 +468,17 @@
       "adversarial": 5
     },
     "runLog": {
-      "total": 71,
+      "total": 72,
       "byResult": {
         "Pass": 24,
         "Fail": 3,
         "Open": 23,
-        "Other": 21
+        "Other": 22
       }
     }
   },
   "org": {
-    "readAt": "2026-10-22T23:33:29.035Z",
+    "readAt": "2026-10-23T00:50:44.569Z",
     "versions": [
       {
         "version": 1,
@@ -547,35 +547,36 @@
       }
     ],
     "cases": {
-      "total": 351,
+      "total": 372,
       "byDay": {
         "2026-10-20": 64,
         "2026-10-21": 185,
-        "2026-10-22": 102
+        "2026-10-22": 120,
+        "2026-10-23": 3
       },
       "byType": {
-        "Customer Order Issue": 284,
-        "Delivery & Driver Issue": 67
+        "Customer Order Issue": 300,
+        "Delivery & Driver Issue": 72
       },
       "byReason": {
         "Missing items": 64,
-        "(none)": 197,
-        "Fraud or policy review": 90
+        "(none)": 211,
+        "Fraud or policy review": 97
       },
       "byPriority": {
-        "Medium": 263,
-        "High": 88
+        "Medium": 277,
+        "High": 95
       },
       "byStatus": {
-        "New": 263,
-        "Escalated": 88
+        "New": 277,
+        "Escalated": 95
       },
       "byOrigin": {
         "Chat": 64,
-        "Agentforce": 287
+        "Agentforce": 308
       },
       "byKind": {
-        "Escalation": 351
+        "Escalation": 372
       }
     },
     "sessions": {
@@ -586,53 +587,52 @@
         "2026-10-22": 25
       },
       "byStatus": {
-        "Ended": 30,
-        "Active": 2
+        "Ended": 32
       }
     },
     "csat": {
-      "total": 25,
+      "total": 28,
       "byScore": {
-        "2": 11,
-        "5": 14
+        "2": 12,
+        "5": 16
       }
     },
     "resolutions": {
-      "total": 57,
+      "total": 65,
       "byStatus": {
-        "Issued": 57
+        "Issued": 65
       },
       "byType": {
         "Refund": {
-          "count": 50,
-          "amount": 658.57
+          "count": 57,
+          "amount": 733.17
         },
         "Store_Credit": {
-          "count": 7,
-          "amount": 88.5
+          "count": 8,
+          "amount": 101.6
         }
       },
       "amount": {
-        "total": 747.07,
-        "mean": 13.11,
+        "total": 834.77,
+        "mean": 12.84,
         "max": 92.2
       },
       "limitUsd": 100,
-      "withinLimit": 57
+      "withinLimit": 65
     },
     "alerts": {
-      "total": 207,
-      "sent": 207,
+      "total": 228,
+      "sent": 228,
       "failed": 0,
-      "slackSent": 118
+      "slackSent": 139
     },
     "conversations": {
       "sessions": 447,
-      "engaged": 379,
+      "engaged": 381,
       "escalated": 57,
       "transferred": 11,
       "customerMessages": {
-        "mean": 1.83,
+        "mean": 1.84,
         "median": 2,
         "max": 10
       },
@@ -649,23 +649,23 @@
           }
         },
         "Other (tests, API)": {
-          "sessions": 71,
-          "engaged": 69,
+          "sessions": 73,
+          "engaged": 71,
           "escalated": 8,
           "transferred": 8,
           "customerMessages": {
-            "mean": 2.61,
+            "mean": 2.6,
             "median": 2,
             "max": 7
           }
         },
         "Live chat (website)": {
-          "sessions": 47,
+          "sessions": 45,
           "engaged": 39,
           "escalated": 4,
           "transferred": 3,
           "customerMessages": {
-            "mean": 1.87,
+            "mean": 1.89,
             "median": 2,
             "max": 3
           }
@@ -784,11 +784,11 @@
         },
         "v12": {
           "sessions": 67,
-          "engaged": 60,
+          "engaged": 62,
           "escalated": 7,
           "transferred": 9,
           "customerMessages": {
-            "mean": 2.36,
+            "mean": 2.39,
             "median": 2,
             "max": 6
           }
@@ -806,10 +806,10 @@
         }
       },
       "byEnd": {
-        "(still open)": 146,
+        "(still open)": 144,
         "EndedByEndUser": 286,
         "Action": 2,
-        "SessionTimedOut": 2,
+        "SessionTimedOut": 4,
         "Transferred": 11
       },
       "byDay": {
@@ -819,9 +819,9 @@
       },
       "turnsHistogram": {
         "0": 13,
-        "1": 121,
+        "1": 120,
         "2": 282,
-        "3": 15,
+        "3": 16,
         "4": 4,
         "5": 12
       }
@@ -5725,7 +5725,7 @@
     "checkedScenarios": 169,
     "caseNumberInReply": {
       "scenarios": 10,
-      "passed": 9
+      "passed": 10
     },
     "runs": [
       {
@@ -5888,17 +5888,65 @@
         "byOutcome": {
           "PASS": 8
         }
+      },
+      {
+        "at": "2026-10-23T00:44:45Z",
+        "file": "p0.json",
+        "agentVersion": "v13 (active)",
+        "scenarios": 84,
+        "sessions": 84,
+        "byOutcome": {
+          "PASS": 81,
+          "N/A": 1,
+          "FAIL": 1,
+          "UNEXPECTED_PASS": 1
+        }
+      },
+      {
+        "at": "2026-10-23T00:44:45Z",
+        "file": "p1.json",
+        "agentVersion": "v13 (active)",
+        "scenarios": 46,
+        "sessions": 46,
+        "byOutcome": {
+          "PASS": 39,
+          "EXPECTED_FAIL": 4,
+          "UNEXPECTED_PASS": 2,
+          "N/A": 1
+        }
+      },
+      {
+        "at": "2026-10-23T00:44:45Z",
+        "file": "p1-rest.json",
+        "agentVersion": "v13 (active)",
+        "scenarios": 23,
+        "sessions": 23,
+        "byOutcome": {
+          "PASS": 20,
+          "UNEXPECTED_PASS": 2,
+          "FAIL": 1
+        }
+      },
+      {
+        "at": "2026-10-23T00:44:45Z",
+        "file": "p1-realdata.json",
+        "agentVersion": "v13 (active)",
+        "scenarios": 8,
+        "sessions": 8,
+        "byOutcome": {
+          "PASS": 8
+        }
       }
     ],
-    "totalSessions": 664,
+    "totalSessions": 825,
     "latest": {
       "total": 170,
       "byOutcome": {
-        "PASS": 150,
-        "EXPECTED_FAIL": 6,
-        "FAIL": 8,
+        "PASS": 156,
+        "UNEXPECTED_PASS": 6,
         "N/A": 2,
-        "UNEXPECTED_PASS": 4
+        "FAIL": 2,
+        "EXPECTED_FAIL": 4
       }
     },
     "byPersona": {
@@ -5907,16 +5955,13 @@
       },
       "P1 Router and first contact": {
         "PASS": 9,
-        "EXPECTED_FAIL": 1,
-        "UNEXPECTED_PASS": 1
+        "UNEXPECTED_PASS": 2
       },
       "P2 Risk Detection": {
-        "PASS": 10,
-        "FAIL": 2
+        "PASS": 12
       },
       "P3 Refund, direct path": {
-        "PASS": 25,
-        "FAIL": 1,
+        "PASS": 26,
         "N/A": 1
       },
       "P4 Stolen & Delayed Orders": {
@@ -5927,9 +5972,9 @@
         "UNEXPECTED_PASS": 1
       },
       "P6 Experience Rating": {
-        "FAIL": 3,
-        "PASS": 10,
-        "EXPECTED_FAIL": 1
+        "PASS": 12,
+        "UNEXPECTED_PASS": 1,
+        "FAIL": 1
       },
       "P7 Escalate to Human": {
         "PASS": 9
@@ -5947,8 +5992,8 @@
         "PASS": 3
       },
       "P12 Pronto policy": {
-        "FAIL": 1,
         "PASS": 11,
+        "FAIL": 1,
         "EXPECTED_FAIL": 3,
         "UNEXPECTED_PASS": 1
       },
@@ -5959,8 +6004,7 @@
         "PASS": 4
       },
       "other": {
-        "PASS": 10,
-        "FAIL": 1
+        "PASS": 11
       }
     },
     "outcomes": [
