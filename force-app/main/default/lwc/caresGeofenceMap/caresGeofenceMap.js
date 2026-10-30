@@ -206,8 +206,9 @@ export default class CaresGeofenceMap extends LightningElement {
     return word || "GPS unknown";
   }
 
+  // The distance the decision uses: the driver to the center, against the radius (D-097)
   get pillText() {
-    return `${this.resultLabel} · ${formatDistance(this.view.driverToDropoffMeters)}`;
+    return `${this.resultLabel} · ${formatDistance(this.view.driverToCenterMeters)}`;
   }
 
   get shape() {
@@ -335,6 +336,12 @@ export default class CaresGeofenceMap extends LightningElement {
   }
 
   get distanceRuleText() {
+    if (
+      this.view.driverDistanceMeters === null ||
+      this.view.driverDistanceMeters === undefined
+    ) {
+      return "No driver location on this row (a timing demo): GPS is unknown, so a person decides the driver pay.";
+    }
     return `No locations on this row: the distance rule decides (${formatDistance(
       this.view.driverDistanceMeters
     )} from the drop-off → ${this.resultLabel}).`;

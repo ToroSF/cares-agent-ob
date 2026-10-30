@@ -89,7 +89,7 @@ describe("c-cares-geofence-map", () => {
     );
     expect(labels).toEqual(["Restaurant", "Drop-off"]);
     expect(root.querySelector(".pill-text").textContent).toBe(
-      "GPS mismatch · 1.7 km"
+      "GPS mismatch · 2.2 km"
     );
     expect(root.querySelector("desc").textContent).toContain("decorative");
   });
@@ -111,7 +111,7 @@ describe("c-cares-geofence-map", () => {
       "match"
     );
     expect(el.shadowRoot.querySelector(".pill-text").textContent).toBe(
-      "GPS match · 10 m"
+      "GPS match · 502 m"
     );
   });
 
@@ -128,6 +128,21 @@ describe("c-cares-geofence-map", () => {
     expect(el.shadowRoot.querySelector("svg")).toBeNull();
     expect(el.shadowRoot.querySelector(".message").textContent).toContain(
       "450 m from the drop-off → GPS mismatch"
+    );
+  });
+
+  it("says a person decides when the row has no driver location at all", async () => {
+    const el = mount();
+    getGeofence.emit({
+      found: true,
+      orderId: "PR-240101-TEST003",
+      hasCoordinates: false,
+      gpsResult: "UNKNOWN",
+      driverDistanceMeters: null
+    });
+    await flush();
+    expect(el.shadowRoot.querySelector(".message").textContent).toContain(
+      "GPS is unknown, so a person decides the driver pay"
     );
   });
 

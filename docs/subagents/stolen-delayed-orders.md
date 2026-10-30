@@ -204,7 +204,7 @@ Open a row in the **CARES Delivery Telemetry** tab of the CARES Admin app. The r
 - the trip geofence: a dashed orange circle with a soft fill;
 - Restaurant and Drop-off: orange dots with a black ring;
 - the route from the drop-off to where the driver marked the order delivered: black inside the circle, then pink (mismatch) or green (match) outside;
-- a pill with the result and the driver's distance from the drop-off, for example "GPS mismatch · 2.2 km".
+- a pill with the result and the driver's distance from the center, the number the decision compares with the radius, for example "GPS mismatch · 2.2 km".
 
 Below the card: the trip, the radius (half the trip + 50 m), the driver's distance to the center and to the drop-off, the demo scenario and a G-111 note. **Show on real map** switches to `lightning-map` with the same circle on Google Maps (G-136).
 
