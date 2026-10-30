@@ -36,7 +36,7 @@ The customers are test fixtures from `scripts/testing/fixtures.json` (mock data,
 | Screen | Who | Shows |
 |---|---|---|
 | Website chat (incognito) | Presenter as the customer | What the customer sees |
-| Delivery map page | Opened from the chat link | The geofence card, then Google Maps |
+| Delivery map page | Opened from the chat link | The result band and the real map (Google Maps) |
 | CARES Admin / Contact record | Presenter | What CARES saved, and the customer's history |
 | Slack `#cares-escalation`, bell, queue | Shared | What the team gets |
 
@@ -50,16 +50,14 @@ The customers are test fixtures from `scripts/testing/fixtures.json` (mock data,
 2. CARES asks for the email (the site chat starts as a guest). **Customer:** `jeffrey.valentine@example.com`, then confirms the order (Caesar Salad and Iced Tea).
 3. **CARES** (one reply): apologises; offers the full **18.10 USD** as a refund, or app wallet credit worth a little more; and adds:
    > View your delivery map (valid for 30 minutes): https://…/delivery-map?t=…
-4. **Open the link.** The Pronto card shows "Order PR-240824-HE7TUW7 · $18.10":
-   - the dashed orange circle (the trip geofence);
+4. **Open the link.** The page shows "Order PR-240824-HE7TUW7 · $18.10" and a pink band: **"GPS mismatch · the driver marked the order delivered 2.2 km from the centre of the trip"**. Below it is the real map (Google Maps), with:
+   - the orange circle (the trip geofence);
    - Restaurant and Drop-off;
-   - the route turning pink as it leaves the circle;
-   - the pill **"GPS mismatch · 2.2 km"**.
-5. Click **Show on real map**: the same circle and points on Google Maps.
-6. **Optional contrast** in CARES Admin → Delivery Telemetry → `INSIDE_NEAR_RESTAURANT` (Peyton Batrick). The driver is green, right next to the restaurant, and still "inside".
+   - the driver's marker, outside the circle.
+5. **Optional contrast:** CARES Admin → Delivery Telemetry → `INSIDE_NEAR_RESTAURANT` (Peyton Batrick). There the band is green, "GPS match", and the driver's marker sits right next to the restaurant, inside the circle.
 
 **Say:**
-- "The geofence is a circle around the middle of the trip, half the trip plus 50 metres. The driver marked this order delivered 2.2 km from the centre, so CARES pays the customer in full and holds the driver's pay. The model never sees these numbers; the policy in Apex decides, and the card is drawn from the same calculation."
+- "The geofence is a circle around the middle of the trip, half the trip plus 50 metres. The driver marked this order delivered 2.2 km from the centre, so CARES pays the customer in full and holds the driver's pay. The model never sees these numbers; the policy in Apex decides, and the band and the circle on the map come from the same calculation."
 - On the contrast: "Our honest limit: the restaurant end of the trip is inside too, so a driver who never left can pass (G-111)."
 - "The link is signed and expires in 30 minutes. Change one character and the page shows nothing."
 
@@ -133,7 +131,8 @@ Don't choose an option if you want to reuse Jeffrey; see *After the demo*.
 | Any | The chat escalates at once with a case number | That customer was already paid (`DUPLICATE_CLAIM`) | Use the backup customer; "a repeat claim on a paid order always goes to a person" |
 | 1 | The link shows as `URL_Redacted` | Site domain not in Trusted URLs (G-139) | Open the page from CARES Admin → Delivery Telemetry instead |
 | 1 | The page says the link expired | Over 30 minutes, or a changed link | Ask again in the chat; "that's the signature at work" |
-| 1 | No link in the reply | The agent version is older than v17 | Show the card in CARES Admin |
+| 1 | No link in the reply | The agent version is older than v17 | Show the map in CARES Admin |
+| 1 | The map area is blank | Google Maps blocked or slow on the site | Show the same record in CARES Admin; the band still gives the result |
 | 2 | No empathetic sentence after the 👎 | The model read the chat as NEUTRAL | Plan B with Boyce Antrag |
 | 2 | "That's all" repeats the offer | G-132 | Say "I don't want either option, please close this issue" first |
 | 3 | The amount didn't drop | The Cases are not linked to Geoff, or are older than 30 days | Check the Contact field on the Cases |
@@ -155,7 +154,7 @@ Don't choose an option if you want to reuse Jeffrey; see *After the demo*.
 | "Is the GPS data real?" | Mock telemetry in Salesforce (D-096, G-110): it shows the rule works, not that a real driver was at fault |
 | "Couldn't a driver cheat the geofence?" | Yes, near the restaurant (G-111). We show it on purpose; a second check on the restaurant end is the fix |
 | "Why show the customer the map at all?" | Only for approved claims, as evidence in their favour; it never shows for a claim still under review (R-18) |
-| "Does the map send data to Google?" | The real map does (G-136); the card doesn't. Fine with mock data, a privacy review before real drivers |
+| "Does the map send data to Google?" | Yes (G-136, D-108). Fine with mock data; a privacy review before real drivers |
 | "Can a customer get a bigger refund by saying they're upset?" | No. The rating is CARES's own reading, the 5% is policy, and NOT_CLEAN customers never get it |
 | "Who decides the amounts?" | The policy table in code (D-004). In testing, 65 of 65 payouts stayed inside policy |
 | "What if a loyal customer just had a bad month?" | Three complaints in 30 days gets a person, not a refusal (D-062) |
