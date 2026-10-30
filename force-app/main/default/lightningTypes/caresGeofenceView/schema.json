@@ -1,0 +1,5 @@
+{
+  "title": "CARES Geofence View",
+  "description": "Stolen & Delayed: the delivery map of an approved claim, shown to the customer in the chat (D-106).",
+  "lightning:type": "@apexClassType/c__CARES_StolenDelayedGeofenceCard$GeofenceView"
+}

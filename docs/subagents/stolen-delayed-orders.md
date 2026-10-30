@@ -102,7 +102,8 @@ Refund owner: when `stolen_delayed_handoff_status == "READY_FOR_REFUND"`, refund
 | `objects/CARES_Delivery_Telemetry__c/**`, `objects/CARES_Redispatch__c/**`, `objects/CARES_Trust_Event__c/**` | Mock telemetry per order; re-dispatch requests (`RD-…`); trust events (D-096) |
 | `scripts/apex/seed-delivery-telemetry.apex` | Seeds the mock telemetry demo rows (`DRY_RUN` first) |
 | `classes/CARES_GeofenceMapController.cls`, `CARES_GeofenceMapControllerTest.cls` | Read-only data for the geofence view: the policy's geofence and GPS result for one telemetry row (D-105) |
-| `lwc/caresGeofenceMap/**`, `flexipages/CARES_Delivery_Telemetry_Record_Page.flexipage-meta.xml` | The geofence view and the telemetry record page that shows it in CARES Admin (D-105) |
+| `lwc/caresGeofenceCard/**`, `lwc/caresGeofenceMap/**`, `flexipages/CARES_Delivery_Telemetry_Record_Page.flexipage-meta.xml` | The geofence card (shared), the CARES Admin view that loads it, and the telemetry record page (D-105) |
+| `classes/CARES_StolenDelayedGeofenceCard.cls`, `CARES_StolenDelayedGeofenceCardTest.cls`, `lightningTypes/caresGeofenceView/**`, `lwc/caresGeofenceRenderer/**` | Agent action `delivery_map`, its Custom Lightning Type and the chat renderer (D-106) |
 | `classes/CARES_StolenDelayedPolicyTest.cls`, `CARES_StolenDelayedActionsTest.cls`, `CARES_StolenDelayedPlatformMock.cls` | Unit tests and callout mock                                                              |
 | `objects/CARES_Stolen_Delayed_Policy__mdt/**`, `customMetadata/CARES_Stolen_Delayed_Policy.Default.md-meta.xml`          | Thresholds and keyword list                                                              |
 
@@ -217,6 +218,20 @@ How to read it:
 The component (`lwc/caresGeofenceMap`) can also be dropped on an App or Home page in the Lightning App Builder. There it asks for an order number.
 
 Access: `CARES_Delivery_Mock_Admin` (class access to the controller). Read-only: it writes nothing and moves no money.
+
+### The delivery map in the customer's chat (D-106)
+
+For an **approved** claim (`FULL_REFUND` or `LOSS_ABSORPTION`) whose telemetry has the three locations, the agent shows the customer the same card in the chat, once, before the refund or credit options.
+
+- **Customer mode:** circle, Restaurant, Drop-off, the driver, the route and the pill. No measurements, demo scenario, G-111 note or real-map button.
+- **How it gets there:**
+  1. The action `delivery_map` (`apex://CARES_StolenDelayedGeofenceCard`) returns the flat `GeofenceView`.
+  2. The Custom Lightning Type `c__caresGeofenceView` (`lightningTypes/caresGeofenceView`) has renderers for `enhancedWebChat` and `lightningDesktopGenAi`.
+  3. Both point to `c/caresGeofenceRenderer`, which draws `caresGeofenceCard`.
+- **Gate in Apex:** the action re-runs the policy on the order. That also proves it is this customer's order. Anything but an approved claim with locations gets `success = false` and no card.
+- **Gate in the agent:** `show_delivery_map` is available only while the approved offer waits for the customer's choice and `stolen_delayed_map_shown` is False. A new `check_order` resets it.
+- **Words:** the agent still never describes GPS, the driver or how it checked (R-18).
+- **Testing:** the CLT renderer does not show in the Builder preview while the agent is a Draft. Test it on the active version in the site chat.
 
 **Write** (in `CARES_StolenDelayedHandoffAction` and `CARES_StolenDelayedTrustScoreJob`, instead of the platform calls):
 - Re-dispatch: a `CARES_Redispatch__c` row (Status `Requested`); its Name `RD-00001` is the reference the agent gives. One per order: asking again returns the same reference. Sending the order again happens outside Salesforce.

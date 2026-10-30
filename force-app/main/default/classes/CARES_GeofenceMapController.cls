@@ -68,7 +68,9 @@ public with sharing class CARES_GeofenceMapController {
       WITH USER_MODE
       LIMIT 1
     ];
-    return rows.isEmpty() ? new View() : build(rows[0]);
+    return rows.isEmpty()
+      ? new View()
+      : build(rows[0].Order_ID__c, rows[0].Scenario__c);
   }
 
   @AuraEnabled(cacheable=true)
@@ -84,22 +86,25 @@ public with sharing class CARES_GeofenceMapController {
       WITH USER_MODE
       LIMIT 1
     ];
-    return rows.isEmpty() ? new View() : build(rows[0]);
+    return rows.isEmpty()
+      ? new View()
+      : build(rows[0].Order_ID__c, rows[0].Scenario__c);
   }
 
-  private static View build(CARES_Delivery_Telemetry__c row) {
+  // Also used by the chat card (CARES_StolenDelayedGeofenceCard, D-106), so both show the same numbers
+  public static View build(String orderId, String scenario) {
     View v = new View();
     CARES_StolenDelayedTelemetry t = CARES_StolenDelayedMockTelemetry.forOrder(
-      row.Order_ID__c
+      orderId
     );
     if (t == null) {
       return v;
     }
     CARES_StolenDelayedPolicy.Settings s = CARES_StolenDelayedPolicy.loadSettings();
     v.found = true;
-    v.orderId = row.Order_ID__c;
-    v.scenario = row.Scenario__c;
-    v.orderTotal = orderTotal(row.Order_ID__c);
+    v.orderId = orderId;
+    v.scenario = scenario;
+    v.orderTotal = orderTotal(orderId);
     // Order__dlm has no currency column; same rule as CARES_StolenDelayedOrderSource
     v.currencyIsoCode = UserInfo.getDefaultCurrency();
     v.gpsResult = CARES_StolenDelayedPolicy.gpsResult(t, s);
