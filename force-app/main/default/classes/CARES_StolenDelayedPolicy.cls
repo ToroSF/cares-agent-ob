@@ -474,8 +474,8 @@ public with sharing class CARES_StolenDelayedPolicy {
     return TRUST_MEDIUM;
   }
 
-  @TestVisible
-  private static String gpsResult(CARES_StolenDelayedTelemetry t, Settings s) {
+  // Public for the geofence view, so it shows the same result the policy decides on
+  public static String gpsResult(CARES_StolenDelayedTelemetry t, Settings s) {
     // With coordinates, the trip geofence decides: inside = match, outside = mismatch (D-097)
     if (t.hasGeofenceCoordinates()) {
       return insideTripGeofence(t, s) ? GPS_MATCH : GPS_MISMATCH;
@@ -502,10 +502,40 @@ public with sharing class CARES_StolenDelayedPolicy {
    */
   @TestVisible
   private static Boolean insideTripGeofence(CARES_StolenDelayedTelemetry t, Settings s) {
+    return geofence(t, s).inside;
+  }
+
+  // The trip geofence of one order, with the numbers behind it. The geofence view draws this (D-105)
+  public class Geofence {
+    public Decimal centerLatitude;
+    public Decimal centerLongitude;
+    public Decimal radiusMeters;
+    public Decimal tripMeters;
+    public Decimal toleranceMeters;
+    public Decimal driverToCenterMeters;
+    public Decimal driverToDropoffMeters;
+    public Boolean inside;
+  }
+
+  // Null when one of the three locations is missing (then the distance rule decides)
+  public static Geofence geofence(CARES_StolenDelayedTelemetry t, Settings s) {
+    if (t == null || !t.hasGeofenceCoordinates()) {
+      return null;
+    }
     Location restaurant = Location.newInstance(t.restaurantLatitude, t.restaurantLongitude);
     Location dropoff = Location.newInstance(t.dropoffLatitude, t.dropoffLongitude);
     Location driver = Location.newInstance(t.driverLatitude, t.driverLongitude);
-    return meters(midpoint(restaurant, dropoff), driver) <= geofenceRadiusMeters(restaurant, dropoff, s);
+    Location center = midpoint(restaurant, dropoff);
+    Geofence g = new Geofence();
+    g.centerLatitude = center.getLatitude();
+    g.centerLongitude = center.getLongitude();
+    g.radiusMeters = geofenceRadiusMeters(restaurant, dropoff, s);
+    g.tripMeters = meters(restaurant, dropoff);
+    g.toleranceMeters = s.gpsMatchMaxMeters;
+    g.driverToCenterMeters = meters(center, driver);
+    g.driverToDropoffMeters = meters(dropoff, driver);
+    g.inside = g.driverToCenterMeters <= g.radiusMeters;
+    return g;
   }
 
   @TestVisible

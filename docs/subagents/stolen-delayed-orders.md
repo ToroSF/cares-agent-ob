@@ -101,6 +101,8 @@ Refund owner: when `stolen_delayed_handoff_status == "READY_FOR_REFUND"`, refund
 | `classes/CARES_StolenDelayedMockTelemetry.cls`, `CARES_StolenDelayedMockTelemetryTest.cls` | Mock telemetry read, re-dispatch request and trust event records (D-096), and its tests |
 | `objects/CARES_Delivery_Telemetry__c/**`, `objects/CARES_Redispatch__c/**`, `objects/CARES_Trust_Event__c/**` | Mock telemetry per order; re-dispatch requests (`RD-…`); trust events (D-096) |
 | `scripts/apex/seed-delivery-telemetry.apex` | Seeds the mock telemetry demo rows (`DRY_RUN` first) |
+| `classes/CARES_GeofenceMapController.cls`, `CARES_GeofenceMapControllerTest.cls` | Read-only data for the geofence view: the policy's geofence and GPS result for one telemetry row (D-105) |
+| `lwc/caresGeofenceMap/**`, `flexipages/CARES_Delivery_Telemetry_Record_Page.flexipage-meta.xml` | The geofence view and the telemetry record page that shows it in CARES Admin (D-105) |
 | `classes/CARES_StolenDelayedPolicyTest.cls`, `CARES_StolenDelayedActionsTest.cls`, `CARES_StolenDelayedPlatformMock.cls` | Unit tests and callout mock                                                              |
 | `objects/CARES_Stolen_Delayed_Policy__mdt/**`, `customMetadata/CARES_Stolen_Delayed_Policy.Default.md-meta.xml`          | Thresholds and keyword list                                                              |
 
@@ -193,7 +195,28 @@ Why the 50 m tolerance (team decision, 2026-10-21): without it the restaurant an
 
 Known consequence (G-111): the whole trip is inside, including the restaurant end. A driver who marks the order delivered while still near the restaurant is a GPS match.
 
-Code: `CARES_StolenDelayedPolicy.gpsResult()` → `insideTripGeofence()`, `geofenceRadiusMeters()`, `midpoint()`. When any location is blank, the older distance rule runs instead (fallback).
+Code: `CARES_StolenDelayedPolicy.gpsResult()` → `insideTripGeofence()` → `geofence()`, which uses `geofenceRadiusMeters()` and `midpoint()`. When any location is blank, the older distance rule runs instead (fallback).
+
+### Seeing the geofence (D-105)
+
+Open a row in the **CARES Delivery Telemetry** tab of the CARES Admin app. The record page shows the **CARES Geofence Map** card on top, in Pronto's delivery-card style:
+
+- the trip geofence: a dashed orange circle with a soft fill;
+- Restaurant and Drop-off: orange dots with a black ring;
+- the route from the drop-off to where the driver marked the order delivered: black inside the circle, then pink (mismatch) or green (match) outside;
+- a pill with the result and the driver's distance from the drop-off, for example "GPS mismatch · 2.2 km".
+
+Below the card: the trip, the radius (half the trip + 50 m), the driver's distance to the center and to the drop-off, the demo scenario and a G-111 note. **Show on real map** switches to `lightning-map` with the same circle on Google Maps (G-136).
+
+How to read it:
+
+- The street grid is decorative. The points are to scale (a local projection around the center).
+- Every number comes from `CARES_GeofenceMapController`, which calls the policy's own `geofence()` and `gpsResult()`. The card can't disagree with the decision.
+- Without the three locations, the card says the distance rule decides, and shows the distance and its result.
+
+The component (`lwc/caresGeofenceMap`) can also be dropped on an App or Home page in the Lightning App Builder. There it asks for an order number.
+
+Access: `CARES_Delivery_Mock_Admin` (class access to the controller). Read-only: it writes nothing and moves no money.
 
 **Write** (in `CARES_StolenDelayedHandoffAction` and `CARES_StolenDelayedTrustScoreJob`, instead of the platform calls):
 - Re-dispatch: a `CARES_Redispatch__c` row (Status `Requested`); its Name `RD-00001` is the reference the agent gives. One per order: asking again returns the same reference. Sending the order again happens outside Salesforce.
