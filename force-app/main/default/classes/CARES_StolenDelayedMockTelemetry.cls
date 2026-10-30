@@ -14,35 +14,40 @@ public with sharing class CARES_StolenDelayedMockTelemetry {
    * can't be read), which leaves everything the platform would add unknown.
    */
   public static CARES_StolenDelayedTelemetry forOrder(String orderId) {
+    return forOrder(orderId, AccessLevel.USER_MODE);
+  }
+
+  private static final String TELEMETRY_QUERY =
+    'SELECT Driver_Distance_Meters__c, Driver_Wait_Seconds__c, Driver_Calls__c, Driver_Chats__c, ' +
+    'Driver_NonDelivery_Rate__c, Driver_Delivery_Count__c, Fraud_Pattern__c, Device_Duplication__c, ' +
+    'Address_Duplication__c, Redispatch_Eligible__c, Restaurant_Location__Latitude__s, ' +
+    'Restaurant_Location__Longitude__s, Dropoff_Location__Latitude__s, Dropoff_Location__Longitude__s, ' +
+    'Driver_Location__Latitude__s, Driver_Location__Longitude__s, Minutes_Since_Order__c ' +
+    'FROM CARES_Delivery_Telemetry__c WHERE Order_ID__c = :orderId LIMIT 1';
+
+  // Only for SYSTEM_MODE (the verified delivery map page, D-107)
+  private without sharing class SystemReader {
+    List<CARES_Delivery_Telemetry__c> read(Map<String, Object> binds) {
+      return Database.queryWithBinds(TELEMETRY_QUERY, binds, AccessLevel.SYSTEM_MODE);
+    }
+  }
+
+  /**
+   * The same read with an explicit access level. SYSTEM_MODE is only for the delivery map page, which a
+   * guest opens with a signed link and has no object access (CARES_DeliveryMapLink, D-107).
+   */
+  public static CARES_StolenDelayedTelemetry forOrder(String orderId, AccessLevel mode) {
     if (String.isBlank(orderId)) {
       return null;
     }
     List<CARES_Delivery_Telemetry__c> rows;
     try {
-      rows = [
-        SELECT
-          Driver_Distance_Meters__c,
-          Driver_Wait_Seconds__c,
-          Driver_Calls__c,
-          Driver_Chats__c,
-          Driver_NonDelivery_Rate__c,
-          Driver_Delivery_Count__c,
-          Fraud_Pattern__c,
-          Device_Duplication__c,
-          Address_Duplication__c,
-          Redispatch_Eligible__c,
-          Restaurant_Location__Latitude__s,
-          Restaurant_Location__Longitude__s,
-          Dropoff_Location__Latitude__s,
-          Dropoff_Location__Longitude__s,
-          Driver_Location__Latitude__s,
-          Driver_Location__Longitude__s,
-          Minutes_Since_Order__c
-        FROM CARES_Delivery_Telemetry__c
-        WHERE Order_ID__c = :orderId
-        WITH USER_MODE
-        LIMIT 1
-      ];
+      Map<String, Object> binds = new Map<String, Object>{ 'orderId' => orderId };
+      // System mode skips field and object checks but not record sharing, so it also needs a reader without
+      // sharing: the guest who opens a verified map link owns no telemetry row
+      rows = mode == AccessLevel.SYSTEM_MODE
+        ? new SystemReader().read(binds)
+        : Database.queryWithBinds(TELEMETRY_QUERY, binds, mode);
     } catch (QueryException e) {
       // Missing access looks like "no data", so say it in the log (G-084 lesson)
       System.debug(LoggingLevel.ERROR, 'CARES mock telemetry not readable: ' + e.getMessage());

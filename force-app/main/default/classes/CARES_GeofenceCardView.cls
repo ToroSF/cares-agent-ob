@@ -61,4 +61,34 @@ global class CARES_GeofenceCardView {
   @AuraEnabled
   @InvocableVariable
   global Decimal driverToDropoffMeters;
+
+  // The card for one order: the geofence view (CARES_GeofenceMapController.build) plus the order's total.
+  // Shared by the chat action and the delivery map page (D-106, D-107)
+  public static CARES_GeofenceCardView fromView(
+    CARES_GeofenceMapController.View v,
+    String orderId,
+    Decimal orderTotal,
+    String currencyIsoCode
+  ) {
+    CARES_GeofenceCardView g = new CARES_GeofenceCardView();
+    g.orderId = orderId;
+    g.orderTotal = orderTotal;
+    g.currencyIsoCode = currencyIsoCode;
+    g.gpsResult = v.gpsResult;
+    g.hasCoordinates = true;
+    g.restaurantLatitude = v.restaurant.latitude;
+    g.restaurantLongitude = v.restaurant.longitude;
+    g.dropoffLatitude = v.dropoff.latitude;
+    g.dropoffLongitude = v.dropoff.longitude;
+    g.driverLatitude = v.driver.latitude;
+    g.driverLongitude = v.driver.longitude;
+    g.centerLatitude = v.center.latitude;
+    g.centerLongitude = v.center.longitude;
+    g.radiusMeters = v.radiusMeters;
+    g.tripMeters = v.tripMeters;
+    g.toleranceMeters = v.toleranceMeters;
+    g.driverToCenterMeters = v.driverToCenterMeters;
+    g.driverToDropoffMeters = v.driverToDropoffMeters;
+    return g;
+  }
 }

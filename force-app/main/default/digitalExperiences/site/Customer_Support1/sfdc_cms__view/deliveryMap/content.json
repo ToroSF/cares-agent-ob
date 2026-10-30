@@ -1,0 +1,81 @@
+{
+  "type": "sfdc_cms__view",
+  "title": "Delivery Map",
+  "contentBody": {
+    "component": {
+      "definition": "community_layout:sldsFlexibleLayout",
+      "id": "f91e0788-ea01-481b-a737-e882cceefde3",
+      "type": "component",
+      "attributes": {},
+      "children": [
+        {
+          "id": "fe63a59e-4a2c-4b95-9998-219e3286ce30",
+          "name": "content",
+          "title": "Content",
+          "type": "region",
+          "children": [
+            {
+              "definition": "community_layout:section",
+              "id": "481c8c37-f8c3-46a6-8481-8f545ad1bda9",
+              "type": "component",
+              "attributes": {
+                "backgroundImageConfig": "",
+                "backgroundImageOverlay": "rgba(0,0,0,0)",
+                "componentSpacerSize": "0rem",
+                "dxpStyle": {},
+                "layoutDirectionDesktop": "row",
+                "layoutDirectionMobile": "column",
+                "layoutDirectionTablet": "column",
+                "maxContentWidth": "",
+                "sectionColumnGutterWidth": "0rem",
+                "sectionConfig": "{\"UUID\":\"481c8c37-f8c3-46a6-8481-8f545ad1bda9\",\"columns\":[{\"UUID\":\"0c396106-25c6-4524-bfb5-b3af1ff0dba9\",\"columnName\":\"Column 1\",\"columnKey\":\"col1\",\"columnWidth\":\"12\",\"seedComponents\":null}]}",
+                "sectionMinHeight": "",
+                "sectionVerticalAlign": "flex-start"
+              },
+              "children": [
+                {
+                  "id": "0c396106-25c6-4524-bfb5-b3af1ff0dba9",
+                  "name": "col1",
+                  "title": "Column 1",
+                  "type": "region",
+                  "children": [
+                    {
+                      "definition": "c:caresDeliveryMapPage",
+                      "id": "698ae9e8-a1c7-47de-b12e-247244de6db3",
+                      "type": "component",
+                      "attributes": {}
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "90b22118-ca14-4c6e-809d-1451df651724",
+          "name": "sfdcHiddenRegion",
+          "title": "sfdcHiddenRegion",
+          "type": "region",
+          "children": [
+            {
+              "definition": "community_builder:seoAssistant",
+              "id": "075433f2-01b8-4acc-a4f2-d6c365be6627",
+              "type": "component",
+              "attributes": {
+                "customHeadTags": "",
+                "description": "",
+                "dxpStyle": {},
+                "pageTitle": "Delivery map",
+                "recordId": ""
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "dataProviders": [],
+    "themeLayoutType": "Inner",
+    "viewType": "custom-delivery-map"
+  },
+  "urlName": "delivery-map"
+}

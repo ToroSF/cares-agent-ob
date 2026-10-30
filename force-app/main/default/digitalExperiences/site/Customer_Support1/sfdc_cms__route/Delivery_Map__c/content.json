@@ -1,0 +1,12 @@
+{
+  "type": "sfdc_cms__route",
+  "title": "Delivery Map",
+  "contentBody": {
+    "activeViewId": "deliveryMap",
+    "configurationTags": [],
+    "pageAccess": "Public",
+    "routeType": "custom-delivery-map",
+    "urlPrefix": "delivery-map"
+  },
+  "urlName": "delivery-map"
+}
