@@ -6,6 +6,10 @@
         <application>CARES_Admin</application>
         <visible>true</visible>
     </applicationVisibilities>
+    <classAccesses>
+        <apexClass>CARES_GeofenceMapController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <hasActivationRequired>false</hasActivationRequired>
     <fieldPermissions>
         <editable>true</editable>
