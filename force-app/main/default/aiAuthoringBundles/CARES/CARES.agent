@@ -980,11 +980,13 @@ subagent stolen_delayed_orders:
                 success: boolean
                     description: "True only when a card was built."
                     filter_from_agent: True
+                # Displayed with show_command, so the planner must see it (filter_from_agent False, as in the official CLT recipe)
                 deliveryMap: object
-                    description: "The delivery map card. It is always displayed to the customer as it is: show it, never convert it to text."
+                    description: "The delivery map card for display. Show it with show_command; never convert it to text."
+                    label: "deliveryMap"
                     complex_data_type_name: "c__caresDeliveryMapView"
                     is_displayable: True
-                    filter_from_agent: True
+                    filter_from_agent: False
             target: "apex://CARES_StolenDelayedDeliveryMap"
 
     reasoning:
@@ -1016,6 +1018,8 @@ subagent stolen_delayed_orders:
                 | This case needs a person. Tell the customer, kindly, that a member of the support team will review it and continue the conversation. Do not promise any outcome or amount. Call {!@actions.escalate_for_review}.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "" and @variables.stolen_delayed_map_shown == False:
                 | Call {!@actions.show_delivery_map} once, in this same reply, before you present the options. Do not describe the map, the driver's position or how anything was checked.
+            if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "" and @variables.stolen_delayed_map_shown == True:
+                | Call show_command to display the show_delivery_map deliveryMap output to the customer, once, before your text. Never describe the map, the driver's position, GPS or how anything was checked in words.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "":
                 | Apologise. Say this is for order {!@variables.stolen_delayed_order_id}. Tell the customer they can get the full order value back as a refund to the original payment method: {!@variables.stolen_delayed_order_total} {!@variables.stolen_delayed_currency}, written with two decimals (for example 52.70). Or they can take credit in the app wallet, which is worth a little more; the exact credit amount is confirmed in the next step. Ask which they prefer.
                   If the customer says it is a different order, do not repeat this offer: call {!@actions.check_order} with the order number they give and their own words.

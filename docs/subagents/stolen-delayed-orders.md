@@ -226,7 +226,7 @@ For an **approved** claim (`FULL_REFUND` or `LOSS_ABSORPTION`) whose telemetry h
 
 - **Customer mode:** circle, Restaurant, Drop-off, the driver, the route and the pill. No measurements, demo scenario, G-111 note or real-map button.
 - **How it gets there:**
-  1. The action `delivery_map` (`apex://CARES_StolenDelayedDeliveryMap`) returns a `CARES_GeofenceCardView`. That is a top-level `global` class: the chat does not draw an inner-class type (G-137).
+  1. The action `delivery_map` (`apex://CARES_StolenDelayedDeliveryMap`) returns a `CARES_GeofenceCardView`. Its output `deliveryMap` is `is_displayable: True` and `filter_from_agent: False`, and on the next step the agent calls the built-in `show_command` to display it (G-137). The card does not appear by itself when the action runs.
   2. The Custom Lightning Type `c__caresDeliveryMapView` (`lightningTypes/caresDeliveryMapView`) has renderers for `enhancedWebChat` and `lightningDesktopGenAi`.
   3. Both point to `c/caresDeliveryMapRenderer`, which draws `caresGeofenceCard`.
   4. Kept only for v14, delete after it is retired: `CARES_StolenDelayedGeofenceCard`, `c__caresGeofenceView` and `caresGeofenceRenderer`.
