@@ -6,7 +6,7 @@ A live script for the panel, about 14 minutes. It walks through the CARES agent 
 2. **Experience rating:** the same customer, before and after a bad rating (D-095, D-102).
 3. **Risk detection:** the same customer, before and after a history of complaints, plus a **scam alert** to the team (D-025, D-062, D-086).
 
-Rehearsed on 2026-10-30 against agent v17 in the team org (`TEST_PLAN.md`). The amounts and the customer replies quoted below come from that rehearsal. The model's wording varies between runs; the amounts and the path do not.
+Rehearsed on 2026-10-30 against agent v17 in the team org (`TEST_PLAN.md`), act 2 and act 3 again after Giacopo's Milkshake chat and the history cases. The amounts and the customer replies quoted below come from that rehearsal. The model's wording varies between runs; the amounts and the path do not.
 
 The customers are test fixtures from `scripts/testing/fixtures.json` (mock data, `example.com` emails). The agent is English only, so the customer's lines are in English.
 
@@ -19,8 +19,8 @@ The customers are test fixtures from `scripts/testing/fixtures.json` (mock data,
    | Act | Customer (email for the chat) | Must be |
    |---|---|---|
    | 1 | Jeffrey Valentine `jeffrey.valentine@example.com` | No refund on `PR-240824-HE7TUW7`; telemetry row `GPS_MISMATCH` |
-   | 2 | Giacopo Maryet `giacopo.maryet@example.com` | No open customer context, no rating, no refund |
-   | 3 | Geoff Wyllt `geoff.wyllt@example.com` | No Cases in the last 30 days (risk CLEAN), no refund |
+   | 2 | Giacopo Maryet `giacopo.maryet@example.com` | Customer context **open (FRUSTRATED)** from his bad Milkshake experience; no refund on `PR-240628-7FEN2KY` |
+   | 3 | Geoff Wyllt `geoff.wyllt@example.com` | Risk CLEAN: run `scripts/apex/demo-risk-stage.apex` with `STAGE = 0`. No refund |
    | 3b | Bruce Clemendot `bruce.clemendot@example.com` | Telemetry row `FRAUD` on `PR-240827-HQ2DT25` |
 
 4. **Slack:** `CARES_Alert_Setting__mdt.Default` is `WORKFLOW` (or `BOT`), and `#cares-escalation` is open.
@@ -64,45 +64,61 @@ The customers are test fixtures from `scripts/testing/fixtures.json` (mock data,
 Don't choose an option if you want to reuse Jeffrey; see *After the demo*.
 
 ## Act 2: Experience rating, the same customer (3 minutes)
-**Customer:** Giacopo Maryet (order: Milkshake, Chips and Quinoa Bowl).
+**Customer:** Giacopo Maryet. Tell it as a story: the "before" already happened, the "after" is live.
 
-**Before**, new incognito chat:
-1. **Customer:** "My order arrived but the Milkshake was missing." Then `giacopo.maryet@example.com`, and confirms the order.
-2. **CARES:** a refund of **$12.53** or store credit of **$13.78**.
-3. **Customer:** "I don't want either option. Please close this issue."
+**Before (already happened, tell it):** Giacopo's Milkshake was missing from order `PR-240819-CNK6KC0` (GreenFork Bistro Uptown).
+- CARES offered a refund of **$12.53** or credit of **$13.78**, with no special words, and paid the refund.
+- At the end he gave a **👎** and wrote that he was frustrated.
+- **Show:**
+  - his Contact → **CSAT Ratings**: score 2, with CARES's own summary of the chat;
+  - his **CARES Customer Context**: FRUSTRATED, open.
 
-   CARES repeats the options once and offers to close (G-132). Then **Customer:** "That's all, thanks."
-4. **CARES:** "Did I resolve your issue today? Please let me know by clicking thumbs up or thumbs down."
-5. **Customer** clicks **👎** and writes: "This is the second time this happens, I'm really frustrated."
-6. **Show** the Contact → CSAT Ratings (score 2, CARES's own summary), and its customer context (FRUSTRATED, open).
+**After (live)**, new incognito chat. **Say the order number in the first message:**
+1. **Customer:** "Hi, my order PR-240628-7FEN2KY from GreenFork Downtown arrived without the Brownie." Then `giacopo.maryet@example.com` if asked, and confirm.
+2. **CARES** starts by acknowledging the bad experience. In the rehearsal: "I'm sorry your order didn't arrive as expected and the Brownie was missing. I know that's frustrating and things haven't gone smoothly for you recently."
+3. Then a refund of **10.08 USD** or store credit of **11.09 USD**. The Brownie is worth $9.60: without the open context the offer would be $9.60 / $10.56.
 
-**After**, new incognito chat:
-1. The same opening: "My order arrived but the Milkshake was missing."
-2. **CARES** starts with one empathetic sentence (for example "It looks like things haven't gone smoothly with your order, and I understand how frustrating that can be."), then a refund of **$13.16** or credit of **$14.47** (+5%).
+**Say:** "Last time Giacopo left unhappy. CARES formed its own reading of that conversation, not just the thumbs. This time it acknowledges the experience, without naming any check or record, and the offer goes up 5%. The model chose the sentence, not the amount: the 5% is a field CRM users set per tier. A thumbs up later closes it; otherwise it expires after 30 days."
 
-**Say:** "CARES formed its own reading of the conversation, not just the thumbs. The next time, it acknowledges the experience and the offer goes up 5%. The model chose the sentence, not the amount: the 5% is a field CRM users set per tier. A thumbs up later closes it; otherwise it expires after 30 days."
+**Watch out:**
+- **The order number must be in the first message.** Otherwise CARES picks his most recent order, the Milkshake one, which was already paid, and says the item isn't on it.
+- **Don't confirm the refund** if you want to reuse the order. Backup order: `PR-240611-6QRT0D6`, "the Smash Burger was missing", which gives **14.01 USD** (instead of $13.34).
 
-**Plan B:** the context opens only when the model reads the chat as NEGATIVE or FRUSTRATED. If it reads it as NEUTRAL, there is no sentence and no bonus. Then show the "after" with **Boyce Antrag** (`boyce.antrag@example.com`), whose context is already open. In the rehearsal his reply was "It looks like things haven't gone smoothly…" with a refund of **11.12 USD** for the missing Cookie.
+**Plan B:** if Giacopo's context has expired, run the "before" live first:
+1. a missing item on one order;
+2. decline: "I don't want either option. Please close this issue";
+3. "That's all, thanks";
+4. 👎 with a frustrated sentence;
+5. then the "after" on another order.
+
+The context opens only if the model reads the chat as NEGATIVE or FRUSTRATED. If it reads NEUTRAL, use **Boyce Antrag** (`boyce.antrag@example.com`), whose context is already open: "my order PR-240826-B9FGO67 arrived without the Cookie" gives the sentence and **11.12 USD**.
 
 ## Act 3: Risk detection, the same customer (4 minutes)
-**Customer:** Geoff Wyllt (Explorer tier; order: Herbal Tea, Side Salad and Soda, $38.70).
+**Customer:** Geoff Wyllt (Explorer tier; order `PR-240825-QN0SODC`: Herbal Tea, Side Salad and Soda, $38.70). His relationship with Pronto gets worse, complaint by complaint.
 
-**Before**, a clean history:
-1. **Customer:** "Hi, my order arrived but all the items were wrong." Then `geoff.wyllt@example.com`, and "Yes, it's that order. All three items were wrong."
+The three earlier complaints exist in the org, unlinked: Cases `Demo history 1`, `2` and `3`. `scripts/apex/demo-risk-stage.apex` links them to Geoff (set `STAGE`, then `DRY_RUN = false`).
+
+| Case | When (story) | Priority | What happened |
+|---|---|---|---|
+| Demo history 1: one item missing | 3 weeks ago | Low | Side Salad missing. Polite: "No big deal, just letting you know." |
+| Demo history 2: wrong order, second time | 9 days ago | Medium | Someone else's order. Annoyed: "This is the second time this month." |
+| Demo history 3: late and cold, threatens to leave | 2 days ago | High | 50 minutes late and cold. Angry: "One more and I'm switching apps." |
+
+**Before** (`STAGE = 0`, a clean history):
+1. **Customer:** "Hi, my order PR-240825-QN0SODC arrived but all the items were wrong." Then `geoff.wyllt@example.com` if asked, and "All three items were wrong."
 2. **CARES:** a refund of **$35.00** or store credit of **$38.50**. That is the clean-history ceiling for Explorer.
 3. Don't choose. Close the chat.
 
-**Live, on Geoff's Contact record:**
-- **Say:** "Let's say Geoff complained twice this month."
-- Create **2 Cases**: Type *Customer Order Issue*, Status *Closed*, Subject *"Demo history 1"* and *"Demo history 2"*.
+**After** (`STAGE = 2`): show Geoff's Contact with complaints 1 and 2 (the polite one, then the annoyed one).
+- A new incognito chat with the same messages gives a refund of **$25.00** or credit of **$27.50**. That is the standard ceiling, because the history is no longer clean.
 
-**After**, new incognito chat, the same messages:
-- **CARES:** a refund of **$25.00** or credit of **$27.50**. That is the standard ceiling, because the history is no longer clean.
+**Then** (`STAGE = 3`): show complaint 3 ("one more and I'm switching apps").
+- A new chat with the same message gets **no offer**: CARES says the support team will review it and gives the case number. If an earlier demo left Geoff's escalation case open, CARES adds to it instead of opening a new one; close old demo escalations first for a fresh number.
+- The case is in the CARES Escalations queue: PATTERN_REVIEW, "Repeated issues in the last 30 days, a person reviews before any offer".
 
-**Then**, a third Case (*"Demo history 3"*) and a new chat with the same message:
-- **CARES** makes no offer: a member of the team will review it, and here is the case number. The case is in the CARES Escalations queue (PATTERN_REVIEW, reason "Repeated issues in the last 30 days").
+**Say:** "Risk Detection is a silent check before every money step. It counts the customer's real complaints in the last 30 days, not what they say in the chat. A clean history gets the higher limit. Once there are complaints, the standard limit. At three in a month, CARES stops automating and puts a person on it, because this customer is about to leave and deserves a human. CARES's own escalations and payouts don't count against the customer."
 
-**Say:** "Risk Detection is a silent check before every money step. It counts real complaints in the last 30 days, not what the customer claims. Zero gets the clean-history limit, one or more the standard limit, three or more a person before any offer. CARES's own escalations and payouts don't count against the customer."
+Never confirm a payout in this act. Reset with `STAGE = 0`.
 
 ## Act 3b: Scam alert (2 minutes)
 **Customer:** Bruce Clemendot (`PR-240827-HQ2DT25`; his delivery data carries a fraud flag).
@@ -135,14 +151,15 @@ Don't choose an option if you want to reuse Jeffrey; see *After the demo*.
 | 1 | The map area is blank | Google Maps blocked or slow on the site | Show the same record in CARES Admin; the band still gives the result |
 | 2 | No empathetic sentence after the 👎 | The model read the chat as NEUTRAL | Plan B with Boyce Antrag |
 | 2 | "That's all" repeats the offer | G-132 | Say "I don't want either option, please close this issue" first |
-| 3 | The amount didn't drop | The Cases are not linked to Geoff, or are older than 30 days | Check the Contact field on the Cases |
+| 2 | "I don't see a Brownie on this order" | The order number wasn't in the first message, so CARES used his latest order | Start a new chat with the number in the first message |
+| 3 | The amount didn't drop | The script didn't write (`DRY_RUN = true`) or the Cases aren't on Geoff | Rerun with `DRY_RUN = false`; check the Cases' Contact |
 | 3b | No Slack message | Slack mode is `OFF`, or the webhook failed | Show the bell and the case; "the alert layers are independent" |
 | Any | "Sorry, I can't assist with that" | The platform content guard (G-088) | Rephrase without words like "hacked" or "scam" |
 | Any | "Something has gone wrong" | The org-level throttle (G-090) | Wait a minute, retry in a new chat |
 
 ## After the demo (reset)
-1. **Geoff:** delete or close the three "Demo history" Cases, or clear their Contact. He is CLEAN again.
-2. **Giacopo:** to close his customer context, give a 👍 in a new chat, or set `Has_Open_Context__c` to false on his CARES Customer Context record. Otherwise it expires in 30 days.
+1. **Geoff:** run `scripts/apex/demo-risk-stage.apex` with `STAGE = 0`. The three Cases stay in the org, unlinked, so he is CLEAN again.
+2. **Giacopo:** leave his customer context open for the next demo. It expires 30 days after his 👎. To close it, give a 👍 in a new chat. Delete the Resolution of any order he was paid for in the demo (keep `CARES-RES-00068`, the Milkshake: it is part of his story).
 3. **Anyone who was paid:** delete their row in CARES Admin → Resolutions. Otherwise the next claim on that order goes to a person, and their claim rate rises.
 4. **Escalation cases** from the demo: close them; they are mock data.
 5. **Telemetry:** only if a profile was moved, rerun `scripts/apex/seed-delivery-telemetry.apex` (DRY_RUN first).
