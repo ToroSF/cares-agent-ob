@@ -103,7 +103,8 @@ Refund owner: when `stolen_delayed_handoff_status == "READY_FOR_REFUND"`, refund
 | `scripts/apex/seed-delivery-telemetry.apex` | Seeds the mock telemetry demo rows (`DRY_RUN` first) |
 | `classes/CARES_GeofenceMapController.cls`, `CARES_GeofenceMapControllerTest.cls` | Read-only data for the geofence view: the policy's geofence and GPS result for one telemetry row (D-105) |
 | `lwc/caresGeofenceCard/**`, `lwc/caresGeofenceMap/**`, `flexipages/CARES_Delivery_Telemetry_Record_Page.flexipage-meta.xml` | The geofence card (shared), the CARES Admin view that loads it, and the telemetry record page (D-105) |
-| `classes/CARES_StolenDelayedGeofenceCard.cls`, `CARES_StolenDelayedGeofenceCardTest.cls`, `lightningTypes/caresGeofenceView/**`, `lwc/caresGeofenceRenderer/**` | Agent action `delivery_map`, its Custom Lightning Type and the chat renderer (D-106) |
+| `classes/CARES_StolenDelayedDeliveryMap.cls`, `CARES_StolenDelayedDeliveryMapTest.cls`, `CARES_GeofenceCardView.cls`, `lightningTypes/caresDeliveryMapView/**`, `lwc/caresDeliveryMapRenderer/**` | Agent action `delivery_map`, its Custom Lightning Type and the chat renderer (D-106, G-137) |
+| `classes/CARES_StolenDelayedGeofenceCard.cls`, `lightningTypes/caresGeofenceView/**`, `lwc/caresGeofenceRenderer/**` | The v14 card (inner-class type, never drawn, G-137). Kept until v14 is retired |
 | `classes/CARES_StolenDelayedPolicyTest.cls`, `CARES_StolenDelayedActionsTest.cls`, `CARES_StolenDelayedPlatformMock.cls` | Unit tests and callout mock                                                              |
 | `objects/CARES_Stolen_Delayed_Policy__mdt/**`, `customMetadata/CARES_Stolen_Delayed_Policy.Default.md-meta.xml`          | Thresholds and keyword list                                                              |
 
@@ -225,9 +226,10 @@ For an **approved** claim (`FULL_REFUND` or `LOSS_ABSORPTION`) whose telemetry h
 
 - **Customer mode:** circle, Restaurant, Drop-off, the driver, the route and the pill. No measurements, demo scenario, G-111 note or real-map button.
 - **How it gets there:**
-  1. The action `delivery_map` (`apex://CARES_StolenDelayedGeofenceCard`) returns the flat `GeofenceView`.
-  2. The Custom Lightning Type `c__caresGeofenceView` (`lightningTypes/caresGeofenceView`) has renderers for `enhancedWebChat` and `lightningDesktopGenAi`.
-  3. Both point to `c/caresGeofenceRenderer`, which draws `caresGeofenceCard`.
+  1. The action `delivery_map` (`apex://CARES_StolenDelayedDeliveryMap`) returns a `CARES_GeofenceCardView`. Its output `deliveryMap` is `is_displayable: True` and `filter_from_agent: False`, and on the next step the agent calls the built-in `show_command` to display it (G-137). The card does not appear by itself when the action runs.
+  2. The Custom Lightning Type `c__caresDeliveryMapView` (`lightningTypes/caresDeliveryMapView`) has renderers for `enhancedWebChat` and `lightningDesktopGenAi`.
+  3. Both point to `c/caresDeliveryMapRenderer`, which draws `caresGeofenceCard`.
+  4. Kept only for v14, delete after it is retired: `CARES_StolenDelayedGeofenceCard`, `c__caresGeofenceView` and `caresGeofenceRenderer`.
 - **Gate in Apex:** the action re-runs the policy on the order. That also proves it is this customer's order. Anything but an approved claim with locations gets `success = false` and no card.
 - **Gate in the agent:** `show_delivery_map` is available only while the approved offer waits for the customer's choice and `stolen_delayed_map_shown` is False. A new `check_order` resets it.
 - **Words:** the agent still never describes GPS, the driver or how it checked (R-18).
@@ -244,7 +246,7 @@ For an **approved** claim (`FULL_REFUND` or `LOSS_ABSORPTION`) whose telemetry h
 | Profile | Order (fixture) | Values | Expected |
 |---|---|---|---|
 | `LOSS_ABSORPTION` | `PR-240815-23HWUID` (E-DELMOR-HEART) | Driver at the door (inside); 240 s, 1 call; driver 0.2%, 900 | `LOSS_ABSORPTION`: refund, driver paid, restaurant reimbursed |
-| `GPS_MISMATCH` | `PR-240829-5WE179W` (P-ROZANNE-DEVEREUX) | Driver 2.2 km from the center (outside) | `FULL_REFUND`, driver pay withheld |
+| `GPS_MISMATCH` | `PR-240824-HE7TUW7` (P-JEFFREY-VALENTINE) | Driver 2.2 km from the center (outside) | `FULL_REFUND`, driver pay withheld |
 | `INSIDE_NEAR_RESTAURANT` | `PR-240826-AL2NKVM` (P-PEYTON-BATRICK) | Driver 30 m from the restaurant (inside); excellent driver | `LOSS_ABSORPTION` (known consequence, G-111) |
 | `AVERAGE_DRIVER` | `PR-240827-L9KMKYL` (P-DORE-BRIANT) | Driver at the door (inside); driver 4%, 300 | `FULL_REFUND`, driver paid |
 | `FRAUD` | `PR-240827-HQ2DT25` (P-BRUCE-CLEMENDOT) | fraud flag | `ESCALATE` / `FRAUD_SIGNAL` |
@@ -252,7 +254,7 @@ For an **approved** claim (`FULL_REFUND` or `LOSS_ABSORPTION`) whose telemetry h
 | `ADDRESS_DUP` | `PR-240828-ZO28CZ7` (P-PENNY-DANFORTH) | address flag | `ESCALATE` / `FRAUD_SIGNAL` |
 | `REDISPATCH` | `PR-240822-P7LB1WC` (E-CATRIONA-SHERGILL) | like loss absorption, re-dispatch eligible | Re-dispatch offered; `RD-…` reference |
 
-These customers are also in Refund's test pools (`R-INS`, `R-PP`, `R-ONE`). Once Refund pays one of these orders, a new claim on it is a duplicate claim (`ESCALATE`), the same problem as G-108. And any refund to the same customer, on any order, lifts their claim rate above 5% (1 of 6 orders is about 17%), so they are no longer high trust and the demo ends in `MANUAL_REVIEW`. Then move the profile to another customer's delivered order in the script and run it again. On 2026-10-21 none of the 8 customers had a refund. On 2026-10-22 two of them were refunded by a test run before the seed (Marta Bassindale `PR-240826-YLNU39N`, Humfrid Jendrusch `PR-240816-CSQI55B`), so `LOSS_ABSORPTION` and `REDISPATCH` moved to escalation-pool customers (`E-*`), whose tests escalate instead of paying. In the org the two old rows are kept, relabeled `RETIRED_…` (the policy does not read `Scenario__c`).
+These customers are also in Refund's test pools (`R-INS`, `R-PP`, `R-ONE`). Once Refund pays one of these orders, a new claim on it is a duplicate claim (`ESCALATE`), the same problem as G-108. And any refund to the same customer, on any order, lifts their claim rate above 5% (1 of 6 orders is about 17%), so they are no longer high trust and the demo ends in `MANUAL_REVIEW`. Then move the profile to another customer's delivered order in the script and run it again. On 2026-10-21 none of the 8 customers had a refund. On 2026-10-30 Rozanne Devereux's `GPS_MISMATCH` order was refunded in a chat test, so the profile moved to Jeffrey Valentine (`PR-240824-HE7TUW7`) and her row is `RETIRED_GPS_MISMATCH`. On 2026-10-22 two of them were refunded by a test run before the seed (Marta Bassindale `PR-240826-YLNU39N`, Humfrid Jendrusch `PR-240816-CSQI55B`), so `LOSS_ABSORPTION` and `REDISPATCH` moved to escalation-pool customers (`E-*`), whose tests escalate instead of paying. In the org the two old rows are kept, relabeled `RETIRED_…` (the policy does not read `Scenario__c`).
 
 **Access.** `CARES_Stolen_Delayed_Access` (agent user): read telemetry, create re-dispatch requests and trust events, with field access (the queries and writes run in user mode; missing access is logged, not silent). `CARES_Delivery_Mock_Admin` (people staging demos): full access and the three tabs in the CARES Admin app. Running the seed script needs it.
 

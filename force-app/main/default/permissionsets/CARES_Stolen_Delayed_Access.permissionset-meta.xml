@@ -19,6 +19,10 @@
         <apexClass>CARES_StolenDelayedGeofenceCard</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>CARES_StolenDelayedDeliveryMap</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <fieldPermissions>
         <field>Contact.Pronto_App_Account_Id__c</field>
         <readable>true</readable>
