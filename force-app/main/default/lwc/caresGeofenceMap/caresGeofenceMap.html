@@ -1,23 +1,5 @@
 <template>
-  <article class="card">
-    <header class="card-header">
-      <div>
-        <p class="eyebrow">Pronto · Delivery details</p>
-        <template lwc:if={hasView}>
-          <p class="order-line">{orderLine}</p>
-        </template>
-      </div>
-      <div class="badge">
-        <lightning-icon
-          icon-name="utility:agent_astro"
-          size="x-small"
-          alternative-text=""
-          class="badge-icon"
-        ></lightning-icon>
-        <span>Agentforce</span>
-      </div>
-    </header>
-
+  <c-cares-geofence-card view={view} audience="admin">
     <template lwc:if={needsOrderInput}>
       <div class="search">
         <lightning-input
@@ -33,7 +15,6 @@
         ></lightning-button>
       </div>
     </template>
-
     <template lwc:if={error}>
       <p class="message">
         The geofence could not be loaded. Check that you have the CARES Delivery
@@ -43,107 +24,5 @@
     <template lwc:if={notFound}>
       <p class="message">No delivery telemetry for this order.</p>
     </template>
-
-    <template lwc:if={showSchematic}>
-      <svg class="schematic" viewBox={viewBox} role="img" aria-label={pillText}>
-        <desc>{svgDescription}</desc>
-        <template for:each={gridLines} for:item="line">
-          <line
-            key={line.key}
-            class="street"
-            x1={line.x1}
-            y1={line.y1}
-            x2={line.x2}
-            y2={line.y2}
-          ></line>
-        </template>
-        <circle
-          class="geofence"
-          cx={shape.center.x}
-          cy={shape.center.y}
-          r={shape.radius}
-        ></circle>
-        <template for:each={routeSegments} for:item="seg">
-          <line
-            key={seg.key}
-            class={seg.className}
-            x1={seg.x1}
-            y1={seg.y1}
-            x2={seg.x2}
-            y2={seg.y2}
-          ></line>
-        </template>
-        <circle
-          class="stop"
-          cx={shape.restaurant.x}
-          cy={shape.restaurant.y}
-          r="12"
-        ></circle>
-        <text class="stop-label" x={shape.restaurant.x} y={restaurantLabelY}>
-          Restaurant
-        </text>
-        <circle
-          class="stop"
-          cx={shape.dropoff.x}
-          cy={shape.dropoff.y}
-          r="12"
-        ></circle>
-        <text class="stop-label" x={shape.dropoff.x} y={dropoffLabelY}>
-          Drop-off
-        </text>
-        <circle
-          class={driverDotClass}
-          cx={shape.driver.x}
-          cy={shape.driver.y}
-          r="8"
-        ></circle>
-        <rect
-          class="pill"
-          x={pill.x}
-          y={pill.y}
-          width={pill.width}
-          height={pill.height}
-          rx="12"
-        ></rect>
-        <text class={pillTextClass} x={pill.textX} y={pill.textY}>
-          {pillText}
-        </text>
-      </svg>
-    </template>
-
-    <template lwc:if={showMap}>
-      <lightning-map
-        map-markers={mapMarkers}
-        list-view="hidden"
-        class="real-map"
-      ></lightning-map>
-    </template>
-
-    <template lwc:if={showDistanceRule}>
-      <p class="message">{distanceRuleText}</p>
-    </template>
-
-    <template lwc:if={hasGeofence}>
-      <dl class="facts">
-        <template for:each={facts} for:item="fact">
-          <div key={fact.key} class="fact">
-            <dt>{fact.label}</dt>
-            <dd>{fact.value}</dd>
-          </div>
-        </template>
-      </dl>
-      <p class="note">
-        The geofence is centered on the middle of the trip, so the restaurant
-        end is inside too: a driver who marks the order delivered near the
-        restaurant counts as a match (G-111).
-      </p>
-      <div class="actions">
-        <lightning-button
-          variant="base"
-          label={toggleLabel}
-          onclick={toggleRealMap}
-        ></lightning-button>
-      </div>
-    </template>
-  </article>
+  </c-cares-geofence-card>
 </template>

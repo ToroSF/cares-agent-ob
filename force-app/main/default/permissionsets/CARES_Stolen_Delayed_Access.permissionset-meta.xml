@@ -4,11 +4,19 @@
     <description>Lets the CARES agent user run the Stolen &amp; Delayed actions, read the order link and resolutions (D-089), and read mock telemetry and write re-dispatch requests and trust events (D-096). Assigning it is an explicit rollout step.</description>
     <hasActivationRequired>false</hasActivationRequired>
     <classAccesses>
+        <apexClass>CARES_GeofenceMapController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>CARES_StolenDelayedEvaluateAction</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>CARES_StolenDelayedHandoffAction</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CARES_StolenDelayedGeofenceCard</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <fieldPermissions>
