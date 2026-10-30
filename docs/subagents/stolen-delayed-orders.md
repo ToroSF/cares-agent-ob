@@ -220,6 +220,17 @@ The component (`lwc/caresGeofenceMap`) can also be dropped on an App or Home pag
 
 Access: `CARES_Delivery_Mock_Admin` (class access to the controller). Read-only: it writes nothing and moves no money.
 
+### The delivery map page (D-107)
+
+The card can't be drawn in the Customer Support site's chat (G-137). So for an approved claim with known locations, the agent adds one line with a **signed link**: *"View your delivery map (valid for 30 minutes): https://…/delivery-map?t=…"*.
+
+- **Signing:** `delivery_map` (`CARES_StolenDelayedDeliveryMap`) asks `CARES_DeliveryMapLink.issue()` for the link. It signs `orderId|contactId|total|currency|expiry` with HMAC-SHA256. The key, the site name and the 30 minutes are in `CARES_Map_Link_Setting__c`. Without a key there is no link and the agent goes on as before.
+- **Page:** `/delivery-map` on the Customer Support site, a public route and view in `digitalExperiences/site/Customer_Support1/`, holds `caresDeliveryMapPage`. It sends `t` to `CARES_DeliveryMapLink.view()`.
+  - With a valid, unexpired signature, Apex reads the order's telemetry in system mode and returns the card.
+  - Otherwise the page says *"This link has expired or isn't valid. Ask in the chat again."*
+- **Guest access:** `CARES_Delivery_Map_Guest`, class access only, on the site's guest user. No object access: the class reads the row itself, and only after it verifies the link.
+- **Setup:** run `scripts/apex/setup-delivery-map-link.apex` once (`DRY_RUN` first). It creates the key, sets the site and the minutes, and assigns the permission set to the guest user.
+
 ### The delivery map in the customer's chat (D-106)
 
 For an **approved** claim (`FULL_REFUND` or `LOSS_ABSORPTION`) whose telemetry has the three locations, the agent shows the customer the same card in the chat, once, before the refund or credit options.

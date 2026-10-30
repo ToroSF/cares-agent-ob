@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>CARES Delivery Map Guest</label>
+    <description>For the guest user of the site that serves the /delivery-map page (D-107): runs CARES_DeliveryMapLink only. No object or field access; the class reads the telemetry itself after it verifies the signed link.</description>
+    <classAccesses>
+        <apexClass>CARES_DeliveryMapLink</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <hasActivationRequired>false</hasActivationRequired>
+</PermissionSet>

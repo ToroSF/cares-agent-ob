@@ -38,6 +38,12 @@ public with sharing class CARES_StolenDelayedDeliveryMap {
       description='The geofence card to display to the customer.'
     )
     public CARES_GeofenceCardView deliveryMap;
+
+    @InvocableVariable(
+      label='Map Url'
+      description='Signed link to the delivery map page, valid for a short time; blank when no card or no link.'
+    )
+    public String mapUrl;
   }
 
   @InvocableMethod(
@@ -77,27 +83,21 @@ public with sharing class CARES_StolenDelayedDeliveryMap {
     if (v.found != true || v.hasCoordinates != true) {
       return res;
     }
-    CARES_GeofenceCardView g = new CARES_GeofenceCardView();
-    g.orderId = d.orderId;
     // The real order's total, as the policy read it
-    g.orderTotal = d.orderTotal;
-    g.currencyIsoCode = d.currencyIsoCode;
-    g.gpsResult = v.gpsResult;
-    g.hasCoordinates = true;
-    g.restaurantLatitude = v.restaurant.latitude;
-    g.restaurantLongitude = v.restaurant.longitude;
-    g.dropoffLatitude = v.dropoff.latitude;
-    g.dropoffLongitude = v.dropoff.longitude;
-    g.driverLatitude = v.driver.latitude;
-    g.driverLongitude = v.driver.longitude;
-    g.centerLatitude = v.center.latitude;
-    g.centerLongitude = v.center.longitude;
-    g.radiusMeters = v.radiusMeters;
-    g.tripMeters = v.tripMeters;
-    g.toleranceMeters = v.toleranceMeters;
-    g.driverToCenterMeters = v.driverToCenterMeters;
-    g.driverToDropoffMeters = v.driverToDropoffMeters;
+    CARES_GeofenceCardView g = CARES_GeofenceCardView.fromView(
+      v,
+      d.orderId,
+      d.orderTotal,
+      d.currencyIsoCode
+    );
     res.deliveryMap = g;
+    // The page that shows the card outside the chat, with a signed 30-minute link (D-107)
+    res.mapUrl = CARES_DeliveryMapLink.issue(
+      d.orderId,
+      r.contactId,
+      d.orderTotal,
+      d.currencyIsoCode
+    );
     res.success = true;
     return res;
   }

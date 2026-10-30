@@ -172,6 +172,8 @@ variables:
         description: "Stolen & Delayed: delivered orders, the minutes the delivery took (D-100)."
     stolen_delayed_map_shown: mutable boolean = False
         description: "Stolen & Delayed: True once the delivery map card was shown for the current claim (D-106). Set only by the script."
+    stolen_delayed_map_url: mutable string = ""
+        description: "Stolen & Delayed: signed link to the delivery map page for the current approved claim, valid 30 minutes (D-107). Set only by the action."
 
 knowledge:
     # Data Library CARES_Customer_Policy in the team org: "ARFPC_" + libraryId (D-060, D-066, D-067)
@@ -304,6 +306,7 @@ subagent refund:
             set @variables.stolen_delayed_latest_order_id = ""
             set @variables.stolen_delayed_latest_order_summary = ""
             set @variables.stolen_delayed_map_shown = False
+            set @variables.stolen_delayed_map_url = ""
             set @variables.escalation_category = ""
             set @variables.escalation_reason = ""
             set @variables.escalation_case_attempted = False
@@ -803,6 +806,7 @@ subagent stolen_delayed_orders:
             set @variables.stolen_delayed_latest_order_id = ""
             set @variables.stolen_delayed_latest_order_summary = ""
             set @variables.stolen_delayed_map_shown = False
+            set @variables.stolen_delayed_map_url = ""
             set @variables.stolen_delayed_timing = ""
             set @variables.stolen_delayed_delay_severity = ""
             set @variables.stolen_delayed_delay_value = 0
@@ -980,12 +984,16 @@ subagent stolen_delayed_orders:
                 success: boolean
                     description: "True only when a card was built."
                     filter_from_agent: True
-                # Displayed with show_command, so the planner must see it (filter_from_agent False, as in the official CLT recipe)
+                # Not drawn in the Experience site's chat (G-137): the page link below shows it instead (D-107)
                 deliveryMap: object
-                    description: "The delivery map card for display. Show it with show_command; never convert it to text."
+                    description: "The delivery map card."
                     label: "deliveryMap"
                     complex_data_type_name: "c__caresDeliveryMapView"
                     is_displayable: True
+                    filter_from_agent: True
+                # Visible to the planner: a link that isn't in an action result is shown as URL_Redacted (G-139)
+                mapUrl: string
+                    description: "Signed link to the delivery map page, valid 30 minutes; blank when there is none. Give it to the customer exactly as it is."
                     filter_from_agent: False
             target: "apex://CARES_StolenDelayedDeliveryMap"
 
@@ -1018,8 +1026,9 @@ subagent stolen_delayed_orders:
                 | This case needs a person. Tell the customer, kindly, that a member of the support team will review it and continue the conversation. Do not promise any outcome or amount. Call {!@actions.escalate_for_review}.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "" and @variables.stolen_delayed_map_shown == False:
                 | Call {!@actions.show_delivery_map} once, in this same reply, before you present the options. Do not describe the map, the driver's position or how anything was checked.
-            if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "" and @variables.stolen_delayed_map_shown == True:
-                | Call show_command to display the show_delivery_map deliveryMap output to the customer, once, before your text. Never describe the map, the driver's position, GPS or how anything was checked in words.
+            if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "" and @variables.stolen_delayed_map_url is not None and @variables.stolen_delayed_map_url != "":
+                | Add this line to your reply, exactly as written: View your delivery map (valid for 30 minutes): {!@variables.stolen_delayed_map_url}
+                  Do not describe the map, the driver's position or how anything was checked.
             if @variables.stolen_delayed_full_refund_approved == True and @variables.stolen_delayed_handoff_status == "":
                 | Apologise. Say this is for order {!@variables.stolen_delayed_order_id}. Tell the customer they can get the full order value back as a refund to the original payment method: {!@variables.stolen_delayed_order_total} {!@variables.stolen_delayed_currency}, written with two decimals (for example 52.70). Or they can take credit in the app wallet, which is worth a little more; the exact credit amount is confirmed in the next step. Ask which they prefer.
                   If the customer says it is a different order, do not repeat this offer: call {!@actions.check_order} with the order number they give and their own words.
@@ -1058,6 +1067,7 @@ subagent stolen_delayed_orders:
                 set @variables.stolen_delayed_loss_absorption = False
                 set @variables.stolen_delayed_redispatch_reference = ""
                 set @variables.stolen_delayed_map_shown = False
+                set @variables.stolen_delayed_map_url = ""
                 set @variables.stolen_delayed_order_id = @outputs.orderId
                 set @variables.stolen_delayed_decision = @outputs.decision
                 set @variables.stolen_delayed_reason = @outputs.reasonCode
@@ -1097,6 +1107,7 @@ subagent stolen_delayed_orders:
                 with contactId = @variables.customer_id
                 with orderId = @variables.stolen_delayed_order_id
                 set @variables.stolen_delayed_map_shown = True
+                set @variables.stolen_delayed_map_url = @outputs.mapUrl
             # The hand-off to Refund is an explicit transition: one inside an action's post-processing did not fire live (G-077)
             escalate_for_review: @utils.transition to @subagent.escalate_to_human
                 description: "Hand the conversation to a person: manual review, an escalation trigger, a failed step, or the customer asks for a person. Escalate to Human logs a case with the claim context first."
@@ -1166,6 +1177,7 @@ subagent risk_detection:
             set @variables.stolen_delayed_latest_order_id = ""
             set @variables.stolen_delayed_latest_order_summary = ""
             set @variables.stolen_delayed_map_shown = False
+            set @variables.stolen_delayed_map_url = ""
             set @variables.escalation_category = ""
             set @variables.escalation_reason = ""
             set @variables.escalation_case_attempted = False

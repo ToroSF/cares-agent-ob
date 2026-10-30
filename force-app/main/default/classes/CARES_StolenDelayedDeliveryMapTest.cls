@@ -200,4 +200,42 @@ private class CARES_StolenDelayedDeliveryMapTest {
     Assert.isFalse(show('', ORDER_ID).success);
     Assert.isFalse(show(contactId, '').success);
   }
+
+  // The page link outside the chat (D-107): only for a card, and only when links are set up
+  @IsTest
+  static void anApprovedClaimGetsASignedPageLinkWhenLinksAreSetUp() {
+    customer(telemetry(FAR_AWAY_LAT, FAR_AWAY_LON), 6);
+    CARES_DeliveryMapLink.settingOverride = new CARES_Map_Link_Setting__c(
+      Signing_Key__c = EncodingUtil.base64Encode(Crypto.generateAesKey(256)),
+      Minutes__c = 30
+    );
+    CARES_DeliveryMapLink.baseUrlOverride = 'https://example.test/customers';
+    CARES_StolenDelayedDeliveryMap.Result res = show(contactId, ORDER_ID);
+    Assert.isTrue(
+      res.mapUrl.startsWith('https://example.test/customers/delivery-map?t='),
+      res.mapUrl
+    );
+    Assert.areEqual(
+      ORDER_ID,
+      CARES_DeliveryMapLink.view(res.mapUrl.substringAfter('?t=')).orderId
+    );
+  }
+
+  @IsTest
+  static void noCardMeansNoPageLink() {
+    customer(telemetry(FAR_AWAY_LAT, FAR_AWAY_LON), 2);
+    CARES_DeliveryMapLink.settingOverride = new CARES_Map_Link_Setting__c(
+      Signing_Key__c = EncodingUtil.base64Encode(Crypto.generateAesKey(256))
+    );
+    CARES_DeliveryMapLink.baseUrlOverride = 'https://example.test/customers';
+    Assert.isNull(show(contactId, ORDER_ID).mapUrl);
+  }
+
+  @IsTest
+  static void withoutLinkSetupTheCardStillComesWithoutALink() {
+    customer(telemetry(FAR_AWAY_LAT, FAR_AWAY_LON), 6);
+    CARES_StolenDelayedDeliveryMap.Result res = show(contactId, ORDER_ID);
+    Assert.isTrue(res.success);
+    Assert.isNull(res.mapUrl);
+  }
 }

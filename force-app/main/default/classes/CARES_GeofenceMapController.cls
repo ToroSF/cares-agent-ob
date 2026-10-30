@@ -93,9 +93,15 @@ public with sharing class CARES_GeofenceMapController {
 
   // Also used by the chat card (CARES_StolenDelayedGeofenceCard, D-106), so both show the same numbers
   public static View build(String orderId, String scenario) {
+    return build(orderId, scenario, AccessLevel.USER_MODE);
+  }
+
+  // SYSTEM_MODE only for the delivery map page, after its signed link is verified (CARES_DeliveryMapLink, D-107)
+  public static View build(String orderId, String scenario, AccessLevel mode) {
     View v = new View();
     CARES_StolenDelayedTelemetry t = CARES_StolenDelayedMockTelemetry.forOrder(
-      orderId
+      orderId,
+      mode
     );
     if (t == null) {
       return v;
@@ -104,7 +110,7 @@ public with sharing class CARES_GeofenceMapController {
     v.found = true;
     v.orderId = orderId;
     v.scenario = scenario;
-    v.orderTotal = orderTotal(orderId);
+    v.orderTotal = mode == AccessLevel.SYSTEM_MODE ? null : orderTotal(orderId);
     // Order__dlm has no currency column; same rule as CARES_StolenDelayedOrderSource
     v.currencyIsoCode = UserInfo.getDefaultCurrency();
     v.gpsResult = CARES_StolenDelayedPolicy.gpsResult(t, s);

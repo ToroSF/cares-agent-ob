@@ -1,0 +1,21 @@
+<template>
+  <div class="page">
+    <template lwc:if={loading}>
+      <lightning-spinner
+        alternative-text="Loading your delivery map"
+        size="small"
+      ></lightning-spinner>
+    </template>
+    <template lwc:if={invalid}>
+      <p class="message">
+        This link has expired or isn't valid. Ask in the chat again.
+      </p>
+    </template>
+    <template lwc:if={card}>
+      <c-cares-geofence-card
+        view={card}
+        audience="customer"
+      ></c-cares-geofence-card>
+    </template>
+  </div>
+</template>

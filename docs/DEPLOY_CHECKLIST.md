@@ -208,3 +208,10 @@ Mock data for this project, not a real Pronto signal (same disclosure as the moc
 - Pronto Help answers nothing: library not indexed or no Data Space access. The agent still works; every other subagent is unaffected.
 - Escalation case looks like before (no Type, no queue): the old Flow version is still active (see the warning above).
 - To roll back the agent: activate the previous agent version. The Data Library, field and queue can stay; nothing else uses them.
+
+## Delivery map page (`feature/sd-delivery-map-page`, D-107)
+1. Deploy `CARES_Map_Link_Setting__c`, `CARES_DeliveryMapLink`, the S&D classes, `caresDeliveryMapPage` and `CARES_Delivery_Map_Guest` with the S&D test classes.
+2. Run `scripts/apex/setup-delivery-map-link.apex` as an admin: first `DRY_RUN`, then write **twice**. The first run saves the key, the site name, its URL and the 30 minutes; the second gives the site's guest user `CARES_Delivery_Map_Guest`. The key is never printed or committed (G-138).
+3. Deploy only the new site pieces: `-m "DigitalExperience:site/Customer_Support1.sfdc_cms__route/Delivery_Map__c" -m "DigitalExperience:site/Customer_Support1.sfdc_cms__view/deliveryMap"`, then `sf community publish --name "Customer Support"`.
+4. Publish and activate the agent version with the `stolen_delayed_map_url` link.
+5. Without step 2 there is no link and the agent goes on without it. To turn links off, clear `Signing_Key__c`.
