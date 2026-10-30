@@ -5,7 +5,6 @@
   --pronto-cream: #fdf9f5;
   --pronto-ink: #1d1d1d;
   --pronto-gray: #6b6560;
-  --pronto-street: #e6e1dc;
   --pronto-pink: #e8728f;
   --pronto-green: #2e8540;
   --pronto-badge: #5a6fa8;
@@ -60,87 +59,6 @@
   margin-top: 1rem;
 }
 
-.schematic {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin-top: 1rem;
-}
-
-.street {
-  stroke: var(--pronto-street);
-  stroke-width: 10;
-}
-
-.geofence {
-  fill: var(--pronto-orange-soft);
-  stroke: var(--pronto-orange);
-  stroke-width: 3;
-  stroke-dasharray: 14 9;
-}
-
-.route {
-  stroke-width: 5;
-  stroke-linecap: square;
-}
-
-.route-inside {
-  stroke: var(--pronto-ink);
-}
-
-.route-outside.mismatch {
-  stroke: var(--pronto-pink);
-}
-
-.route-outside.match {
-  stroke: var(--pronto-green);
-}
-
-.stop {
-  fill: var(--pronto-orange);
-  stroke: var(--pronto-ink);
-  stroke-width: 5;
-}
-
-.stop-label {
-  fill: var(--pronto-ink);
-  font-size: 20px;
-  font-weight: 700;
-  text-anchor: middle;
-}
-
-.driver-dot {
-  stroke: #fff;
-  stroke-width: 3;
-}
-
-.driver-dot.mismatch {
-  fill: var(--pronto-pink);
-}
-
-.driver-dot.match {
-  fill: var(--pronto-green);
-}
-
-.pill {
-  fill: #fff;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.1));
-}
-
-.pill-text {
-  font-size: 22px;
-  font-weight: 700;
-  text-anchor: middle;
-}
-
-.pill-text.mismatch {
-  fill: var(--pronto-pink);
-}
-
-.pill-text.match {
-  fill: var(--pronto-green);
-}
-
 .real-map {
   display: block;
   margin-top: 1rem;
@@ -177,6 +95,19 @@
   font-size: 0.9rem;
 }
 
-.actions {
-  margin-top: 0.5rem;
+.result-band {
+  border-radius: 12px;
+  font-weight: 700;
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+}
+
+.result-band.mismatch {
+  background: rgba(232, 114, 143, 0.12);
+  color: var(--pronto-pink);
+}
+
+.result-band.match {
+  background: rgba(46, 133, 64, 0.12);
+  color: var(--pronto-green);
 }

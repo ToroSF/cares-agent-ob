@@ -21,74 +21,8 @@
     <!-- The admin page puts its order search and messages here -->
     <slot></slot>
 
-    <template lwc:if={showSchematic}>
-      <svg class="schematic" viewBox={viewBox} role="img" aria-label={pillText}>
-        <desc>{svgDescription}</desc>
-        <template for:each={gridLines} for:item="line">
-          <line
-            key={line.key}
-            class="street"
-            x1={line.x1}
-            y1={line.y1}
-            x2={line.x2}
-            y2={line.y2}
-          ></line>
-        </template>
-        <circle
-          class="geofence"
-          cx={shape.center.x}
-          cy={shape.center.y}
-          r={shape.radius}
-        ></circle>
-        <template for:each={routeSegments} for:item="seg">
-          <line
-            key={seg.key}
-            class={seg.className}
-            x1={seg.x1}
-            y1={seg.y1}
-            x2={seg.x2}
-            y2={seg.y2}
-          ></line>
-        </template>
-        <circle
-          class="stop"
-          cx={shape.restaurant.x}
-          cy={shape.restaurant.y}
-          r="12"
-        ></circle>
-        <text class="stop-label" x={shape.restaurant.x} y={restaurantLabelY}>
-          Restaurant
-        </text>
-        <circle
-          class="stop"
-          cx={shape.dropoff.x}
-          cy={shape.dropoff.y}
-          r="12"
-        ></circle>
-        <text class="stop-label" x={shape.dropoff.x} y={dropoffLabelY}>
-          Drop-off
-        </text>
-        <circle
-          class={driverDotClass}
-          cx={shape.driver.x}
-          cy={shape.driver.y}
-          r="8"
-        ></circle>
-        <rect
-          class="pill"
-          x={pill.x}
-          y={pill.y}
-          width={pill.width}
-          height={pill.height}
-          rx="12"
-        ></rect>
-        <text class={pillTextClass} x={pill.textX} y={pill.textY}>
-          {pillText}
-        </text>
-      </svg>
-    </template>
-
     <template lwc:if={showMap}>
+      <p class={resultBandClass} role="status">{resultBandText}</p>
       <lightning-map
         map-markers={mapMarkers}
         list-view="hidden"
@@ -114,16 +48,6 @@
         end is inside too: a driver who marks the order delivered near the
         restaurant counts as a match (G-111).
       </p>
-    </template>
-
-    <template lwc:if={showMapToggle}>
-      <div class="actions">
-        <lightning-button
-          variant="base"
-          label={toggleLabel}
-          onclick={toggleRealMap}
-        ></lightning-button>
-      </div>
     </template>
   </article>
 </template>
