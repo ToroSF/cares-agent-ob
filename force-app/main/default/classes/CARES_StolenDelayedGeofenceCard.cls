@@ -1,6 +1,9 @@
 /**
- * Stolen & Delayed Orders: read-only agent action that returns the geofence card of an approved
- * claim, shown to the customer in the chat (Custom Lightning Type c__caresGeofenceView, D-106).
+ * DEPRECATED (G-137): kept only for agent v14, whose Lightning type c__caresGeofenceView points at the
+ * inner class below. The chat never draws an inner-class type, so v15 uses CARES_StolenDelayedDeliveryMap
+ * and c__caresDeliveryMapView instead. Delete this class and c__caresGeofenceView once v14 is retired.
+ *
+ * Read-only agent action that returns the geofence card of an approved claim (D-106).
  *
  * The card is shown only when it backs a decision in the customer's favour: the order is re-checked
  * with the policy (which also proves it is this customer's order) and must come out FULL_REFUND or
@@ -100,64 +103,34 @@ public with sharing class CARES_StolenDelayedGeofenceCard {
   }
 
   @InvocableMethod(
-    label='Show Delivery Map'
+    label='Show Delivery Map (v14)'
     description='Read-only. Returns the delivery map card of an approved Stolen & Delayed claim.'
   )
   public static List<Result> show(List<Request> requests) {
-    List<Result> results = new List<Result>();
+    List<CARES_StolenDelayedDeliveryMap.Request> asked = new List<CARES_StolenDelayedDeliveryMap.Request>();
     for (Request r : requests) {
-      results.add(card(r));
+      CARES_StolenDelayedDeliveryMap.Request n = new CARES_StolenDelayedDeliveryMap.Request();
+      n.contactId = r == null ? null : r.contactId;
+      n.orderId = r == null ? null : r.orderId;
+      asked.add(n);
+    }
+    List<Result> results = new List<Result>();
+    for (
+      CARES_StolenDelayedDeliveryMap.Result n : CARES_StolenDelayedDeliveryMap.show(
+        asked
+      )
+    ) {
+      Result res = new Result();
+      res.success = n.success;
+      // Same fields, so the shape copies across
+      res.deliveryMap = n.deliveryMap == null
+        ? null
+        : (GeofenceView) JSON.deserialize(
+            JSON.serialize(n.deliveryMap),
+            GeofenceView.class
+          );
+      results.add(res);
     }
     return results;
-  }
-
-  private static Result card(Request r) {
-    Result res = new Result();
-    if (r == null || String.isBlank(r.contactId) || String.isBlank(r.orderId)) {
-      return res;
-    }
-    // Same re-check as the hand-off: a different order, another customer's order, or a decision that
-    // is no longer approved gets nothing
-    CARES_StolenDelayedPolicy.Outcome d = CARES_StolenDelayedPolicy.evaluate(
-      r.contactId,
-      r.orderId,
-      ''
-    );
-    if (
-      d.decision != CARES_StolenDelayedPolicy.FULL_REFUND &&
-      d.decision != CARES_StolenDelayedPolicy.LOSS_ABSORPTION
-    ) {
-      return res;
-    }
-    CARES_GeofenceMapController.View v = CARES_GeofenceMapController.build(
-      d.orderId,
-      null
-    );
-    if (v.found != true || v.hasCoordinates != true) {
-      return res;
-    }
-    GeofenceView g = new GeofenceView();
-    g.orderId = d.orderId;
-    // The real order's total, as the policy read it
-    g.orderTotal = d.orderTotal;
-    g.currencyIsoCode = d.currencyIsoCode;
-    g.gpsResult = v.gpsResult;
-    g.hasCoordinates = true;
-    g.restaurantLatitude = v.restaurant.latitude;
-    g.restaurantLongitude = v.restaurant.longitude;
-    g.dropoffLatitude = v.dropoff.latitude;
-    g.dropoffLongitude = v.dropoff.longitude;
-    g.driverLatitude = v.driver.latitude;
-    g.driverLongitude = v.driver.longitude;
-    g.centerLatitude = v.center.latitude;
-    g.centerLongitude = v.center.longitude;
-    g.radiusMeters = v.radiusMeters;
-    g.tripMeters = v.tripMeters;
-    g.toleranceMeters = v.toleranceMeters;
-    g.driverToCenterMeters = v.driverToCenterMeters;
-    g.driverToDropoffMeters = v.driverToDropoffMeters;
-    res.deliveryMap = g;
-    res.success = true;
-    return res;
   }
 }

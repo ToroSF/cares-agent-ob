@@ -965,7 +965,7 @@ subagent stolen_delayed_orders:
                     filter_from_agent: True
             target: "apex://CARES_StolenDelayedHandoffAction"
 
-        # Shown to the customer only for an approved claim: Apex re-checks the decision (D-106, R-17)
+        # Shown to the customer only for an approved claim: Apex re-checks the decision (D-106, R-18). A top-level Apex type, so the chat draws it (G-137)
         delivery_map:
             description: "Read-only. Returns the delivery map card of an approved claim, shown to the customer."
             label: "Show Delivery Map"
@@ -981,11 +981,11 @@ subagent stolen_delayed_orders:
                     description: "True only when a card was built."
                     filter_from_agent: True
                 deliveryMap: object
-                    description: "The delivery map card."
-                    complex_data_type_name: "c__caresGeofenceView"
+                    description: "The delivery map card. It is always displayed to the customer as it is: show it, never convert it to text."
+                    complex_data_type_name: "c__caresDeliveryMapView"
                     is_displayable: True
                     filter_from_agent: True
-            target: "apex://CARES_StolenDelayedGeofenceCard"
+            target: "apex://CARES_StolenDelayedDeliveryMap"
 
     reasoning:
         instructions: ->
