@@ -116,6 +116,26 @@ describe("c-cares-geofence-card", () => {
     expect(root.querySelector("lightning-map")).toBeNull();
   });
 
+  it("lets a customer switch to the real map only where the page allows it", async () => {
+    const el = createElement("c-cares-geofence-card", {
+      is: CaresGeofenceCard
+    });
+    el.view = MISMATCH;
+    el.audience = "customer";
+    el.allowRealMap = true;
+    document.body.appendChild(el);
+    const root = el.shadowRoot;
+    expect(root.querySelector(".facts")).toBeNull();
+    expect(root.querySelector(".note")).toBeNull();
+    root.querySelector(".actions lightning-button").click();
+    await flush();
+    expect(root.querySelector("svg")).toBeNull();
+    expect(root.querySelector("lightning-map").mapMarkers[0]).toMatchObject({
+      type: "Circle",
+      radius: 562.3
+    });
+  });
+
   it("explains the distance rule when the row has no locations", () => {
     const root = mount({
       found: true,

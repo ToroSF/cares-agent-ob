@@ -3,8 +3,9 @@ import { LightningElement, api } from "lwc";
 // Stolen & Delayed: the trip geofence card in Pronto's delivery-card style (D-105). Presentation only:
 // it draws the view it is given. The admin page (caresGeofenceMap) and the agent chat
 // (caresGeofenceRenderer, D-106) both use it, so the two never look different.
-// audience = "customer" hides what is for the team only: the demo scenario, the G-111 note, the measurements
-// and the real map, which would send the coordinates to Google (G-136).
+// audience = "customer" hides what is for the team only: the demo scenario, the G-111 note and the measurements.
+// The real map sends the coordinates to Google (G-136): the team always has it, a customer only where the page
+// turns it on with allow-real-map (the delivery map page, D-107).
 
 const WIDTH = 640;
 const HEIGHT = 380;
@@ -108,6 +109,7 @@ export function splitByCircle(a, b, center, radius) {
 export default class CaresGeofenceCard extends LightningElement {
   @api view;
   @api audience = "admin";
+  @api allowRealMap = false;
   showRealMap = false;
 
   get isAdmin() {
@@ -130,8 +132,18 @@ export default class CaresGeofenceCard extends LightningElement {
     return this.hasGeofence && !this.showRealMap;
   }
 
+  get canShowRealMap() {
+    return (
+      this.isAdmin || this.allowRealMap === true || this.allowRealMap === "true"
+    );
+  }
+
   get showMap() {
-    return this.isAdmin && this.hasGeofence && this.showRealMap;
+    return this.canShowRealMap && this.hasGeofence && this.showRealMap;
+  }
+
+  get showMapToggle() {
+    return this.canShowRealMap && this.hasGeofence;
   }
 
   get showAdminDetails() {
