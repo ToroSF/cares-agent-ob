@@ -17,25 +17,30 @@ Boolean DRY_RUN = true;
 Integer STAGE = 0;
 String CUSTOMER_EMAIL = 'geoff.wyllt@example.com';
 
-// Oldest first: the relationship gets worse with each one. [subject, priority, days ago, description]
+// Oldest first: the relationship gets worse with each one. Each is one of the customer's real orders, named in
+// the description (the Case's order field needs the escalation permission set).
+// [subject, priority, days ago, order, description]
 List<List<Object>> HISTORY = new List<List<Object>>{
     new List<Object>{
         'Demo history 1: one item missing',
         'Low',
         21,
-        'The Side Salad was missing from the order. The customer was polite: "No big deal, just letting you know." Resolved with an apology.'
+        'PR-240705-KVJZAKD',
+        'BiteFusion Kitchen Deep Ellum, $20.30: the Garlic Bread was missing. The customer was polite: "No big deal, just letting you know." Resolved with an apology.'
     },
     new List<Object>{
         'Demo history 2: wrong order, second time',
         'Medium',
         9,
-        'Received someone else\'s order. The customer was annoyed: "This is the second time this month." Asked for a full refund.'
+        'PR-240808-PFHOYUZ',
+        'Harvest Table Kitchens Downtown, $60.90: received someone else\'s order. The customer was annoyed: "This is the second time this month." Asked for a full refund.'
     },
     new List<Object>{
         'Demo history 3: late and cold, threatens to leave',
         'High',
         2,
-        'Arrived 50 minutes late and cold. The customer was angry: "Third problem in a month. One more and I\'m switching apps."'
+        'PR-240722-X2XDLFD',
+        'Urban Eats Collective Uptown, $83.10: arrived 50 minutes late and cold. The customer was angry: "Third problem in a month. One more and I\'m switching apps."'
     }
 };
 
@@ -63,11 +68,11 @@ for (Integer i = 0; i < HISTORY.size(); i++) {
     k.Origin = 'Web';
     k.Status = 'Closed';
     k.Priority = (String) h[1];
-    k.Description = h[2] + ' days ago (demo timeline). ' + (String) h[3];
+    k.Description = h[2] + ' days ago (demo timeline). Order ' + h[3] + ', ' + (String) h[4];
     k.ContactId = linked ? c.Id : null;
     k.AccountId = linked ? c.AccountId : null;
     toSave.add(k);
-    System.debug(LoggingLevel.WARN, (linked ? 'LINK   ' : 'unlink ') + h[0] + ' (' + h[1] + ', ' + h[2] + ' days ago)');
+    System.debug(LoggingLevel.WARN, (linked ? 'LINK   ' : 'unlink ') + h[0] + ' (' + h[3] + ', ' + h[1] + ', ' + h[2] + ' days ago)');
 }
 System.debug(LoggingLevel.WARN, 'Stage ' + STAGE + ' for ' + c.Name + ': ' + STAGE + ' earlier complaint(s) count in the last 30 days.');
 if (DRY_RUN) {

@@ -98,11 +98,13 @@ The context opens only if the model reads the chat as NEGATIVE or FRUSTRATED. If
 
 The three earlier complaints exist in the org, unlinked: Cases `Demo history 1`, `2` and `3`. `scripts/apex/demo-risk-stage.apex` links them to Geoff (set `STAGE`, then `DRY_RUN = false`).
 
-| Case | When (story) | Priority | What happened |
-|---|---|---|---|
-| Demo history 1: one item missing | 3 weeks ago | Low | Side Salad missing. Polite: "No big deal, just letting you know." |
-| Demo history 2: wrong order, second time | 9 days ago | Medium | Someone else's order. Annoyed: "This is the second time this month." |
-| Demo history 3: late and cold, threatens to leave | 2 days ago | High | 50 minutes late and cold. Angry: "One more and I'm switching apps." |
+| Case | When (story) | Priority | Order | What happened |
+|---|---|---|---|---|
+| Demo history 1: one item missing | 3 weeks ago | Low | `PR-240705-KVJZAKD` · BiteFusion Kitchen Deep Ellum · $20.30 | Garlic Bread missing. Polite: "No big deal, just letting you know." |
+| Demo history 2: wrong order, second time | 9 days ago | Medium | `PR-240808-PFHOYUZ` · Harvest Table Kitchens Downtown · $60.90 | Someone else's order. Annoyed: "This is the second time this month." |
+| Demo history 3: late and cold, threatens to leave | 2 days ago | High | `PR-240722-X2XDLFD` · Urban Eats Collective Uptown · $83.10 | 50 minutes late and cold. Angry: "One more and I'm switching apps." |
+
+The live claim is always a **fourth** order, `PR-240825-QN0SODC` (Epicurean Edge Grill, $38.70). The history orders are only the story; don't claim them in the chat.
 
 **Before** (`STAGE = 0`, a clean history):
 1. **Customer:** "Hi, my order PR-240825-QN0SODC arrived but all the items were wrong." Then `geoff.wyllt@example.com` if asked, and "All three items were wrong."
