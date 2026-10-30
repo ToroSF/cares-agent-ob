@@ -228,6 +228,7 @@ The card can't be drawn in the Customer Support site's chat (G-137). So for an a
 - **Page:** `/delivery-map` on the Customer Support site, a public route and view in `digitalExperiences/site/Customer_Support1/`, holds `caresDeliveryMapPage`. It sends `t` to `CARES_DeliveryMapLink.view()`.
   - With a valid, unexpired signature, Apex reads the order's telemetry in system mode and returns the card.
   - Otherwise the page says *"This link has expired or isn't valid. Ask in the chat again."*
+- **Real map:** the page always shows the real map (`allow-real-map`, D-108), the same Google Maps view as CARES Admin, with the circle, the three points and the result band. It sends the coordinates to Google (G-136). The measurements, demo scenario and G-111 note stay team-only.
 - **Guest access:** `CARES_Delivery_Map_Guest`, class access only, on the site's guest user. No object access: the class reads the row itself, and only after it verifies the link.
 - **Setup:** run `scripts/apex/setup-delivery-map-link.apex` once (`DRY_RUN` first). It creates the key, sets the site and the minutes, and assigns the permission set to the guest user.
 

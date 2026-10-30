@@ -11,6 +11,8 @@ export default class CaresDeliveryMapPage extends LightningElement {
   invalid = false;
   token;
   started = false;
+  // The customer can switch to Google Maps here, as in CARES Admin (G-136: mock data only today)
+  allowRealMap = true;
 
   @wire(CurrentPageReference)
   pageRef(ref) {

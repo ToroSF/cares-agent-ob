@@ -61,6 +61,7 @@ describe("c-cares-delivery-map-page", () => {
     const card = el.shadowRoot.querySelector("c-cares-geofence-card");
     expect(card.audience).toBe("customer");
     expect(card.view.gpsResult).toBe("MISMATCH");
+    expect(card.allowRealMap).toBe(true);
     expect(el.shadowRoot.querySelector(".message")).toBeNull();
   });
 
